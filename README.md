@@ -1,7 +1,7 @@
 # 🦋 Vlinder - A Dream for Everyone
 
 <p align="center">
-  <img src="assets/banner.png" alt="Vlinder Banner" width="100%">
+  <img src="extension/assets/banner.png" alt="Vlinder Banner" width="100%">
 </p>
 
 ---
