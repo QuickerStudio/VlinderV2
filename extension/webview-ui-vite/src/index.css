@@ -1,0 +1,527 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Styles */
+@layer base {
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 0 0% 3.9%;
+		--card: 0 0% 100%;
+		--card-foreground: 0 0% 3.9%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 0 0% 3.9%;
+		--primary: 0 0% 9%;
+		--primary-foreground: 0 0% 98%;
+		--secondary: 0 0% 96.1%;
+		--secondary-foreground: 0 0% 9%;
+		--muted: 0 0% 96.1%;
+		--muted-foreground: 0 0% 45.1%;
+		--accent: 0 0% 96.1%;
+		--accent-foreground: 0 0% 9%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 0 0% 89.8%;
+		--input: 0 0% 89.8%;
+		--ring: 0 0% 3.9%;
+		--chart-1: 12 76% 61%;
+		--chart-2: 173 58% 39%;
+		--chart-3: 197 37% 24%;
+		--chart-4: 43 74% 66%;
+		--chart-5: 27 87% 67%;
+		--radius: 0.5rem;
+		--section-border: var(
+			--vscode-panel-border,
+			var(
+				--vscode-editorGroup-border,
+				var(--vscode-menu-separatorBackground, var(--vscode-menu-border, var(--vscode-activityBar-background)))
+			)
+		);
+	}
+
+	.dark {
+		--background: 0 0% 3.9%;
+		--foreground: 0 0% 98%;
+		--card: 0 0% 3.9%;
+		--card-foreground: 0 0% 98%;
+		--popover: 0 0% 3.9%;
+		--popover-foreground: 0 0% 98%;
+		--primary: 0 0% 98%;
+		--primary-foreground: 0 0% 9%;
+		--secondary: 0 0% 14.9%;
+		--secondary-foreground: 0 0% 98%;
+		--muted: 0 0% 14.9%;
+		--muted-foreground: 0 0% 63.9%;
+		--accent: 0 0% 14.9%;
+		--accent-foreground: 0 0% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 0 0% 14.9%;
+		--input: 0 0% 14.9%;
+		--ring: 0 0% 83.1%;
+		--chart-1: 220 70% 50%;
+		--chart-2: 160 60% 45%;
+		--chart-3: 30 80% 55%;
+		--chart-4: 280 65% 60%;
+		--chart-5: 340 75% 55%;
+	}
+
+	* {
+		@apply border-border;
+	}
+
+	body {
+		@apply bg-background text-foreground;
+		margin: 0;
+		padding: 0;
+		font-size: var(--vscode-font-size);
+		height: 100%;
+		width: 100%;
+	}
+
+	html {
+		height: 100%;
+		width: 100%;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	#root {
+		/* 🎯 修复：恢复根容器设置，边距将在聊天内容区域单独处理 */
+		max-width: 1280px;
+		margin: 0 auto;
+		text-align: start;
+		height: 100%;
+		width: 100%;
+	}
+
+	/* 🎯 为聊天内容区域添加右边距和下边距，避免影响输入区域 */
+	.chat-content {
+		margin-right: 2px;/* 聊天内容区域添加右边距*/
+		margin-bottom: 2px;	/* 聊天内容区域添加下边距 */
+	}
+
+	li {
+		list-style: auto;
+	}
+}
+
+/* Component Styles */
+@layer components {
+	.logo {
+		height: 6em;
+		padding: 1.5em;
+		will-change: filter;
+		transition: filter 300ms;
+
+		&:hover {
+			filter: drop-shadow(0 0 2em #646cffaa);
+		}
+
+		&.react:hover {
+			filter: drop-shadow(0 0 2em #61dafbaa);
+		}
+	}
+
+	.card {
+		padding: 2em;
+	}
+
+	.read-the-docs {
+		color: #888;
+	}
+
+	.task-card {
+		border: 1px solid var(--section-border);
+		padding: 16px;
+		display: grid;
+		grid-auto-rows: min-content;
+		gap: 4px;
+
+		&.is-clickable:hover {
+			cursor: pointer;
+			background-color: var(--vscode-tab-activeBackground) !important;
+		}
+	}
+
+	.dropdown-container {
+		box-sizing: border-box;
+		display: flex;
+		flex-flow: column nowrap;
+		align-items: flex-start;
+		justify-content: flex-start;
+
+		label {
+			display: block;
+			color: var(--vscode-foreground);
+			cursor: pointer;
+			font-size: var(--vscode-font-size);
+			line-height: normal;
+			margin-bottom: 2px;
+		}
+	}
+
+	.flex-line {
+		display: flex;
+		gap: 4px;
+		align-items: center;
+		justify-content: baseline;
+
+		&.wrap {
+			flex-wrap: wrap;
+		}
+
+		&.nowrap {
+			flex-wrap: nowrap;
+		}
+	}
+}
+
+/* Utility Styles */
+@layer utilities {
+	.text-light {
+		color: var(--vscode-breadcrumb-foreground) !important;
+	}
+
+	.text-alt {
+		color: var(--vscode-terminal-ansiBlue) !important;
+	}
+
+	.text-success {
+		color: var(--vscode-terminal-ansiGreen) !important;
+	}
+
+	.text-error {
+		color: var(--vscode-terminal-ansiRed) !important;
+	}
+
+	.text-info {
+		color: var(--vscode-terminal-ansiBlue) !important;
+	}
+
+	.uppercase {
+		text-transform: uppercase;
+	}
+
+	.flex-1 {
+		flex: 1 1 0%;
+	}
+}
+
+/* Global Styles */
+section {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 16px;
+	border-bottom: 1px solid var(--section-border);
+}
+
+h3 {
+	color: var(--vscode-sideBarSectionHeader-foreground);
+	font-size: var(--vscode-editor-font-size);
+	font-weight: 600;
+	margin: 0;
+}
+
+code:not([class*="language-"]) {
+	color: var(--vscode-foreground);
+	font-family: var(--vscode-editor-font-family, "monospace");
+	font-size: var(--vscode-editor-font-size);
+	line-height: 1.5em;
+	border: 1px solid var(--section-border);
+	background-color: var(--vscode-editor-background);
+	display: inline-flex;
+	gap: 2px;
+	align-items: center;
+	padding: 1px 4px;
+	border-radius: 2px;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+p {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+/* Animations */
+@keyframes logo-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Static Particles Background Effect - 模拟particles.js */
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Stars Background Effect - 原始stars.css */
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--twinkle-duration, 3s) infinite;
+    opacity: var(--initial-opacity, 0.3);
+}
+
+.star::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: inherit;
+    filter: blur(1px);
+    animation: glow var(--twinkle-duration, 3s) infinite;
+}
+
+.star.burst::before,
+.star.burst::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+    left: 50%;
+    top: 50%;
+    transform-origin: center;
+    animation: starBurst 1.5s ease-out;
+    pointer-events: none;
+}
+
+.star.burst::before {
+    transform: translate(-50%, -50%);
+    animation: starBurstHorizontal 1.5s ease-out;
+}
+
+.star.burst::after {
+    transform: translate(-50%, -50%);
+    animation: starBurstVertical 1.5s ease-out;
+}
+
+@keyframes twinkle {
+    0%, 100% {
+        opacity: var(--initial-opacity, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        filter: blur(1px) brightness(1);
+    }
+    50% {
+        filter: blur(2px) brightness(1.5);
+    }
+}
+
+@keyframes starBurstHorizontal {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) scaleX(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(180deg) scaleX(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg) scaleX(0);
+        opacity: 0;
+    }
+}
+
+@keyframes starBurstVertical {
+    0% {
+        transform: translate(-50%, -50%) rotate(90deg) scaleX(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(270deg) scaleX(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(450deg) scaleX(0);
+        opacity: 0;
+    }
+}
+
+/* Meteor Effect - 流星特效 */
+.meteor {
+    position: fixed;
+    width: 3px;
+    height: 100px;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 1), rgba(255, 216, 156, 0.1));
+    border-radius: 999px;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+    animation: var(--meteor-animation);
+    z-index: 1;
+}
+
+@keyframes meteor {
+    0% {
+        transform: translateX(0) translateY(-100px) rotate(45deg);
+        opacity: 1;
+    }
+    20% {
+        opacity: 1;
+    }
+    60% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateX(-1000px) translateY(1000px) rotate(45deg);
+        opacity: 0;
+    }
+}
+
+/* Banner发光效果 */
+.banner-glow {
+    animation: bannerGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes bannerGlow {
+    0% {
+        filter: drop-shadow(0 0 8px var(--glow-color-1)) 
+                drop-shadow(0 0 16px var(--glow-color-2)) 
+                drop-shadow(0 0 24px var(--glow-color-3));
+    }
+    100% {
+        filter: drop-shadow(0 0 12px var(--glow-color-1)) 
+                drop-shadow(0 0 24px var(--glow-color-2)) 
+                drop-shadow(0 0 36px var(--glow-color-3)) 
+                drop-shadow(0 0 48px var(--glow-color-4));
+    }
+}
+
+/* VSCode Specific Overrides */
+textarea:focus {
+	outline: 1.5px solid #66FFDA;
+	box-shadow: 0 0 0 1px #66FFDA, 0 0 8px rgba(102, 255, 218, 0.15);
+}
+
+vscode-button::part(control):focus {
+	outline: none;
+}
+
+vscode-dropdown::part(listbox) {
+	border-color: var(--vscode-scrollbarSlider-background);
+	transition: none;
+	scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+	html {
+		scrollbar-color: unset;
+	}
+}
+
+/* Custom animations for floating question box */
+@keyframes pulse-fast {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.3;
+	}
+}
+
+.animate-pulse-fast {
+	animation: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Happy mood glow animation */
+@keyframes happy-glow {
+	0%, 100% {
+		box-shadow: 0 0 20px #FF63CB, 0 0 40px #FF63CB, 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+	50% {
+		box-shadow: 0 0 30px #FF63CB, 0 0 60px #FF63CB, 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+}
+
+/* Glow fade-in animation */
+@keyframes glow-fade-in {
+	0% {
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+	100% {
+		box-shadow: 0 0 20px #FF63CB, 0 0 40px #FF63CB, 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+}
+
+/* Glow fade-out animation */
+@keyframes glow-fade-out {
+	0% {
+		box-shadow: 0 0 20px #FF63CB, 0 0 40px #FF63CB, 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+	100% {
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+}
+
+.lightning-happy-glow {
+	animation: glow-fade-in 0.5s ease-out forwards, happy-glow 2s ease-in-out infinite 0.5s;
+}
+
+.lightning-glow-fade-out {
+	animation: glow-fade-out 0.5s ease-out forwards;
+}
+
+/* 拖拽导入样式 */
+.drag-over .drag-overlay {
+	opacity: 1 !important;
+	pointer-events: auto !important;
+}
+
+.drag-over {
+	background-color: hsl(var(--primary) / 0.05) !important;
+}
+
+/* Book Panel 样式 */
+.book-panel-container {
+	/* 移除固定高度，使用 flex-1 自适应 */
+}
+
+/* 图表交互样式 */
+.mermaid-diagram {
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+.mermaid-diagram svg {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto !important;
+	height: auto !important;
+}
+
+/* 图表容器聚焦样式 */
+.mermaid-diagram:focus {
+	outline: 2px solid hsl(var(--primary));
+	outline-offset: 2px;
+}

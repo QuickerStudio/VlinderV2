@@ -1,0 +1,88 @@
+# Build outputs
+dist/
+out/
+build/
+webview-ui-vite/dist/
+webview-ui-vite/build/
+
+# Dependencies
+node_modules/
+webview-ui-vite/node_modules/
+
+# Generated files
+*.d.ts
+**/*.generated.ts
+**/*.generated.js
+
+# Configuration files
+*.config.js
+*.config.ts
+vite.config.*
+webpack.config.*
+rollup.config.*
+babel.config.*
+jest.config.*
+tailwind.config.*
+postcss.config.*
+drizzle.config.ts
+esbuild.ts
+
+# Test files (optional - remove if you want to lint tests)
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+test/
+tests/
+__tests__/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Documentation
+docs/
+documentation/
+*.md
+
+# Archive files
+*.zip
+*.tar.gz
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env*
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Specific files to ignore
+interactive-test.js
+bundler/

@@ -1,0 +1,141 @@
+# VSCode extension ignore file
+# Files and directories to exclude from the extension package
+
+# Development directories
+.vscode/**
+.vscode-test/**
+.vscode-test-web/**
+out/**
+src/**
+
+# Dependencies (exclude most, keep specific ones)
+node_modules/**
+webview-ui-vite/node_modules/**
+# Keep better-sqlite3 native addon
+!node_modules/better-sqlite3/**
+# Keep codicons
+!node_modules/@vscode/codicons/dist/codicon.css
+!node_modules/@vscode/codicons/dist/codicon.ttf
+!dist/codicons/**
+
+# Configuration files
+.gitignore
+.gitattributes
+.editorconfig
+.nvmrc
+.yarnrc*
+.npmrc
+.prettierrc*
+.prettierignore
+tsconfig*.json
+eslint.config.*
+.eslintrc*
+.eslintignore
+esbuild.ts
+esbuild.js
+vite.config.*
+tailwind.config.*
+postcss.config.*
+drizzle.config.ts
+
+# Documentation and guides
+vsc-extension-quickstart.md
+demo.gif
+README.md
+CHANGELOG.md
+docs/**
+documentation/**
+
+# Source maps and TypeScript files
+**/*.map
+**/*.ts
+!dist/**/*.js
+**/.vscode-test.*
+
+# Environment files
+.env*
+
+# Logs and temporary files
+logs/**
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp/**
+temp/**
+
+# Testing and coverage
+test/**
+tests/**
+coverage/**
+.nyc_output/**
+**/*.test.*
+**/*.spec.*
+
+# Cache directories
+.cache/**
+.parcel-cache/**
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# Webview UI development files
+webview-ui-vite/src/**
+webview-ui-vite/public/**
+webview-ui-vite/scripts/**
+webview-ui-vite/index.html
+webview-ui-vite/README.md
+webview-ui-vite/package.json
+webview-ui-vite/package-lock.json
+webview-ui-vite/pnpm-lock.yaml
+webview-ui-vite/tsconfig*.json
+webview-ui-vite/vite.config.*
+webview-ui-vite/tailwind.config.*
+webview-ui-vite/postcss.config.*
+webview-ui-vite/eslint.config.*
+webview-ui-vite/components.json
+webview-ui-vite/tailwind-hex-opacity-plugin.js
+
+# OS and editor files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.swp
+*.swo
+*~
+.idea/**
+
+# Build tools and scripts
+bundler/**
+interactive-test.js
+scripts/**
+tools/**
+
+# CI/CD files
+.github/**
+.travis.yml
+.circleci/**
+azure-pipelines.yml
+appveyor.yml
+
+# Archive and backup files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.bak
+*.backup
+
+# Database development files
+@libsql/**
+*.db
+*.sqlite
+*.sqlite3
+
+# Keep binary files if needed
+!bin/**

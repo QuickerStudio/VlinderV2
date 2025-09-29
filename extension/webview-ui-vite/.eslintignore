@@ -1,0 +1,57 @@
+# Build outputs
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.d.ts
+**/*.generated.ts
+**/*.generated.js
+
+# Configuration files
+*.config.js
+*.config.ts
+vite.config.*
+tailwind.config.*
+postcss.config.*
+tailwind-hex-opacity-plugin.js
+
+# Test files (optional)
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+**/*.test.tsx
+**/*.spec.tsx
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env*
+
+# Public assets
+public/
+
+# Documentation
+*.md
+
+# Logs
+*.log
