@@ -30,6 +30,23 @@ const ChatView: React.FC<ChatViewProps> = ({
 	const [isMaxContextReached, setIsMaxContextReached] = useState(false)
 	const [isCompressing, setIsCompressing] = useState(false)
 
+	// 监听压缩状态变化
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "compressionStatus") {
+				if (message.status === "started") {
+					setIsCompressing(true)
+				} else if (message.status === "completed" || message.status === "error") {
+					setIsCompressing(false)
+				}
+			}
+		}
+		
+		window.addEventListener('message', handleMessage)
+		return () => window.removeEventListener('message', handleMessage)
+	}, [])
+
 	const updateState = useCallback(
 		(updates: Partial<ChatState>) => {
 			setState((prev) => ({ ...prev, ...updates }))
@@ -393,6 +410,8 @@ const ChatView: React.FC<ChatViewProps> = ({
 						isInTask={!!currentTask}
 						isHidden={isHidden}
 						handlePrimaryButtonClick={handlePrimaryButtonClick}
+						isCompressing={isCompressing}
+						isMaxContextReached={isMaxContextReached}
 					/>
 				</div>
 			)}

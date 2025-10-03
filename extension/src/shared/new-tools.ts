@@ -199,18 +199,6 @@ export type BashTool = {
 	output?: string
 }
 
-export type ContextEngineAgentTool = {
-	tool: "context_engine_agent"
-	query: string
-	searchType: "semantic" | "structural" | "historical" | "contextual"
-	scope?: string
-	includeGitHistory?: boolean
-	maxResults?: number
-	analysisDepth?: "shallow" | "deep" | "comprehensive"
-	result?: string
-}
-
-
 
 export type ChatTool = (
 	| ExitAgentTool
@@ -236,7 +224,6 @@ export type ChatTool = (
 	| RemoveTool
 	| RenameTool
 	| BashTool
-	| ContextEngineAgentTool
 ) & {
 	ts: number
 	approvalState?: ToolStatus

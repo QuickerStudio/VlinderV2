@@ -15,7 +15,6 @@ import { movePrompt } from "./move"
 import { removePrompt } from "./remove"
 import { renamePrompt } from "./rename"
 import { bashToolPrompt } from "./Bash"
-import { contextEngineAgentPrompt } from "./context-engine-agent"
 
 export const toolPrompts = [
 	fileEditorPrompt,
@@ -35,6 +34,5 @@ export const toolPrompts = [
 	removePrompt,
 	renamePrompt,
 	bashToolPrompt,
-	contextEngineAgentPrompt,
 	// submitReviewPrompt,
 ]

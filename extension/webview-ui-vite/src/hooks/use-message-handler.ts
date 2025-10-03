@@ -256,11 +256,11 @@ export const useChatMessageHandling = (
 						primaryButtonText: "Rename",
 						secondaryButtonText: "Cancel",
 					},
-						bash: {
-							...baseState,
-							primaryButtonText: "Run Command",
-							secondaryButtonText: "Cancel",
-						}
+					bash: {
+						...baseState,
+						primaryButtonText: "Run Command",
+						secondaryButtonText: "Cancel",
+					}
 				}
 
 				const updates = toolButtonMap[tool.tool] || {

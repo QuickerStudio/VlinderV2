@@ -56,7 +56,6 @@ import { EnhancedWebSearchBlock } from "./tools/web-search-tool"
 import { EnhancedWebFetchBlock } from "./tools/web-fetch-tool"
 import { FileEditorTool } from "./tools/file-editor-tool"
 import { SpawnAgentBlock, ExitAgentBlock } from "./tools/agent-tools"
-import { ContextEngineAgentBlock } from "./tools/context-engine-agent-tool"
 import MarkdownRenderer from "./markdown-renderer"
 import { CodeBlock } from "./code-block"
 import { getLanguageFromPath } from "@/utils/get-language-from-path"
@@ -1500,8 +1499,6 @@ export const ToolRenderer: React.FC<{
 			return <SpawnAgentBlock {...tool} />
 		case "exit_agent":
 			return <ExitAgentBlock {...tool} />
-		case "context_engine_agent":
-			return <ContextEngineAgentBlock {...tool} />
 		case "submit_review":
 			return <SubmitReviewBlock {...tool} />
 		case "move":

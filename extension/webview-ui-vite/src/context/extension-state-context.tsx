@@ -78,6 +78,7 @@ export const extensionStateAtom = atom((get) => ({
 	themeName: get(themeNameAtom),
 	user: get(userAtom),
 	alwaysAllowWriteOnly: get(alwaysAllowApproveOnlyAtom),
+	compressionStatus: get(compressionStatusAtom),
 }))
 extensionStateAtom.debugLabel = "extensionState"
 
@@ -105,6 +106,9 @@ autoSummarizeAtom.debugLabel = "autoSummarize"
 
 const terminalCompressionThresholdAtom = atom<number | undefined>(undefined)
 terminalCompressionThresholdAtom.debugLabel = "terminalCompressionThreshold"
+
+const compressionStatusAtom = atom<"idle" | "compressing" | "completed">("idle")
+compressionStatusAtom.debugLabel = "compressionStatus"
 
 const apiConfigAtom = atom<GlobalState["apiConfig"] | undefined>(undefined)
 apiConfigAtom.debugLabel = "apiConfig"
@@ -178,6 +182,7 @@ export const ExtensionStateProvider: React.FC<{ children: React.ReactNode }> = (
 	const setExtensionName = useSetAtom(extensionNameAtom)
 	const setTerminalCompressionThreshold = useSetAtom(terminalCompressionThresholdAtom)
 	const setInlineEditModeType = useSetAtom(inlineEditModeTypeAtom)
+	const setCompressionStatus = useSetAtom(compressionStatusAtom)
 
 	const handleMessage = (event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
@@ -212,6 +217,20 @@ export const ExtensionStateProvider: React.FC<{ children: React.ReactNode }> = (
 			setDidHydrateState(true)
 			setThemeName(message.state.themeName)
 			setUriScheme(message.state.uriScheme)
+		}
+
+		if (message.type === "compressionStatus") {
+			if (message.status === "started") {
+				setCompressionStatus("compressing")
+			} else if (message.status === "completed") {
+				setCompressionStatus("completed")
+				// Reset to idle after a short delay to show the success flash
+				setTimeout(() => {
+					setCompressionStatus("idle")
+				}, 1000)
+			} else if (message.status === "error") {
+				setCompressionStatus("idle")
+			}
 		}
 	}
 

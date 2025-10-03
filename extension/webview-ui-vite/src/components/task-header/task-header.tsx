@@ -14,7 +14,6 @@ import { useDnaContextProtocol } from "@/hooks/use-dna-context-protocol"
 import { FoldVertical, Pencil, Download, Dna as Book } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { Input } from "../ui/input"
-import { Progress } from "../ui/progress"
 import { useState, useRef, useEffect } from "react"
 
 import { rpcClient } from "@/lib/rpc-client"
@@ -56,8 +55,6 @@ export default function TaskHeader({
 	const { isDnaContextProtocolOpen, toggleDnaContextProtocol, closeDnaContextProtocol } = useDnaContextProtocol()
 	const { mutate: markAsComplete, isPending } = rpcClient.markAsDone.useMutation()
 
-	// 计算Memory使用百分比
-	const memoryPercentage = currentContextWindow ? Math.round((currentContextTokens ?? 0) / currentContextWindow * 100) : 0
 
 	// 编辑状态
 	const [isEditing, setIsEditing] = useState(false)
@@ -215,28 +212,6 @@ export default function TaskHeader({
 					</div>
 				
 		</div>
-		{/* Memory进度条 - 跨越整个宽度 */}
-		{(currentContextWindow ?? 0) > 0 && (
-			<div className="w-full mt-1">
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<div className="w-full">
-							<Progress
-								value={memoryPercentage}
-								className="h-0.5 w-full"
-								style={{
-									'--tw-bg-opacity': '0.25',
-									backgroundColor: 'rgba(102, 255, 218, 0.25)'
-								} as React.CSSProperties}
-							/>
-						</div>
-					</TooltipTrigger>
-					<TooltipContent>
-						<p>Context Window: {currentContextTokens?.toLocaleString() ?? 0} / {currentContextWindow?.toLocaleString() ?? 0} tokens ({memoryPercentage}%)</p>
-					</TooltipContent>
-				</Tooltip>
-			</div>
-		)}
 
 		{/* DNA Context Protocol */}
 		<DnaContextProtocol

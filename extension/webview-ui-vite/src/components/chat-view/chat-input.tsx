@@ -13,6 +13,8 @@ interface ChatInputProps {
 	isInTask: boolean
 	isHidden: boolean
 	handlePrimaryButtonClick: () => void
+	isCompressing?: boolean
+	isMaxContextReached?: boolean
 }
 
 export const ChatInput = memo(function ChatInput({
@@ -25,6 +27,8 @@ export const ChatInput = memo(function ChatInput({
 	isInTask,
 	isHidden,
 	handlePrimaryButtonClick,
+	isCompressing = false,
+	isMaxContextReached = false,
 }: ChatInputProps) {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -93,6 +97,8 @@ export const ChatInput = memo(function ChatInput({
 			enableButtons={state.enableButtons}
 			primaryButtonText={state.primaryButtonText}
 			handlePrimaryButtonClick={handlePrimaryButtonClick}
+			isCompressing={isCompressing}
+			isMaxContextReached={isMaxContextReached}
 		/>
 	)
 })

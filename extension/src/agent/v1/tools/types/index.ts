@@ -27,7 +27,6 @@ import { MoveToolParams } from "../schema/move"
 import { RemoveToolParams } from "../schema/remove"
 import { RenameToolParams } from "../schema/rename"
 import { BashToolParams } from "../schema/Bash"
-import { ContextEngineAgentToolParams } from "../schema/context-engine-agent"
 
 export type UpsertMemoryInput = {
 	milestoneName: string
@@ -61,7 +60,6 @@ export type ToolParams =
 	| RemoveToolParams
 	| RenameToolParams
 	| BashToolParams
-	| ContextEngineAgentToolParams
 
 export type ToolName = ToolParams["name"]
 

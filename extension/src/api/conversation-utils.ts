@@ -212,8 +212,26 @@ export async function manageContextWindow(
 
 	const contextWindow = api.getModel().info.contextWindow
 	const terminalCompressionThreshold = await provider.getStateManager().state.terminalCompressionThreshold
+	
+	// Notify webview that compression started
+	const extensionProvider = provider.providerRef.deref()
+	if (extensionProvider) {
+		extensionProvider.getWebviewManager().postMessageToWebview({
+			type: "compressionStatus",
+			status: "started"
+		})
+	}
+	
 	const compressedMessages = await smartTruncation(history, api, terminalCompressionThreshold)
 	const newMemorySize = compressedMessages.reduce((acc, message) => acc + estimateTokenCount(message), 0)
+	
+	// Notify webview that compression completed
+	if (extensionProvider) {
+		extensionProvider.getWebviewManager().postMessageToWebview({
+			type: "compressionStatus",
+			status: "completed"
+		})
+	}
 	logFn("info", `API History before compression:`, history)
 	logFn("info", `Total tokens after compression: ${newMemorySize}`)
 	const maxPostTruncationTokens = contextWindow - 13_314 + api.getModel().info.maxTokens

@@ -12,6 +12,8 @@ import { vscode } from "@/utils/vscode"
 import { ModelDisplay } from "./model-display"
 import { Switch } from "../ui/switch"
 import { useExtensionState } from "@/context/extension-state-context"
+import { CircularProgress } from "../ui/circular-progress"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { useLightningWindow } from "@/hooks/use-lightning-window"
 import { rpcClient } from "@/lib/rpc-client"
 
@@ -41,6 +43,9 @@ interface InputAreaProps {
 	enableButtons: boolean
 	primaryButtonText: string | undefined
 	handlePrimaryButtonClick: () => void
+	// Compression states
+	isCompressing?: boolean
+	isMaxContextReached?: boolean
 }
 
 const useHandleAbort = (isRequestRunning: boolean) => {
@@ -79,10 +84,31 @@ const InputArea: React.FC<InputAreaProps> = ({
 	enableButtons,
 	primaryButtonText,
 	handlePrimaryButtonClick,
+	isCompressing = false,
+	isMaxContextReached = false,
 }) => {
 	const [_, setIsTextAreaFocused] = useState(false)
 	const [handleAbort, isAborting] = useHandleAbort(isRequestRunning)
 	const extensionState = useExtensionState()
+	
+	// 压缩完成后的绿色闪烁状态
+	const [showSuccessFlash, setShowSuccessFlash] = useState(false)
+	
+	// 监听压缩完成事件
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "compressionStatus" && message.status === "completed") {
+				setShowSuccessFlash(true)
+				setTimeout(() => {
+					setShowSuccessFlash(false)
+				}, 1000)
+			}
+		}
+		
+		window.addEventListener('message', handleMessage)
+		return () => window.removeEventListener('message', handleMessage)
+	}, [])
 
 	// Scholar Hook state
 	const [isScholarHovered, setIsScholarHovered] = useState(false)
@@ -316,6 +342,32 @@ const InputArea: React.FC<InputAreaProps> = ({
 
 				<div className="flex justify-between items-center px-1 pt-1">
 					<div className="flex items-center gap-2">
+						{/* Memory使用进度环 - 放置在模型选择器左边 */}
+						{(extensionState.currentContextWindow ?? 0) > 0 && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<div>
+										<CircularProgress
+											value={extensionState.currentContextWindow ? Math.round((extensionState.currentContextTokens ?? 0) / extensionState.currentContextWindow * 100) : 0}
+											size={20}
+											strokeWidth={2}
+											animationState={
+												showSuccessFlash 
+													? 'success-flash' 
+													: isCompressing 
+														? 'compressing' 
+														: isRequestRunning 
+															? 'breathing' 
+															: 'normal'
+											}
+										/>
+									</div>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Context Window: {extensionState.currentContextTokens?.toLocaleString() ?? 0} / {extensionState.currentContextWindow?.toLocaleString() ?? 0} tokens ({extensionState.currentContextWindow ? Math.round((extensionState.currentContextTokens ?? 0) / extensionState.currentContextWindow * 100) : 0}%)</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
 						<ModelDisplay />
 						<div className="flex items-center gap-1">
 							<span className="text-xs text-muted-foreground">Auto</span>

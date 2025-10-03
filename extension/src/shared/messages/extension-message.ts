@@ -72,6 +72,11 @@ export type RequestStatus = {
 	isRunning: boolean
 }
 
+export type CompressionStatus = {
+	type: "compressionStatus"
+	status: "started" | "completed" | "error"
+}
+
 export type SetInlineEditModeMessage = {
 	type: "setInlineEditMode"
 	inlineEditOutputType?: "full" | "diff" | "none"
@@ -201,6 +206,7 @@ export type ExtensionMessage =
 	| EnableTextAreasMessage
 	| HideCommandBlockMessage
 	| RequestStatus
+	| CompressionStatus
 	| PostClaudeMessage
 	| PromptEditorLoadedMessage
 	| AssetUriMessage

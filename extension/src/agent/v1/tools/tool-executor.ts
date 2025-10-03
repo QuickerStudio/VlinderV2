@@ -22,7 +22,6 @@ import {
 	RemoveTool,
 	RenameTool,
 	BashTool,
-	ContextEngineAgentTool,
 } from "."
 import { SearchSymbolsTool } from "./runners/search-symbols.tool"
 import { BaseAgentTool, FullToolParams } from "./base-agent.tool"
@@ -141,7 +140,6 @@ export class ToolExecutor {
 			remove: RemoveTool,
 			rename: RenameTool,
 			bash: BashTool,
-			context_engine_agent: ContextEngineAgentTool,
 		} as const
 
 		const ToolClass = toolMap[params.name as keyof typeof toolMap]

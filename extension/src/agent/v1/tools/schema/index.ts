@@ -20,7 +20,6 @@ import { moveTool } from "./move"
 import { removeTool } from "./remove"
 import { renameTool } from "./rename"
 import { bashTool } from "./Bash"
-import { contextEngineAgentTool } from "./context-engine-agent"
 
 export const tools = [
 	executeCommandTool,
@@ -43,7 +42,6 @@ export const tools = [
 	removeTool,
 	renameTool,
 	bashTool,
-	contextEngineAgentTool,
 ] as const
 
 export type Tool = (typeof tools)[number]
@@ -68,7 +66,6 @@ export {
 	removeTool,
 	renameTool,
 	bashTool,
-	contextEngineAgentTool,
 }
 
 /**
