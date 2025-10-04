@@ -473,88 +473,40 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 	async run(terminal: vscode.Terminal, command: string, terminalId: number) {
 		this.isHot = true
 		try {
-			if (terminal.shellIntegration && terminal.shellIntegration.executeCommand) {
-				const execution = terminal.shellIntegration.executeCommand(command)
-				const stream = execution.read()
-				let isFirstChunk = true
-				let didEmitEmptyLine = false
-
-				const noShellTimeout = setTimeout(() => {
-					this.emit("no_shell_integration")
-					this.emit("continue")
-					this.emit("completed")
-				}, 3000)
-
-				for await (let data of stream) {
-					if (isFirstChunk) {
-						const outputBetweenSequences = data.match(/\]633;C([\s\S]*?)\]633;D/)?.[1] || ""
-						const vscodeSequenceRegex = /\x1b\]633;.[^\x07]*\x07/g
-						const lastMatch = [...data.matchAll(vscodeSequenceRegex)].pop()
-						if (lastMatch?.index !== undefined) {
-							data = data.slice(lastMatch.index + lastMatch[0].length)
-						}
-						if (outputBetweenSequences.trim()) {
-							data = outputBetweenSequences + "\n" + data
-						}
-						data = stripAnsi(data)
-						let lines = data.split(/[\n\r]+/) // Split on both \n and \r
-						if (lines.length > 0) {
-							lines[0] = lines[0].replace(/[^\x20-\x7E]/g, "")
-							if (lines[0].length >= 2 && lines[0][0] === lines[0][1]) {
-								lines[0] = lines[0].slice(1)
-							}
-							lines[0] = lines[0].replace(/^[^a-zA-Z0-9]*/, "")
-						}
-						data = lines.join("\n")
-					} else {
-						data = stripAnsi(data)
-					}
-					clearTimeout(noShellTimeout)
-					if (!data.trim()) {
-						continue
-					}
-					// Remove command echo but preserve line updates
-					const lines = data.split(/[\n\r]+/)
-					const filteredLines = lines.filter((line) => {
-						const trimmedLine = line.trim()
-						return trimmedLine && !command.includes(trimmedLine)
-					})
-					data = filteredLines.join("\n")
-
-					// Handle hot state
-					this.isHot = true
-					if (this.hotTimer) {
-						clearTimeout(this.hotTimer)
-					}
-
-					const compilingMarkers = ["compiling", "building", "bundling"]
-					const markerNullifiers = ["compiled", "success", "finish"]
-					const isCompiling =
-						compilingMarkers.some((m) => data.toLowerCase().includes(m)) &&
-						!markerNullifiers.some((n) => data.toLowerCase().includes(n))
-
-					this.hotTimer = setTimeout(
-						() => {
-							this.isHot = false
-						},
-						isCompiling ? 15000 : 2000
-					)
-
-					if (!didEmitEmptyLine && this.fullOutput.length === 0 && data) {
-						await this.queueOutput("", terminalId)
-						didEmitEmptyLine = true
-					}
-
-					await this.emitIfEol(data, terminalId)
-					isFirstChunk = false
-				}
-
-				await this.processOutputQueue(terminalId)
-				await this.emitRemainingBufferIfListening(terminalId)
-			} else {
-				terminal.sendText(command, true)
-				this.emit("no_shell_integration")
+			// Try to use shell integration if available
+			if (terminal.shellIntegration) {
+				return await this.runWithShellIntegration(terminal, command, terminalId)
 			}
+
+			// Wait for shell integration to activate (up to 5 seconds)
+			const shellIntegrationPromise = new Promise<vscode.TerminalShellIntegration>((resolve, reject) => {
+				const disposable = vscode.window.onDidChangeTerminalShellIntegration?.((event) => {
+					if (event.terminal === terminal && event.shellIntegration) {
+						disposable?.dispose()
+						resolve(event.shellIntegration)
+					}
+				})
+
+				setTimeout(() => {
+					disposable?.dispose()
+					reject(new Error("Shell integration not available"))
+				}, 5000)
+			})
+
+			try {
+				const shellIntegration = await shellIntegrationPromise
+				if (shellIntegration) {
+					return await this.runWithShellIntegration(terminal, command, terminalId, shellIntegration)
+				}
+			} catch (error) {
+				// Shell integration not available, use fallback
+			}
+
+			// Fallback: Use sendText without shell integration
+			terminal.sendText(command, true)
+			this.emit("no_shell_integration")
+			this.emit("continue")
+			this.emit("completed")
 		} catch (error) {
 			if (error instanceof Error) {
 				this.emit("error", error)
@@ -568,6 +520,92 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			this.emit("completed")
 			this.emit("continue")
 		}
+	}
+
+	private async runWithShellIntegration(
+		terminal: vscode.Terminal,
+		command: string,
+		terminalId: number,
+		shellIntegration?: vscode.TerminalShellIntegration
+	) {
+		const integration = shellIntegration || terminal.shellIntegration!
+		const execution = integration.executeCommand(command)
+		const stream = execution.read()
+		let isFirstChunk = true
+		let didEmitEmptyLine = false
+
+		const noShellTimeout = setTimeout(() => {
+			this.emit("no_shell_integration")
+			this.emit("continue")
+			this.emit("completed")
+		}, 3000)
+
+		for await (let data of stream) {
+			if (isFirstChunk) {
+				const outputBetweenSequences = data.match(/\]633;C([\s\S]*?)\]633;D/)?.[1] || ""
+				const vscodeSequenceRegex = /\x1b\]633;.[^\x07]*\x07/g
+				const lastMatch = [...data.matchAll(vscodeSequenceRegex)].pop()
+				if (lastMatch?.index !== undefined) {
+					data = data.slice(lastMatch.index + lastMatch[0].length)
+				}
+				if (outputBetweenSequences.trim()) {
+					data = outputBetweenSequences + "\n" + data
+				}
+				data = stripAnsi(data)
+				let lines = data.split(/[\n\r]+/) // Split on both \n and \r
+				if (lines.length > 0) {
+					lines[0] = lines[0].replace(/[^\x20-\x7E]/g, "")
+					if (lines[0].length >= 2 && lines[0][0] === lines[0][1]) {
+						lines[0] = lines[0].slice(1)
+					}
+					lines[0] = lines[0].replace(/^[^a-zA-Z0-9]*/, "")
+				}
+				data = lines.join("\n")
+			} else {
+				data = stripAnsi(data)
+			}
+			clearTimeout(noShellTimeout)
+			if (!data.trim()) {
+				continue
+			}
+			// Remove command echo but preserve line updates
+			const lines = data.split(/[\n\r]+/)
+			const filteredLines = lines.filter((line) => {
+				const trimmedLine = line.trim()
+				return trimmedLine && !command.includes(trimmedLine)
+			})
+			data = filteredLines.join("\n")
+
+			// Handle hot state
+			this.isHot = true
+			if (this.hotTimer) {
+				clearTimeout(this.hotTimer)
+			}
+
+			const compilingMarkers = ["compiling", "building", "bundling"]
+			const markerNullifiers = ["compiled", "success", "finish"]
+			const isCompiling =
+				compilingMarkers.some((m) => data.toLowerCase().includes(m)) &&
+				!markerNullifiers.some((n) => data.toLowerCase().includes(n))
+
+			this.hotTimer = setTimeout(
+				() => {
+					this.isHot = false
+				},
+				isCompiling ? 15000 : 2000
+			)
+
+			if (!didEmitEmptyLine && this.fullOutput.length === 0 && data) {
+				await this.queueOutput("", terminalId)
+				didEmitEmptyLine = true
+			}
+
+			await this.emitIfEol(data, terminalId)
+			isFirstChunk = false
+		}
+
+		await this.processOutputQueue(terminalId)
+		await this.emitRemainingBufferIfListening(terminalId)
 	}
 
 	// Rest of your existing methods remain the same

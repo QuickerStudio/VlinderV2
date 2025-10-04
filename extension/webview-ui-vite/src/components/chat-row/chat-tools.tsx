@@ -47,7 +47,10 @@ import {
 	MoveTool,
 	RemoveTool,
 	RenameTool,
-	BashTool,
+	GitBashTool,
+	KillBashTool,
+	ReadProgressTool,
+	TerminalTool,
 } from "extension/shared/new-tools"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible"
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
@@ -1232,12 +1235,12 @@ export const RemoveBlock: React.FC<RemoveTool & ToolAddons> = ({
 	)
 }
 
-export const BashBlock: React.FC<
-	BashTool &
+export const GitBashBlock: React.FC<
+	GitBashTool &
 		ToolAddons & {
 			hasNextMessage?: boolean
 		}
-> = ({ command, output, approvalState, tool, ts, ...rest }) => {
+> = ({ command, timeout, captureOutput, output, approvalState, tool, ts, ...rest }) => {
 	const [isCopied, setIsCopied] = useState(false)
 	const handleCopy = () => {
 		if (command) {
@@ -1301,7 +1304,7 @@ export const BashBlock: React.FC<
 			ts={ts}
 			tool={tool}
 			icon={Terminal}
-			title="Bash Command"
+			title="Bash"
 			variant="info"
 			approvalState={approvalState}
 			summary={`$ ${command}`} // Display command in single-row layout
@@ -1349,6 +1352,588 @@ export const BashBlock: React.FC<
 
 				{approvalState === "error" && (
 					<p className="text-xs mt-2 text-destructive">An error occurred while executing the command.</p>
+				)}
+			</div>
+		</ToolBlock>
+	)
+}
+
+export const KillBashBlock: React.FC<
+	KillBashTool &
+		ToolAddons & {
+			hasNextMessage?: boolean
+		}
+> = ({ terminalId, terminalName, lastCommand, isBusy, force, result, approvalState, tool, ts, ...rest }) => {
+	const [isOpen, setIsOpen] = useState(false)
+
+	// 🎯 自定义右侧操作按钮区域
+	const renderActionButtons = () => {
+		if (approvalState === "pending") {
+			return (
+				<div className="flex items-center space-x-2">
+					{/* Kill Terminal 图标按钮 */}
+					<Button
+						size="sm"
+						variant="destructive"
+						className="h-8 w-8 p-0"
+						onClick={() => {
+							// 🎯 使用原生常量和逻辑 - 发送主按钮点击事件
+							vscode.postMessage({
+								type: "askResponse",
+								askResponse: "yesButtonTapped",
+								text: "",
+								images: []
+							})
+						}}
+						title="Kill Terminal"
+					>
+						<XCircle className="h-4 w-4" />
+					</Button>
+
+					{/* Cancel 图标按钮 */}
+					<Button
+						size="sm"
+						variant="outline"
+						className="h-8 w-8 p-0"
+						onClick={() => {
+							// 🎯 使用原生常量和逻辑 - 发送次按钮点击事件
+							vscode.postMessage({
+								type: "askResponse",
+								askResponse: "noButtonTapped",
+								text: "",
+								images: []
+							})
+						}}
+						title="Cancel"
+					>
+						<X className="h-4 w-4" />
+					</Button>
+				</div>
+			)
+		}
+		return null
+	}
+
+	// 构建摘要信息
+	const terminalIdentifier = terminalName || `Terminal #${terminalId}`
+	const summary = `${terminalIdentifier}${force ? " (Force)" : ""}`
+
+	return (
+		<ToolBlock
+			{...rest}
+			ts={ts}
+			tool={tool}
+			icon={XCircle}
+			title="Kill Terminal"
+			variant="destructive"
+			approvalState={approvalState}
+			summary={summary}
+			customActions={renderActionButtons()}
+			collapsible={true}>
+			<div className="space-y-3">
+				{/* Terminal Information */}
+				<div className="space-y-2">
+					{terminalId !== undefined && (
+						<p className="text-xs">
+							<span className="font-semibold">Terminal ID:</span> {terminalId}
+						</p>
+					)}
+					{terminalName && (
+						<p className="text-xs">
+							<span className="font-semibold">Terminal Name:</span> {terminalName}
+						</p>
+					)}
+					{lastCommand && (
+						<div className="text-xs">
+							<span className="font-semibold">Last Command:</span>
+							<div className="bg-muted p-2 rounded font-mono text-xs overflow-x-auto mt-1">
+								<pre className="whitespace-pre-wrap text-pretty break-all">
+									<span className="text-success">$</span> {lastCommand}
+								</pre>
+							</div>
+						</div>
+					)}
+					{isBusy !== undefined && (
+						<p className="text-xs">
+							<span className="font-semibold">Status:</span>{" "}
+							<span className={cn(isBusy ? "text-warning" : "text-muted-foreground")}>
+								{isBusy ? "Busy" : "Idle"}
+							</span>
+						</p>
+					)}
+					{force !== undefined && (
+						<p className="text-xs">
+							<span className="font-semibold">Kill Method:</span>{" "}
+							<span className={cn(force ? "text-destructive font-semibold" : "text-muted-foreground")}>
+								{force ? "Force Kill" : "Graceful Termination"}
+							</span>
+						</p>
+					)}
+				</div>
+
+				{/* Loading State */}
+				{approvalState === "loading" && (
+					<div className="mt-2 flex items-center">
+						<span className="text-xs mr-2">Terminating terminal...</span>
+						<div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-destructive"></div>
+					</div>
+				)}
+
+				{/* Result Output */}
+				{result && (
+					<Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-2">
+						<CollapsibleTrigger asChild>
+							<Button variant="ghost" size="sm" className="flex items-center w-full justify-between">
+								<span>View Details</span>
+								{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+							</Button>
+						</CollapsibleTrigger>
+						<CollapsibleContent className="mt-2">
+							<ScrollArea className="h-[200px] w-full rounded-md border">
+								<div className="bg-secondary/20 p-3 rounded-md text-sm">
+									<pre className="whitespace-pre-wrap text-pretty break-all">{result}</pre>
+								</div>
+								<ScrollBar orientation="vertical" />
+							</ScrollArea>
+						</CollapsibleContent>
+					</Collapsible>
+				)}
+
+				{/* Success State */}
+				{approvalState === "approved" && (
+					<p className="text-xs mt-2 text-success">Terminal terminated successfully.</p>
+				)}
+
+				{/* Error State */}
+				{approvalState === "error" && (
+					<p className="text-xs mt-2 text-destructive">An error occurred while terminating the terminal.</p>
+				)}
+			</div>
+		</ToolBlock>
+	)
+}
+
+export const ReadProgressBlock: React.FC<ReadProgressTool & ToolAddons> = ({
+	terminalId,
+	terminalName,
+	includeFullOutput,
+	result,
+	approvalState,
+	tool,
+	ts,
+	...rest
+}) => {
+	const [isOpen, setIsOpen] = useState(false)
+
+	// 自定义右侧操作按钮区域
+	const renderActionButtons = () => {
+		if (approvalState === "pending") {
+			return (
+				<div className="flex items-center space-x-2">
+					{/* Read Progress 图标按钮 */}
+					<Button
+						size="sm"
+						variant="default"
+						className="h-8 w-8 p-0"
+						onClick={() => {
+							vscode.postMessage({
+								type: "askResponse",
+								askResponse: "yesButtonTapped",
+								text: "",
+								images: []
+							})
+						}}
+						title="Read Progress"
+					>
+						<RefreshCw className="h-4 w-4" />
+					</Button>
+
+					{/* Cancel 图标按钮 */}
+					<Button
+						size="sm"
+						variant="outline"
+						className="h-8 w-8 p-0"
+						onClick={() => {
+							vscode.postMessage({
+								type: "askResponse",
+								askResponse: "noButtonTapped",
+								text: "",
+								images: []
+							})
+						}}
+						title="Cancel"
+					>
+						<X className="h-4 w-4" />
+					</Button>
+				</div>
+			)
+		}
+		return null
+	}
+
+	// 构建摘要信息
+	const terminalIdentifier = terminalName || `Terminal #${terminalId}`
+	const summary = `${terminalIdentifier}${includeFullOutput ? " (Full Output)" : " (Recent)"}`
+
+	return (
+		<ToolBlock
+			{...rest}
+			ts={ts}
+			tool={tool}
+			icon={RefreshCw}
+			title="Read Terminal Progress"
+			variant="info"
+			approvalState={approvalState}
+			summary={summary}
+			customActions={renderActionButtons()}
+			collapsible={true}>
+			<div className="space-y-3">
+				{/* Terminal Information */}
+				<div className="space-y-2">
+					{terminalId !== undefined && (
+						<p className="text-xs">
+							<span className="font-semibold">Terminal ID:</span> {terminalId}
+						</p>
+					)}
+					{terminalName && (
+						<p className="text-xs">
+							<span className="font-semibold">Terminal Name:</span> {terminalName}
+						</p>
+					)}
+					{includeFullOutput !== undefined && (
+						<p className="text-xs">
+							<span className="font-semibold">Output Mode:</span>{" "}
+							<span className={cn(includeFullOutput ? "text-info" : "text-muted-foreground")}>
+								{includeFullOutput ? "Full History" : "Recent Output (Last 20 lines)"}
+							</span>
+						</p>
+					)}
+				</div>
+
+				{/* Loading State */}
+				{approvalState === "loading" && (
+					<div className="mt-2 flex items-center">
+						<span className="text-xs mr-2">Reading terminal progress...</span>
+						<div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-info"></div>
+					</div>
+				)}
+
+				{/* Result Output */}
+				{result && (
+					<Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-2">
+						<CollapsibleTrigger asChild>
+							<Button variant="ghost" size="sm" className="flex items-center w-full justify-between">
+								<span>View Progress Details</span>
+								{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+							</Button>
+						</CollapsibleTrigger>
+						<CollapsibleContent className="mt-2">
+							<ScrollArea className="h-[300px] w-full rounded-md border">
+								<div className="bg-secondary/20 p-3 rounded-md text-sm">
+									<pre className="whitespace-pre-wrap text-pretty break-all">{result}</pre>
+								</div>
+								<ScrollBar orientation="vertical" />
+							</ScrollArea>
+						</CollapsibleContent>
+					</Collapsible>
+				)}
+
+				{/* Success State */}
+				{approvalState === "approved" && (
+					<p className="text-xs mt-2 text-success">Progress read successfully.</p>
+				)}
+
+				{/* Error State */}
+				{approvalState === "error" && (
+					<p className="text-xs mt-2 text-destructive">An error occurred while reading terminal progress.</p>
+				)}
+			</div>
+		</ToolBlock>
+	)
+}
+
+export const TerminalBlock: React.FC<TerminalTool & ToolAddons> = ({
+	command,
+	shell,
+	cwd,
+	timeout,
+	env,
+	captureOutput,
+	interactive,
+	terminalName,
+	reuseTerminal,
+	result,
+	approvalState,
+	tool,
+	ts,
+	...rest
+}) => {
+	const [isOpen, setIsOpen] = useState(false)
+	const [isCopied, setIsCopied] = useState(false)
+
+	// Copy command to clipboard
+	const handleCopy = () => {
+		navigator.clipboard.writeText(command)
+		setIsCopied(true)
+		setTimeout(() => setIsCopied(false), 2000)
+	}
+
+	// Parse XML result to extract structured data
+	const parseResult = (xmlResult: string | undefined) => {
+		if (!xmlResult) return null
+
+		try {
+			const statusMatch = xmlResult.match(/<status>(.*?)<\/status>/)
+			const terminalIdMatch = xmlResult.match(/<id>(.*?)<\/id>/)
+			const terminalNameMatch = xmlResult.match(/<name>(.*?)<\/name>/)
+			const shellMatch = xmlResult.match(/<shell>(.*?)<\/shell>/)
+			const commandMatch = xmlResult.match(/<command>(.*?)<\/command>/)
+			const outputMatch = xmlResult.match(/<output>(.*?)<\/output>/s)
+			const messageMatch = xmlResult.match(/<message>(.*?)<\/message>/)
+			const elapsedMatch = xmlResult.match(/<elapsed>(.*?)<\/elapsed>/)
+			const noteMatch = xmlResult.match(/<note>(.*?)<\/note>/)
+
+			return {
+				status: statusMatch?.[1] || "unknown",
+				terminalId: terminalIdMatch?.[1],
+				terminalName: terminalNameMatch?.[1],
+				shell: shellMatch?.[1],
+				command: commandMatch?.[1],
+				output: outputMatch?.[1]?.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
+				message: messageMatch?.[1],
+				elapsed: elapsedMatch?.[1],
+				note: noteMatch?.[1],
+			}
+		} catch (e) {
+			return null
+		}
+	}
+
+	const parsedResult = parseResult(result)
+
+	// 自定义右侧操作按钮区域
+	const customActions = approvalState === "pending" ? (
+		<div className="flex items-center space-x-2">
+			{/* Execute 图标按钮 */}
+			<Button
+				size="sm"
+				variant="default"
+				className="h-8 w-8 p-0"
+				onClick={() => {
+					vscode.postMessage({
+						type: "askResponse",
+						askResponse: "yesButtonTapped",
+						text: "",
+						images: []
+					})
+				}}
+				title="Execute Command"
+			>
+				<Play className="h-4 w-4" />
+			</Button>
+
+			{/* Cancel 图标按钮 */}
+			<Button
+				size="sm"
+				variant="outline"
+				className="h-8 w-8 p-0"
+				onClick={() => {
+					vscode.postMessage({
+						type: "askResponse",
+						askResponse: "noButtonTapped",
+						text: "",
+						images: []
+					})
+				}}
+				title="Cancel"
+			>
+				<X className="h-4 w-4" />
+			</Button>
+		</div>
+	) : null
+
+	// Helper function to format shell label
+	const getShellLabel = (shellType: string | undefined): string => {
+		if (!shellType || shellType === "auto") return "auto"
+		const shellMap: Record<string, string> = {
+			"powershell": "PowerShell",
+			"git-bash": "Git Bash",
+			"cmd": "CMD",
+			"bash": "bash",
+			"zsh": "zsh",
+			"fish": "fish",
+			"sh": "sh"
+		}
+		return shellMap[shellType] || shellType
+	}
+
+	// Build summary for collapsed state
+	const shellLabel = getShellLabel(shell)
+	const summary = `[${shellLabel}] ${command}`
+
+	return (
+		<ToolBlock
+			icon={Terminal}
+			title="Terminal"
+			variant="default"
+			approvalState={approvalState}
+			customActions={customActions}
+			summary={summary}
+			collapsible={true}
+			tool={tool}
+			ts={ts}
+			{...rest}
+		>
+			<div className="space-y-3">
+				{/* Command with Shell Label */}
+				<div className="space-y-2">
+					<div className="flex items-center space-x-2">
+						<span className="text-sm font-medium text-muted-foreground">Command:</span>
+						<span className="text-xs bg-accent/50 px-2 py-0.5 rounded font-medium">
+							{getShellLabel(shell)}
+						</span>
+						<span className="text-muted-foreground">|</span>
+						<div className="flex-1 bg-muted px-3 py-1.5 rounded font-mono text-xs overflow-x-auto">
+							{command}
+						</div>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-7 w-7 flex-shrink-0"
+							onClick={handleCopy}
+							title="Copy command"
+						>
+							{isCopied ? (
+								<CheckCircle className="h-4 w-4 text-success" />
+							) : (
+								<ClipboardCheck className="h-4 w-4" />
+							)}
+						</Button>
+					</div>
+				</div>
+
+				{/* Working Directory */}
+				{cwd && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Directory:</span>
+						<code className="text-sm bg-muted px-2 py-1 rounded flex-1 break-all">{cwd}</code>
+					</div>
+				)}
+
+				{/* Terminal Name */}
+				{terminalName && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Terminal:</span>
+						<span className="text-sm">{terminalName}</span>
+					</div>
+				)}
+
+				{/* Options */}
+				{(timeout || interactive || reuseTerminal || captureOutput === false) && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Options:</span>
+						<div className="flex flex-wrap gap-2">
+							{timeout && timeout !== 30000 && (
+								<span className="text-xs bg-muted px-2 py-1 rounded">Timeout: {timeout}ms</span>
+							)}
+							{interactive && <span className="text-xs bg-muted px-2 py-1 rounded">Interactive</span>}
+							{reuseTerminal && <span className="text-xs bg-muted px-2 py-1 rounded">Reuse Terminal</span>}
+							{captureOutput === false && <span className="text-xs bg-muted px-2 py-1 rounded">No Capture</span>}
+						</div>
+					</div>
+				)}
+
+				{/* Environment Variables */}
+				{env && Object.keys(env).length > 0 && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Env Vars:</span>
+						<div className="flex flex-wrap gap-1">
+							{Object.entries(env).map(([key, value]) => (
+								<span key={key} className="text-xs bg-muted px-2 py-1 rounded">
+									{key}={value}
+								</span>
+							))}
+						</div>
+					</div>
+				)}
+
+				{/* Status Message */}
+				{parsedResult?.message && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Message:</span>
+						<span className="text-sm">{parsedResult.message}</span>
+					</div>
+				)}
+
+				{/* Execution Time */}
+				{parsedResult?.elapsed && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Elapsed:</span>
+						<span className="text-sm">{parsedResult.elapsed}</span>
+					</div>
+				)}
+
+				{/* Note */}
+				{parsedResult?.note && (
+					<div className="flex items-start space-x-2">
+						<span className="text-sm font-medium text-muted-foreground min-w-[80px]">Note:</span>
+						<span className="text-sm text-yellow-600">{parsedResult.note}</span>
+					</div>
+				)}
+
+				{/* Output */}
+				{parsedResult?.output && (
+					<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+						<CollapsibleTrigger asChild>
+							<Button variant="ghost" size="sm" className="w-full justify-between">
+								<span className="text-sm font-medium">Output</span>
+								{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+							</Button>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<ScrollArea className="h-[300px] w-full rounded-md border">
+								<pre className="p-4 text-xs whitespace-pre-wrap break-words">{parsedResult.output}</pre>
+								<ScrollBar orientation="horizontal" />
+							</ScrollArea>
+						</CollapsibleContent>
+					</Collapsible>
+				)}
+
+				{/* Loading State */}
+				{approvalState === "loading" && !result && (
+					<div className="flex items-center space-x-2 text-sm text-muted-foreground">
+						<LoaderPinwheel className="h-4 w-4 animate-spin" />
+						<span>Executing command...</span>
+					</div>
+				)}
+
+				{/* Status Indicators */}
+				{parsedResult?.status === "success" && (
+					<div className="flex items-center space-x-2 text-sm text-green-600">
+						<CheckCircle className="h-4 w-4" />
+						<span>Command completed successfully</span>
+					</div>
+				)}
+
+				{parsedResult?.status === "timeout" && (
+					<div className="flex items-center space-x-2 text-sm text-yellow-600">
+						<AlertCircle className="h-4 w-4" />
+						<span>Command timed out - may still be running</span>
+					</div>
+				)}
+
+				{parsedResult?.status === "interactive" && (
+					<div className="flex items-center space-x-2 text-sm text-blue-600">
+						<Terminal className="h-4 w-4" />
+						<span>Interactive mode - waiting for user input</span>
+					</div>
+				)}
+
+				{approvalState === "error" && (
+					<div className="flex items-center space-x-2 text-sm text-red-600">
+						<XCircle className="h-4 w-4" />
+						<span>Command execution failed</span>
+					</div>
 				)}
 			</div>
 		</ToolBlock>
@@ -1507,8 +2092,14 @@ export const ToolRenderer: React.FC<{
 			return <RemoveBlock {...tool} />
 		case "rename":
 			return <RenameBlock {...tool} />
-		case "bash":
-			return <BashBlock {...tool} />
+		case "git_bash":
+			return <GitBashBlock {...tool} />
+		case "kill_bash":
+			return <KillBashBlock {...tool} />
+		case "read_progress":
+			return <ReadProgressBlock {...tool} />
+		case "terminal":
+			return <TerminalBlock {...tool} />
 		default:
 			return null
 	}

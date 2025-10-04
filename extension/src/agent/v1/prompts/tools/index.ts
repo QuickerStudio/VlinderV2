@@ -14,7 +14,10 @@ import { spawnAgentPrompt } from "./spawn-agent"
 import { movePrompt } from "./move"
 import { removePrompt } from "./remove"
 import { renamePrompt } from "./rename"
-import { bashToolPrompt } from "./Bash"
+import { gitBashToolPrompt } from "./git-bash"
+import { killBashToolPrompt } from "./kill-bash"
+import { readProgressPrompt } from "./read-progress"
+import { terminalToolPrompt } from "./terminal"
 
 export const toolPrompts = [
 	fileEditorPrompt,
@@ -33,6 +36,9 @@ export const toolPrompts = [
 	movePrompt,
 	removePrompt,
 	renamePrompt,
-	bashToolPrompt,
+	gitBashToolPrompt,
+	killBashToolPrompt,
+	readProgressPrompt,
+	terminalToolPrompt,
 	// submitReviewPrompt,
 ]

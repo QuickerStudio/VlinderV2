@@ -256,9 +256,24 @@ export const useChatMessageHandling = (
 						primaryButtonText: "Rename",
 						secondaryButtonText: "Cancel",
 					},
-					bash: {
+					git_bash: {
 						...baseState,
 						primaryButtonText: "Run Command",
+						secondaryButtonText: "Cancel",
+					},
+					kill_bash: {
+						...baseState,
+						primaryButtonText: "Kill Terminal",
+						secondaryButtonText: "Cancel",
+					},
+					read_progress: {
+						...baseState,
+						primaryButtonText: "Read Progress",
+						secondaryButtonText: "Cancel",
+					},
+					terminal: {
+						...baseState,
+						primaryButtonText: "Execute",
 						secondaryButtonText: "Cancel",
 					}
 				}

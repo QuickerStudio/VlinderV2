@@ -193,12 +193,46 @@ export type RenameTool = {
 	overwrite?: boolean
 }
 
-export type BashTool = {
-	tool: "bash"
+export type GitBashTool = {
+	tool: "git_bash"
 	command: string
+	timeout?: number
+	captureOutput?: boolean
 	output?: string
 }
 
+export type KillBashTool = {
+	tool: "kill_bash"
+	terminalId?: number
+	terminalName?: string
+	lastCommand?: string
+	isBusy?: boolean
+	force?: boolean
+	result?: string
+}
+
+export type ReadProgressTool = {
+	tool: "read_progress"
+	terminalId?: number
+	terminalName?: string
+	includeFullOutput?: boolean
+	result?: string
+}
+
+export type TerminalTool = {
+	tool: "terminal"
+	command: string
+	shell?: "bash" | "powershell" | "cmd" | "git-bash" | "zsh" | "fish" | "sh" | "auto"
+	cwd?: string
+	timeout?: number
+	env?: Record<string, string>
+	captureOutput?: boolean
+	interactive?: boolean
+	terminalName?: string
+	reuseTerminal?: boolean
+	output?: string
+	result?: string
+}
 
 export type ChatTool = (
 	| ExitAgentTool
@@ -223,7 +257,10 @@ export type ChatTool = (
 	| MoveTool
 	| RemoveTool
 	| RenameTool
-	| BashTool
+	| GitBashTool
+	| KillBashTool
+	| ReadProgressTool
+	| TerminalTool
 ) & {
 	ts: number
 	approvalState?: ToolStatus
@@ -244,6 +281,7 @@ export const readOnlyTools: ChatTool["tool"][] = [
 	"web_fetch",
 	"url_screenshot",
 	"add_interested_file",
+	"read_progress",
 ] as const
 
 export const mustRequestApprovalTypes: (ChatTool["tool"] | string)[] = [

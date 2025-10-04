@@ -19,7 +19,10 @@ import { exitAgentTool } from "./agents/agent-exit"
 import { moveTool } from "./move"
 import { removeTool } from "./remove"
 import { renameTool } from "./rename"
-import { bashTool } from "./Bash"
+import { gitBashTool } from "./git-bash"
+import { killBashTool } from "./kill-bash"
+import { readProgressTool } from "./read-progress"
+import { terminalTool } from "./terminal"
 
 export const tools = [
 	executeCommandTool,
@@ -41,7 +44,10 @@ export const tools = [
 	moveTool,
 	removeTool,
 	renameTool,
-	bashTool,
+	gitBashTool,
+	killBashTool,
+	readProgressTool,
+	terminalTool,
 ] as const
 
 export type Tool = (typeof tools)[number]
@@ -65,7 +71,10 @@ export {
 	moveTool,
 	removeTool,
 	renameTool,
-	bashTool,
+	gitBashTool,
+	killBashTool,
+	readProgressTool,
+	terminalTool,
 }
 
 /**

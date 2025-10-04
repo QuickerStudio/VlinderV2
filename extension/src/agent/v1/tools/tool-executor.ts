@@ -21,7 +21,10 @@ import {
 	MoveTool,
 	RemoveTool,
 	RenameTool,
-	BashTool,
+	GitBashTool,
+	KillBashTool,
+	ReadProgressTool,
+	TerminalTool,
 } from "."
 import { SearchSymbolsTool } from "./runners/search-symbols.tool"
 import { BaseAgentTool, FullToolParams } from "./base-agent.tool"
@@ -139,7 +142,10 @@ export class ToolExecutor {
 			move: MoveTool,
 			remove: RemoveTool,
 			rename: RenameTool,
-			bash: BashTool,
+			git_bash: GitBashTool,
+			kill_bash: KillBashTool,
+			read_progress: ReadProgressTool,
+			terminal: TerminalTool,
 		} as const
 
 		const ToolClass = toolMap[params.name as keyof typeof toolMap]

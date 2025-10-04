@@ -26,7 +26,10 @@ import { SubmitReviewToolParams } from "../schema/submit_review"
 import { MoveToolParams } from "../schema/move"
 import { RemoveToolParams } from "../schema/remove"
 import { RenameToolParams } from "../schema/rename"
-import { BashToolParams } from "../schema/Bash"
+import { GitBashToolParams } from "../schema/git-bash"
+import { KillBashToolParams } from "../schema/kill-bash"
+import { ReadProgressToolParams } from "../schema/read-progress"
+import { TerminalToolParams } from "../schema/terminal"
 
 export type UpsertMemoryInput = {
 	milestoneName: string
@@ -59,7 +62,10 @@ export type ToolParams =
 	| MoveToolParams
 	| RemoveToolParams
 	| RenameToolParams
-	| BashToolParams
+	| GitBashToolParams
+	| KillBashToolParams
+	| ReadProgressToolParams
+	| TerminalToolParams
 
 export type ToolName = ToolParams["name"]
 
