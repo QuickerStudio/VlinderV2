@@ -1,5 +1,5 @@
 // schema/search_files.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool search_files
@@ -37,16 +37,20 @@ const schema = z.object({
 	path: z
 		.string()
 		.describe(
-			"The path of the directory to search in (relative to the current working directory). This directory will be recursively searched."
+			'The path of the directory to search in (relative to the current working directory). This directory will be recursively searched.'
 		),
-	regex: z.string().describe("The regular expression pattern to search for. Uses Rust regex syntax."),
+	regex: z
+		.string()
+		.describe(
+			'The regular expression pattern to search for. Uses Rust regex syntax.'
+		),
 	filePattern: z
 		.string()
 		.optional()
 		.describe(
 			"Optional glob pattern to filter files (e.g., '*.ts' for TypeScript files). If not provided, it will search all files (*)."
 		),
-})
+});
 
 const examples = [
 	`<tool name="search_files">
@@ -64,17 +68,17 @@ const examples = [
   <path>/documents</path>
   <regex>TODO</regex>
 </tool>`,
-]
+];
 
 export const searchFilesTool = {
 	schema: {
-		name: "search_files",
+		name: 'search_files',
 		schema,
 	},
 	examples,
-}
+};
 
 export type SearchFilesToolParams = {
-	name: "search_files"
-	input: z.infer<typeof schema>
-}
+	name: 'search_files';
+	input: z.infer<typeof schema>;
+};

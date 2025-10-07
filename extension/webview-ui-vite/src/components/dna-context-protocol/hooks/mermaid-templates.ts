@@ -1,9 +1,9 @@
 export interface MermaidTemplate {
-  id: string
-  name: string
-  description: string
-  code: string
-  category: string
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  category: string;
 }
 
 export const mermaidTemplates: MermaidTemplate[] = [
@@ -17,7 +17,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     B -->|Yes| C[Execute Action A]
     B -->|No| D[Execute Action B]
     C --> E[End]
-    D --> E`
+    D --> E`,
   },
   {
     id: 'flowchart-lr',
@@ -29,7 +29,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     B --> C[Validate]
     C -->|Pass| D[Output]
     C -->|Fail| E[Error Handling]
-    E --> B`
+    E --> B`,
   },
   {
     id: 'sequence-basic',
@@ -44,7 +44,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     A->>B: Send Request
     B->>C: Query Data
     C-->>B: Return Result
-    B-->>A: Response Data`
+    B-->>A: Response Data`,
   },
 
   {
@@ -58,7 +58,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     Processing --> Completed : Process Complete
     Processing --> Failed : Process Failed
     Failed --> Pending : Retry
-    Completed --> [*]`
+    Completed --> [*]`,
   },
   {
     id: 'er-basic',
@@ -80,7 +80,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
         date order_date
     }
 
-    USER ||--o{ ORDER : places`
+    USER ||--o{ ORDER : places`,
   },
 
   {
@@ -92,7 +92,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     "Completed" : 45
     "In Progress" : 30
     "Pending" : 20
-    "Cancelled" : 5`
+    "Cancelled" : 5`,
   },
 
   {
@@ -111,7 +111,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     Auth-->>Server: Token Valid
     Server->>DB: Query Data
     DB-->>Server: Return Data
-    Server-->>Client: 200 OK (Data)`
+    Server-->>Client: 200 OK (Data)`,
   },
   {
     id: 'programming-microservice-arch',
@@ -141,7 +141,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     B --> E
     C --> F
     D --> G
-    E --> H`
+    E --> H`,
   },
   {
     id: 'programming-data-flow',
@@ -154,7 +154,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
     C -- response --> B
     B -- commit --> D(Mutation/Reducer)
     D -- update --> E(State)
-    E -- render --> A`
+    E -- render --> A`,
   },
   {
     id: 'programming-db-schema',
@@ -185,7 +185,7 @@ export const mermaidTemplates: MermaidTemplate[] = [
         int id PK
         string name
         float price
-    }`
+    }`,
   },
   {
     id: 'gantt-basic',
@@ -201,9 +201,9 @@ export const mermaidTemplates: MermaidTemplate[] = [
     section Development Phase
     Frontend Development    :         dev1, after des2, 5d
     Backend Development     :         dev2, after des2, 5d
-    Testing                 :         test1, after dev1, 2d`
-  }
-]
+    Testing                 :         test1, after dev1, 2d`,
+  },
+];
 
 export const templateCategories = [
   'All',
@@ -213,6 +213,5 @@ export const templateCategories = [
   'ER Diagram',
   'Pie Chart',
   'Programming',
-  'Gantt Chart'
-]
-
+  'Gantt Chart',
+];

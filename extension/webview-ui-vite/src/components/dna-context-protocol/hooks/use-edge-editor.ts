@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface EditingEdge {
   id: string;
@@ -24,7 +24,7 @@ export function useEdgeEditor({
 }: EdgeEditorOptions) {
   const [isEdgeEditMode, setIsEdgeEditMode] = useState(false);
   const [editingEdge, setEditingEdge] = useState<EditingEdge | null>(null);
-  const [editLabel, setEditLabel] = useState("");
+  const [editLabel, setEditLabel] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [sourceNode, setSourceNode] = useState<{
@@ -45,28 +45,31 @@ export function useEdgeEditor({
       // 匹配不同类型的连接线标签
       const patterns = [
         // A -->|标签| B
-        new RegExp(`${sourceId}\\s*-->\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*-->\\s*\\|([^|]+)\\|\\s*${targetId}`, 'g'),
         // A <-->|标签| B (双箭头)
-        new RegExp(`${sourceId}\\s*<-->\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*<-->\\s*\\|([^|]+)\\|\\s*${targetId}`, 'g'),
         // A --o|标签| B (圆圈箭头)
-        new RegExp(`${sourceId}\\s*--o\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*--o\\s*\\|([^|]+)\\|\\s*${targetId}`, 'g'),
         // A --x|标签| B (叉号箭头)
-        new RegExp(`${sourceId}\\s*--x\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*--x\\s*\\|([^|]+)\\|\\s*${targetId}`, 'g'),
         // A ----->|标签| B (长箭头)
-        new RegExp(`${sourceId}\\s*----->\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(
+          `${sourceId}\\s*----->\\s*\\|([^|]+)\\|\\s*${targetId}`,
+          'g'
+        ),
         // A --> B : 标签
-        new RegExp(`${sourceId}\\s*-->\\s*${targetId}\\s*:\\s*(.+)`, "g"),
+        new RegExp(`${sourceId}\\s*-->\\s*${targetId}\\s*:\\s*(.+)`, 'g'),
         // A -- 标签 --> B (重要：支持破折号标签格式)
-        new RegExp(`${sourceId}\\s*--\\s*([^-]+)\\s*-->\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*--\\s*([^-]+)\\s*-->\\s*${targetId}`, 'g'),
         // A -.- 标签 -.-> B (虚线)
         new RegExp(
           `${sourceId}\\s*-\\.\\-\\s*([^-]+)\\s*-\\.->\\s*${targetId}`,
-          "g"
+          'g'
         ),
         // A === 标签 ==> B (粗线)
-        new RegExp(`${sourceId}\\s*===\\s*([^=]+)\\s*==>\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*===\\s*([^=]+)\\s*==>\\s*${targetId}`, 'g'),
         // A <===|标签|===> B (双向粗线)
-        new RegExp(`${sourceId}\\s*<===>\\s*\\|([^|]+)\\|\\s*${targetId}`, "g"),
+        new RegExp(`${sourceId}\\s*<===>\\s*\\|([^|]+)\\|\\s*${targetId}`, 'g'),
       ];
 
       for (const pattern of patterns) {
@@ -96,49 +99,49 @@ export function useEdgeEditor({
           {
             search: new RegExp(
               `(${sourceId}\\s*)-->\\s*\\|[^|]+\\|\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1--> $2`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*)<-->\\s*\\|[^|]+\\|\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1<--> $2`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*)--o\\s*\\|[^|]+\\|\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1--o $2`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*)--x\\s*\\|[^|]+\\|\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1--x $2`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*)<===>\\s*\\|[^|]+\\|\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1<===> $2`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*-->\\s*${targetId})\\s*:\\s*.+`,
-              "g"
+              'g'
             ),
             replace: `$1`,
           },
           {
             search: new RegExp(
               `(${sourceId}\\s*)--\\s*[^-]+\\s*-->\\s*(${targetId})`,
-              "g"
+              'g'
             ),
             replace: `$1--> $2`,
           },
@@ -159,70 +162,70 @@ export function useEdgeEditor({
         {
           search: new RegExp(
             `(${sourceId}\\s*-->\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*<-->\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*--o\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*--x\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*----->\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*<===>\\s*\\|)([^|]+)(\\|\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*-->\\s*${targetId}\\s*:\\s*)(.+)`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*--\\s*)([^-]+)(\\s*-->\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*-\\.\\-\\s*)([^-]+)(\\s*-\\.->\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
         {
           search: new RegExp(
             `(${sourceId}\\s*===\\s*)([^=]+)(\\s*==>\\s*${targetId})`,
-            "g"
+            'g'
           ),
           replace: `$1${newLabel}$3`,
         },
@@ -249,8 +252,8 @@ export function useEdgeEditor({
 
     if (newLabel === editingEdge.originalLabel) {
       setEditingEdge(null);
-      setEditLabel("");
-      onStatusMessage("📝 未修改");
+      setEditLabel('');
+      onStatusMessage('📝 未修改');
       return;
     }
 
@@ -264,7 +267,7 @@ export function useEdgeEditor({
 
     onCodeUpdate(updatedCode);
     setEditingEdge(null);
-    setEditLabel("");
+    setEditLabel('');
     onStatusMessage(
       `✅ 已更新连接线: ${editingEdge.sourceId} -> ${editingEdge.targetId}`
     );
@@ -280,8 +283,8 @@ export function useEdgeEditor({
   // 取消编辑
   const cancelEdit = useCallback(() => {
     setEditingEdge(null);
-    setEditLabel("");
-    onStatusMessage("❌ 已取消编辑");
+    setEditLabel('');
+    onStatusMessage('❌ 已取消编辑');
   }, [onStatusMessage]);
 
   // 处理键盘事件
@@ -290,11 +293,11 @@ export function useEdgeEditor({
       if (!editingEdge) return;
 
       // 在编辑模式下，阻止其他键盘处理
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         e.preventDefault();
         e.stopPropagation();
         saveEdit();
-      } else if (e.key === "Escape") {
+      } else if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         cancelEdit();
@@ -310,10 +313,10 @@ export function useEdgeEditor({
       if (!newMode) {
         // 退出编辑模式时清理状态
         setEditingEdge(null);
-        setEditLabel("");
+        setEditLabel('');
       }
       onStatusMessage(
-        newMode ? "🔗 连接线拖拽模式已开启" : "👁️ 连接线拖拽模式已关闭"
+        newMode ? '🔗 连接线拖拽模式已开启' : '👁️ 连接线拖拽模式已关闭'
       );
       return newMode;
     });
@@ -322,13 +325,13 @@ export function useEdgeEditor({
   // 从元素中获取节点ID
   const getNodeIdFromElement = (element: SVGElement): string | null => {
     let current: SVGElement | null = element;
-    while (current && current.tagName !== "svg") {
-      const id = current.getAttribute("id");
+    while (current && current.tagName !== 'svg') {
+      const id = current.getAttribute('id');
       if (
         id &&
-        (current.classList.contains("node") || current.closest(".node"))
+        (current.classList.contains('node') || current.closest('.node'))
       ) {
-        return id.replace(/^flowchart-/, "").replace(/-\d+$/, "");
+        return id.replace(/^flowchart-/, '').replace(/-\d+$/, '');
       }
       current = current.parentElement as SVGElement | null;
     }
@@ -358,7 +361,7 @@ export function useEdgeEditor({
         setSourceNode({ id: nodeId, x, y });
         setConnectionPreview({ x1: x, y1: y, x2: x, y2: y });
         setIsConnecting(true);
-        onStatusMessage("🔗 拖拽以连接节点...");
+        onStatusMessage('🔗 拖拽以连接节点...');
       }
     },
     [isEnabled, isEdgeEditMode, onStatusMessage]
@@ -396,7 +399,7 @@ export function useEdgeEditor({
         onCodeUpdate(mermaidCode + newConnection);
         onStatusMessage(`✅ 已连接 ${sourceNode.id} -> ${targetNodeId}`);
       } else {
-        onStatusMessage("❌ 连接取消");
+        onStatusMessage('❌ 连接取消');
       }
 
       setIsConnecting(false);
@@ -418,15 +421,15 @@ export function useEdgeEditor({
     const container = containerRef.current;
     if (!container || !isEnabled) return;
 
-    container.addEventListener("mousedown", handleMouseDown);
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("keydown", handleKeyDown);
+    container.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      container.removeEventListener("mousedown", handleMouseDown);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("keydown", handleKeyDown);
+      container.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [
     isEnabled,

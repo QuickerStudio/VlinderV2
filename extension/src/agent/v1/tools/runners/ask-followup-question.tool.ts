@@ -1,19 +1,19 @@
-import delay from "delay"
-import { BaseAgentTool } from "../base-agent.tool"
-import { AskFollowupQuestionToolParams } from "../schema/ask_followup_question"
-import dedent from "dedent"
-import { askFollowupQuestionPrompt } from "../../prompts/tools/ask-followup-question"
+import delay from 'delay';
+import { BaseAgentTool } from '../base-agent.tool';
+import { AskFollowupQuestionToolParams } from '../schema/ask_followup_question';
+import dedent from 'dedent';
+import { askFollowupQuestionPrompt } from '../../prompts/tools/ask-followup-question';
 
 export class AskFollowupQuestionTool extends BaseAgentTool<AskFollowupQuestionToolParams> {
 	async execute() {
-		const { input, ask, say, updateAsk } = this.params
-		const question = input.question
+		const { input, ask, say, updateAsk } = this.params;
+		const question = input.question;
 
-		if (question === undefined || question === "") {
+		if (question === undefined || question === '') {
 			await say(
-				"error",
+				'error',
 				"Vlinder tried to use ask_followup_question without value for required parameter 'question'. Retrying..."
-			)
+			);
 			const errorMsg = dedent`<question_tool_response>
 <status>
 	<result>error</result>
@@ -32,28 +32,40 @@ export class AskFollowupQuestionTool extends BaseAgentTool<AskFollowupQuestionTo
 		<note>Follow-up questions require a valid question parameter to proceed</note>
 	</help>
 </error_details>
-</question_tool_response>`
-			return this.toolResponse("error", errorMsg)
+</question_tool_response>`;
+			return this.toolResponse('error', errorMsg);
 		}
 
 		const { text, images } = await ask(
-			"tool",
+			'tool',
 			{
-				tool: { tool: "ask_followup_question", question, approvalState: "pending", ts: this.ts },
+				tool: {
+					tool: 'ask_followup_question',
+					question,
+					approvalState: 'pending',
+					ts: this.ts,
+				},
 			},
 			this.ts,
 			true
-		)
+		);
 		// let the ask update the approval state
 		await updateAsk(
-			"tool",
-			{ tool: { tool: "ask_followup_question", question, approvalState: "approved", ts: this.ts } },
+			'tool',
+			{
+				tool: {
+					tool: 'ask_followup_question',
+					question,
+					approvalState: 'approved',
+					ts: this.ts,
+				},
+			},
 			this.ts
-		)
-		await say("user_feedback", text ?? "", images)
+		);
+		await say('user_feedback', text ?? '', images);
 
 		return this.toolResponse(
-			"success",
+			'success',
 			dedent`<status>
 <result>success</result>
 <operation>ask_followup_question</operation>
@@ -61,9 +73,9 @@ export class AskFollowupQuestionTool extends BaseAgentTool<AskFollowupQuestionTo
 </status>
 <user_feedback>
 YOU MUST TAKE IN ACCOUNT THE FOLLOWING FEEDBACK USER FEEDBACK:
-${text || "please take a look into the images"}
+${text || 'please take a look into the images'}
 </user_feedback>`,
 			images
-		)
+		);
 	}
 }

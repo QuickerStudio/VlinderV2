@@ -1,12 +1,12 @@
 export type WebSearchResponseDto = {
-	content: string
-	type: "start" | "explore" | "summarize" | "end"
-}
+	content: string;
+	type: 'start' | 'explore' | 'summarize' | 'end';
+};
 
 export type AskConsultantResponseDto = {
-	result: string
-}
+	result: string;
+};
 
 export type SummaryResponseDto = {
-	result: string
-}
+	result: string;
+};

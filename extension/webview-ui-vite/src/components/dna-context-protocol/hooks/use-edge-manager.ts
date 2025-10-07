@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from 'react';
 
 interface EdgeManagerOptions {
   mermaidCode: string;
@@ -9,52 +9,68 @@ interface EdgeManagerOptions {
 // Connection line style type definitions
 export const EDGE_TYPES = [
   // 基础箭头样式
-  { value: "-->", label: "-->", description: "Standard arrow" },
-  { value: "-.->", label: "-.->", description: "Dashed arrow" },
-  { value: "==>", label: "==>", description: "Thick arrow" },
-  { value: "-..->", label: "-..->", description: "Dotted arrow" },
+  { value: '-->', label: '-->', description: 'Standard arrow' },
+  { value: '-.->', label: '-.->', description: 'Dashed arrow' },
+  { value: '==>', label: '==>', description: 'Thick arrow' },
+  { value: '-..->', label: '-..->', description: 'Dotted arrow' },
 
   // 无箭头连接线
-  { value: "---", label: "---", description: "Solid line" },
-  { value: "-.-", label: "-.-", description: "Dashed line" },
-  { value: "===", label: "===", description: "Thick line" },
+  { value: '---', label: '---', description: 'Solid line' },
+  { value: '-.-', label: '-.-', description: 'Dashed line' },
+  { value: '===', label: '===', description: 'Thick line' },
 
   // 双向箭头
-  { value: "<-->", label: "<-->", description: "Bidirectional arrow" },
-  { value: "<-.->", label: "<-.->", description: "Bidirectional dashed" },
-  { value: "<===>", label: "<===>", description: "Bidirectional thick" },
+  { value: '<-->', label: '<-->', description: 'Bidirectional arrow' },
+  { value: '<-.->', label: '<-.->', description: 'Bidirectional dashed' },
+  { value: '<===>', label: '<===>', description: 'Bidirectional thick' },
 
   // 圆圈箭头
-  { value: "--o", label: "--o", description: "Circle arrow" },
-  { value: "-.->o", label: "-.->o", description: "Dashed circle arrow" },
-  { value: "o--o", label: "o--o", description: "Double circle" },
+  { value: '--o', label: '--o', description: 'Circle arrow' },
+  { value: '-.->o', label: '-.->o', description: 'Dashed circle arrow' },
+  { value: 'o--o', label: 'o--o', description: 'Double circle' },
 
   // 叉号箭头
-  { value: "--x", label: "--x", description: "Cross arrow" },
-  { value: "-.->x", label: "-.->x", description: "Dashed cross arrow" },
-  { value: "x--x", label: "x--x", description: "Double cross" },
+  { value: '--x', label: '--x', description: 'Cross arrow' },
+  { value: '-.->x', label: '-.->x', description: 'Dashed cross arrow' },
+  { value: 'x--x', label: 'x--x', description: 'Double cross' },
 
   // 不同长度连接线
-  { value: "----", label: "----", description: "Medium line" },
-  { value: "-----", label: "-----", description: "Long line" },
-  { value: "------", label: "------", description: "Extra long line" },
-  { value: "----->", label: "----->", description: "Long arrow" },
-  { value: "------>", label: "------>", description: "Extra long arrow" },
+  { value: '----', label: '----', description: 'Medium line' },
+  { value: '-----', label: '-----', description: 'Long line' },
+  { value: '------', label: '------', description: 'Extra long line' },
+  { value: '----->', label: '----->', description: 'Long arrow' },
+  { value: '------>', label: '------>', description: 'Extra long arrow' },
 
   // 特殊连接线
-  { value: "~~~", label: "~~~", description: "Invisible connection" },
+  { value: '~~~', label: '~~~', description: 'Invisible connection' },
 
   // 自连接
-  { value: "SELF_LOOP", label: "Self Loop", description: "Self connection loop" },
-  { value: "SELF_DOUBLE", label: "Self Double", description: "Self bidirectional" },
+  {
+    value: 'SELF_LOOP',
+    label: 'Self Loop',
+    description: 'Self connection loop',
+  },
+  {
+    value: 'SELF_DOUBLE',
+    label: 'Self Double',
+    description: 'Self bidirectional',
+  },
 
   // 带标签的常用分支
-  { value: "-->|Yes|", label: "-->|Yes|", description: "Yes branch" },
-  { value: "-->|No|", label: "-->|No|", description: "No branch" },
-  { value: "-->|true|", label: "-->|true|", description: "True branch" },
-  { value: "-->|false|", label: "-->|false|", description: "False branch" },
-  { value: "-->|Success|", label: "-->|Success|", description: "Success branch" },
-  { value: "-->|Failure|", label: "-->|Failure|", description: "Failure branch" },
+  { value: '-->|Yes|', label: '-->|Yes|', description: 'Yes branch' },
+  { value: '-->|No|', label: '-->|No|', description: 'No branch' },
+  { value: '-->|true|', label: '-->|true|', description: 'True branch' },
+  { value: '-->|false|', label: '-->|false|', description: 'False branch' },
+  {
+    value: '-->|Success|',
+    label: '-->|Success|',
+    description: 'Success branch',
+  },
+  {
+    value: '-->|Failure|',
+    label: '-->|Failure|',
+    description: 'Failure branch',
+  },
 ] as const;
 
 export function useEdgeManager({
@@ -72,11 +88,11 @@ export function useEdgeManager({
       { lineNumber: number; rawLine: string }
     >();
     const edgeCounters = new Map<string, number>();
-    const lines = mermaidCode.split("\n");
+    const lines = mermaidCode.split('\n');
 
     lines.forEach((line, index) => {
       const trimmedLine = line.trim();
-      const nodePattern = "\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?";
+      const nodePattern = '\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?';
       const captureNodePattern = `(${nodePattern})`;
       const labeledRegex = new RegExp(
         `^${captureNodePattern}\\s*(-->|-.->|==>|-\\.\\.->|<-->|<-.->|<===>|--o|-.->o|--x|-.->x|----->|------>)\\s*\\|([^|]+)\\|\\s*${captureNodePattern}`
@@ -145,9 +161,9 @@ export function useEdgeManager({
         return;
       }
 
-      const lines = mermaidCode.split("\n");
+      const lines = mermaidCode.split('\n');
       lines.splice(edgeToDelete.lineNumber, 1);
-      const updatedCode = lines.join("\n");
+      const updatedCode = lines.join('\n');
 
       onCodeUpdate(updatedCode);
       onStatusMessage(`✅ Connection line deleted: ${edgeId}`);
@@ -163,10 +179,10 @@ export function useEdgeManager({
         return;
       }
 
-      const lines = mermaidCode.split("\n");
+      const lines = mermaidCode.split('\n');
       const currentLine = lines[edgeToChange.lineNumber];
 
-      const nodePattern = "\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?";
+      const nodePattern = '\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?';
       const captureNodePattern = `(${nodePattern})`;
       const labeledRegex = new RegExp(
         `^${captureNodePattern}\\s*(-->|-.->|==>|-\\.\\.->|<-->|<-.->|<===>|--o|-.->o|--x|-.->x|----->|------>)\\s*\\|([^|]+)\\|\\s*${captureNodePattern}`
@@ -210,13 +226,13 @@ export function useEdgeManager({
 
       // Build new connection line
       let newLine;
-      if (newType === "SELF_LOOP") {
+      if (newType === 'SELF_LOOP') {
         // Self loop: A --> A
         newLine = `    ${sourceDef} --> ${sourceDef}`;
-      } else if (newType === "SELF_DOUBLE") {
+      } else if (newType === 'SELF_DOUBLE') {
         // Self double: A <--> A
         newLine = `    ${sourceDef} <--> ${sourceDef}`;
-      } else if (newType.includes("|")) {
+      } else if (newType.includes('|')) {
         // Labeled connection line format: A -->|label| B
         newLine = `    ${sourceDef} ${newType} ${targetDef}`;
       } else {
@@ -228,12 +244,12 @@ export function useEdgeManager({
       lines[edgeToChange.lineNumber] = newLine;
 
       // Special handling for ~~~ (invisible connection)
-      if (newType === "~~~") {
+      if (newType === '~~~') {
         // Calculate the edge index to remove corresponding linkStyle
         let edgeIndex = 0;
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
-          const nodePattern = "\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?";
+          const nodePattern = '\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?';
           const captureNodePattern = `(${nodePattern})`;
 
           // 标准格式
@@ -264,9 +280,11 @@ export function useEdgeManager({
         }
       }
 
-      const updatedCode = lines.join("\n");
+      const updatedCode = lines.join('\n');
       onCodeUpdate(updatedCode);
-      onStatusMessage(`✅ Connection line style changed: ${edgeId} -> ${newType}${newType === "~~~" ? " (color removed for invisibility)" : ""}`);
+      onStatusMessage(
+        `✅ Connection line style changed: ${edgeId} -> ${newType}${newType === '~~~' ? ' (color removed for invisibility)' : ''}`
+      );
     },
     [mermaidCode, onCodeUpdate, onStatusMessage, edgeMap]
   );
@@ -279,12 +297,14 @@ export function useEdgeManager({
         return;
       }
 
-      const lines = mermaidCode.split("\n");
+      const lines = mermaidCode.split('\n');
 
       // Check if the edge is invisible (~~~) - cannot apply color to invisible edges
       const currentLine = lines[edgeToColor.lineNumber];
-      if (currentLine && currentLine.includes("~~~")) {
-        onStatusMessage(`❌ Cannot apply color to invisible connection (~~~): ${edgeId}`);
+      if (currentLine && currentLine.includes('~~~')) {
+        onStatusMessage(
+          `❌ Cannot apply color to invisible connection (~~~): ${edgeId}`
+        );
         return;
       }
 
@@ -295,7 +315,7 @@ export function useEdgeManager({
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        const nodePattern = "\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?";
+        const nodePattern = '\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?';
         const captureNodePattern = `(${nodePattern})`;
 
         // 标准标签格式和普通格式
@@ -338,8 +358,9 @@ export function useEdgeManager({
 
       if (linkStyleExists && linkStyleLineIndex !== -1) {
         // Update existing linkStyle
-        const indentation = lines[linkStyleLineIndex].match(/^\s*/)?.[0] || "";
-        lines[linkStyleLineIndex] = `${indentation}linkStyle ${edgeIndex} ${colorStyle}`;
+        const indentation = lines[linkStyleLineIndex].match(/^\s*/)?.[0] || '';
+        lines[linkStyleLineIndex] =
+          `${indentation}linkStyle ${edgeIndex} ${colorStyle}`;
       } else {
         // Add new linkStyle after all the edges but before any existing linkStyles
         let insertIndex = lines.length;
@@ -347,7 +368,7 @@ export function useEdgeManager({
         // Find the last edge line
         for (let i = lines.length - 1; i >= 0; i--) {
           const line = lines[i].trim();
-          const nodePattern = "\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?";
+          const nodePattern = '\\w+(?:\\[[^\\]]*\\]|\\{[^}]*\\}|\\([^)]*\\))?';
           const captureNodePattern = `(${nodePattern})`;
           const edgeRegex = new RegExp(
             `^${captureNodePattern}\\s*(-->|-.->|==>|-\\.\\.->|---|===|-\\.-|<-->|<-.->|<===>|--o|-.->o|o--o|--x|-.->x|x--x|----|-----|------|----->|------>|~~~)\\s*(?:\\|[^|]*\\|\\s*)?${captureNodePattern}`
@@ -359,12 +380,18 @@ export function useEdgeManager({
           }
         }
 
-        lines.splice(insertIndex, 0, `    linkStyle ${edgeIndex} ${colorStyle}`);
+        lines.splice(
+          insertIndex,
+          0,
+          `    linkStyle ${edgeIndex} ${colorStyle}`
+        );
       }
 
-      const updatedCode = lines.join("\n");
+      const updatedCode = lines.join('\n');
       onCodeUpdate(updatedCode);
-      onStatusMessage(`✅ Connection line color applied: ${edgeId} (index: ${edgeIndex})`);
+      onStatusMessage(
+        `✅ Connection line color applied: ${edgeId} (index: ${edgeIndex})`
+      );
     },
     [mermaidCode, onCodeUpdate, onStatusMessage, edgeMap]
   );

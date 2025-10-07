@@ -1,47 +1,50 @@
 // Import values (classes)
-import { BaseHook } from "./base-hook"
-import { HookManager } from "./hook-manager"
-import { EnhancePromptHook, createEnhancePromptHook } from "./enhance-prompt"
-import { ScholarHook } from "./scholar-hook"
+import { BaseHook } from './base-hook';
+import { HookManager } from './hook-manager';
+import { EnhancePromptHook, createEnhancePromptHook } from './enhance-prompt';
+import { ScholarHook } from './scholar-hook';
 
 // Import types
-import type { HookOptions, HookState } from "./base-hook"
-import type { EnhancePromptOptions } from "./enhance-prompt"
-import type { ScholarHookOptions } from "./scholar-hook"
-import { MainAgent } from "../main-agent"
+import type { HookOptions, HookState } from './base-hook';
+import type { EnhancePromptOptions } from './enhance-prompt';
+import type { ScholarHookOptions } from './scholar-hook';
+import { MainAgent } from '../main-agent';
 
 /**
  * Base hook types and classes for implementing custom hooks
  */
-export { BaseHook }
-export type { HookOptions }
-export type { HookState }
+export { BaseHook };
+export type { HookOptions };
+export type { HookState };
 
 /**
  * Hook manager for registering and managing hooks
  */
-export { HookManager }
+export { HookManager };
 
 /**
  * Enhance prompt hook for improving user prompts
  */
-export { EnhancePromptHook, createEnhancePromptHook }
-export type { EnhancePromptOptions }
+export { EnhancePromptHook, createEnhancePromptHook };
+export type { EnhancePromptOptions };
 
 /**
  * Scholar hook for knowledge extraction and management
  */
-export { ScholarHook }
-export type { ScholarHookOptions }
+export { ScholarHook };
+export type { ScholarHookOptions };
 
 // Hook type for type safety when registering hooks
-export type HookConstructor<T extends BaseHook> = new (options: HookOptions, MainAgent: MainAgent) => T
+export type HookConstructor<T extends BaseHook> = new (
+	options: HookOptions,
+	MainAgent: MainAgent
+) => T;
 
 // Hook registration helper type
 export type RegisteredHook = {
-	name: string
-	hook: BaseHook
-}
+	name: string;
+	hook: BaseHook;
+};
 
 /**
  * Example usage:

@@ -1,12 +1,16 @@
 import React from 'react';
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 
 interface NavButtonProps {
   onClick: () => void;
   icon: string;
   tooltip: string;
   style: React.CSSProperties;
-  onShowTooltip: (text: string, event: React.MouseEvent, align: 'left' | 'center' | 'right') => void;
+  onShowTooltip: (
+    text: string,
+    event: React.MouseEvent,
+    align: 'left' | 'center' | 'right'
+  ) => void;
   onHideTooltip: () => void;
   tooltipAlign?: 'left' | 'center' | 'right';
 }
@@ -18,10 +22,10 @@ const NavButton: React.FC<NavButtonProps> = ({
   style,
   onShowTooltip,
   onHideTooltip,
-  tooltipAlign = 'center'
+  tooltipAlign = 'center',
 }) => (
   <VSCodeButton
-    appearance="icon"
+    appearance='icon'
     onClick={onClick}
     style={style}
     onMouseEnter={(e) => onShowTooltip(tooltip, e, tooltipAlign)}

@@ -1,6 +1,6 @@
-import fs from "fs/promises"
-import * as path from "path"
-import { normalizePathEncodingExport } from "./path-helpers"
+import fs from 'fs/promises';
+import * as path from 'path';
+import { normalizePathEncodingExport } from './path-helpers';
 
 /**
  * Asynchronously creates all non-existing subdirectories for a given file path
@@ -9,30 +9,32 @@ import { normalizePathEncodingExport } from "./path-helpers"
  * @param filePath - The full path to a file.
  * @returns A promise that resolves to an array of newly created directories.
  */
-export async function createDirectoriesForFile(filePath: string): Promise<string[]> {
-	const newDirectories: string[] = []
+export async function createDirectoriesForFile(
+	filePath: string
+): Promise<string[]> {
+	const newDirectories: string[] = [];
 	// Normalize encoding first to handle non-ASCII characters, then normalize path for cross-platform compatibility
-	filePath = normalizePathEncodingExport(filePath)
-	const normalizedFilePath = path.normalize(filePath)
-	const directoryPath = path.dirname(normalizedFilePath)
+	filePath = normalizePathEncodingExport(filePath);
+	const normalizedFilePath = path.normalize(filePath);
+	const directoryPath = path.dirname(normalizedFilePath);
 
-	let currentPath = directoryPath
-	const dirsToCreate: string[] = []
+	let currentPath = directoryPath;
+	const dirsToCreate: string[] = [];
 
 	// Traverse up the directory tree and collect missing directories
 	while (!(await fileExistsAtPath(currentPath))) {
-		dirsToCreate.push(currentPath)
-		currentPath = path.dirname(currentPath)
+		dirsToCreate.push(currentPath);
+		currentPath = path.dirname(currentPath);
 	}
-	console.log("dirsToCreate: ", dirsToCreate)
+	console.log('dirsToCreate: ', dirsToCreate);
 
 	// Create directories from the topmost missing one down to the target directory
 	for (let i = dirsToCreate.length - 1; i >= 0; i--) {
-		await fs.mkdir(dirsToCreate[i])
-		newDirectories.push(dirsToCreate[i])
+		await fs.mkdir(dirsToCreate[i]);
+		newDirectories.push(dirsToCreate[i]);
 	}
 
-	return newDirectories
+	return newDirectories;
 }
 
 /**
@@ -44,10 +46,10 @@ export async function createDirectoriesForFile(filePath: string): Promise<string
 export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 	try {
 		// Normalize encoding to handle non-ASCII characters properly
-		filePath = normalizePathEncodingExport(filePath)
-		await fs.access(filePath)
-		return true
+		filePath = normalizePathEncodingExport(filePath);
+		await fs.access(filePath);
+		return true;
 	} catch {
-		return false
+		return false;
 	}
 }

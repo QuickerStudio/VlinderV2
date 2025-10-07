@@ -1,5 +1,5 @@
 // schema/move.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool move
@@ -52,28 +52,34 @@ import { z } from "zod"
 const schema = z.object({
 	source_path: z
 		.string()
-		.describe("The current path of the file or directory to move (relative to the current working directory)."),
+		.describe(
+			'The current path of the file or directory to move (relative to the current working directory).'
+		),
 	destination_path: z
 		.string()
-		.describe("The new path where the item should be moved to (relative to the current working directory)."),
+		.describe(
+			'The new path where the item should be moved to (relative to the current working directory).'
+		),
 	type: z
-		.enum(["file", "directory", "auto"])
+		.enum(['file', 'directory', 'auto'])
 		.optional()
-		.default("auto")
-		.describe("Specify what type of item to move. 'auto' will automatically detect the type. Default is 'auto'."),
+		.default('auto')
+		.describe(
+			"Specify what type of item to move. 'auto' will automatically detect the type. Default is 'auto'."
+		),
 	overwrite: z
 		.boolean()
 		.optional()
 		.describe(
-			"Whether to overwrite the destination file if it already exists (applies to files only). Default is false."
+			'Whether to overwrite the destination file if it already exists (applies to files only). Default is false.'
 		),
 	merge: z
 		.boolean()
 		.optional()
 		.describe(
-			"Whether to merge with the destination directory if it already exists (applies to directories only). Default is false."
+			'Whether to merge with the destination directory if it already exists (applies to directories only). Default is false.'
 		),
-})
+});
 
 const examples = [
 	`<tool name="move">
@@ -105,21 +111,21 @@ const examples = [
   <source_path>./src/old_components</source_path>
   <destination_path>./src/components</destination_path>
 </tool>`,
-]
+];
 
 export const moveTool = {
 	schema: {
-		name: "move",
+		name: 'move',
 		schema,
 	},
 	examples,
-}
+};
 
 export type MoveToolParams = {
-	name: "move"
-	input: z.infer<typeof schema>
-}
+	name: 'move';
+	input: z.infer<typeof schema>;
+};
 
 // Type aliases for backward compatibility
-export type MoveFileToolParams = MoveToolParams
-export type MoveDirectoryToolParams = MoveToolParams
+export type MoveFileToolParams = MoveToolParams;
+export type MoveDirectoryToolParams = MoveToolParams;

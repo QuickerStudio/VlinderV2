@@ -1,33 +1,39 @@
-import type { Anthropic } from "@anthropic-ai/sdk"
-import { WebSearchResponseDto } from "./interfaces"
-import { SSEResponse } from "../agent/v1/task-executor/task-executor"
-import { ApiHistoryItem } from "../agent/v1/main-agent"
-import { CustomApiHandler } from "./providers/custom-provider"
-import { PROVIDER_IDS, ProviderId } from "./providers/constants"
-import { customProviderSchema, ModelInfo, ProviderConfig } from "./providers/types"
-import { z } from "zod"
+import type { Anthropic } from '@anthropic-ai/sdk';
+import { WebSearchResponseDto } from './interfaces';
+import { SSEResponse } from '../agent/v1/task-executor/task-executor';
+import { ApiHistoryItem } from '../agent/v1/main-agent';
+import { CustomApiHandler } from './providers/custom-provider';
+import { PROVIDER_IDS, ProviderId } from './providers/constants';
+import {
+	customProviderSchema,
+	ModelInfo,
+	ProviderConfig,
+} from './providers/types';
+import { z } from 'zod';
 
 export interface ApiHandlerMessageResponse {
-	message: Anthropic.Messages.Message | Anthropic.Beta.PromptCaching.Messages.PromptCachingBetaMessage
-	errorString?: string
-	errorCode?: number
+	message:
+		| Anthropic.Messages.Message
+		| Anthropic.Beta.PromptCaching.Messages.PromptCachingBetaMessage;
+	errorString?: string;
+	errorCode?: number;
 }
 
 export type ApiConfiguration = {
-	providerId: ProviderId
-	modelId: string
-	apiKey?: string
-}
+	providerId: ProviderId;
+	modelId: string;
+	apiKey?: string;
+};
 
-export type ApiHandlerOptions = Omit<ProviderConfig, "models"> & {
-	model: ProviderConfig["models"][number]
-}
+export type ApiHandlerOptions = Omit<ProviderConfig, 'models'> & {
+	model: ProviderConfig['models'][number];
+};
 
 export type ApiConstructorOptions = {
-	providerSettings: ProviderSettings
-	models: ProviderConfig["models"]
-	model: ProviderConfig["models"][number]
-}
+	providerSettings: ProviderSettings;
+	models: ProviderConfig['models'];
+	model: ProviderConfig['models'][number];
+};
 
 export interface ApiHandler {
 	createMessageStream({
@@ -40,26 +46,35 @@ export interface ApiHandler {
 		appendAfterCacheToLastMessage,
 		updateAfterCacheInserts,
 	}: {
-		systemPrompt: string[]
-		messages: ApiHistoryItem[]
-		abortSignal: AbortSignal | null
-		top_p?: number
-		tempature?: number
-		modelId: string
-		appendAfterCacheToLastMessage?: (lastMessage: Anthropic.Messages.Message) => void
+		systemPrompt: string[];
+		messages: ApiHistoryItem[];
+		abortSignal: AbortSignal | null;
+		top_p?: number;
+		tempature?: number;
+		modelId: string;
+		appendAfterCacheToLastMessage?: (
+			lastMessage: Anthropic.Messages.Message
+		) => void;
 		updateAfterCacheInserts?: (
 			messages: ApiHistoryItem[],
 			systemMessages: Anthropic.Beta.PromptCaching.Messages.PromptCachingBetaTextBlockParam[]
-		) => Promise<[ApiHistoryItem[], Anthropic.Beta.PromptCaching.Messages.PromptCachingBetaTextBlockParam[]]>
-	}): AsyncIterableIterator<SSEResponse>
+		) => Promise<
+			[
+				ApiHistoryItem[],
+				Anthropic.Beta.PromptCaching.Messages.PromptCachingBetaTextBlockParam[],
+			]
+		>;
+	}): AsyncIterableIterator<SSEResponse>;
 
-	get options(): ApiConstructorOptions
+	get options(): ApiConstructorOptions;
 
-	getModel(): { id: string; info: ModelInfo }
+	getModel(): { id: string; info: ModelInfo };
 }
 
-export function buildApiHandler(configuration: ApiConstructorOptions): ApiHandler {
-	return new CustomApiHandler(configuration)
+export function buildApiHandler(
+	configuration: ApiConstructorOptions
+): ApiHandler {
+	return new CustomApiHandler(configuration);
 }
 
 export function withoutImageData(
@@ -70,24 +85,33 @@ export function withoutImageData(
 		| Anthropic.ToolResultBlockParam
 	>
 ): Array<
-	Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam
+	| Anthropic.TextBlockParam
+	| Anthropic.ImageBlockParam
+	| Anthropic.ToolUseBlockParam
+	| Anthropic.ToolResultBlockParam
 > {
 	return userContent.map((part) => {
-		if (part.type === "image") {
-			return { ...part, source: { ...part.source, data: "..." } }
-		} else if (part.type === "tool_result" && typeof part.content !== "string") {
+		if (part.type === 'image') {
+			return { ...part, source: { ...part.source, data: '...' } };
+		} else if (
+			part.type === 'tool_result' &&
+			typeof part.content !== 'string'
+		) {
 			return {
 				...part,
 				content: part.content?.map((contentPart) => {
-					if (contentPart.type === "image") {
-						return { ...contentPart, source: { ...contentPart.source, data: "..." } }
+					if (contentPart.type === 'image') {
+						return {
+							...contentPart,
+							source: { ...contentPart.source, data: '...' },
+						};
 					}
-					return contentPart
+					return contentPart;
 				}),
-			}
+			};
 		}
-		return part
-	})
+		return part;
+	});
 }
 export const providerSettingsSchema = z
 	.object({
@@ -106,6 +130,6 @@ export const providerSettingsSchema = z
 		secretAccessKey: z.string().optional(),
 		sessionToken: z.string().optional(),
 	})
-	.merge(customProviderSchema.partial())
+	.merge(customProviderSchema.partial());
 
-export type ProviderSettings = z.infer<typeof providerSettingsSchema>
+export type ProviderSettings = z.infer<typeof providerSettingsSchema>;

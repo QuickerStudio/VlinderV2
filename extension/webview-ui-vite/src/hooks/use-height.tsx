@@ -1,4 +1,4 @@
-import { useEffect, useState, RefObject } from "react";
+import { useEffect, useState, RefObject } from 'react';
 
 /**
  * Custom hook that calculates and tracks the height of a referenced element
@@ -20,11 +20,11 @@ export function useHeight(ref: RefObject<HTMLElement>): number {
     calculateHeight();
 
     // Recalculate on window resize
-    window.addEventListener("resize", calculateHeight);
+    window.addEventListener('resize', calculateHeight);
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", calculateHeight);
+      window.removeEventListener('resize', calculateHeight);
     };
   }, [ref]);
 

@@ -1,10 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk"
-import { ApiHandler } from "."
-import { ApiHistoryItem, MainAgent } from "../agent/v1/main-agent"
-import { ClaudeMessage } from "../shared/messages/extension-message"
-import { isTextBlock } from "../shared/format-tools"
-import { truncateHalfConversation, estimateTokenCount, smartTruncation } from "../utils/context-managment"
-import { cleanUpMsg, ApiMetrics } from "./api-utils"
+import Anthropic from '@anthropic-ai/sdk';
+import { ApiHandler } from '.';
+import { ApiHistoryItem, MainAgent } from '../agent/v1/main-agent';
+import { ClaudeMessage } from '../shared/messages/extension-message';
+import { isTextBlock } from '../shared/format-tools';
+import {
+	truncateHalfConversation,
+	estimateTokenCount,
+	smartTruncation,
+} from '../utils/context-managment';
+import { cleanUpMsg, ApiMetrics } from './api-utils';
 
 /**
  * @danger This function is mutating the history object
@@ -23,54 +27,61 @@ export async function processConversationHistory(
 	autoSaveToDisk = false
 ): Promise<void> {
 	if (!provider) {
-		return
+		return;
 	}
 	// Ensure the conversation history starts with a USER > ASSISTANT > USER pattern
-	ensureLastMessageFromUser(history)
+	ensureLastMessageFromUser(history);
 
-	const lastMessage = history[history.length - 1]
-	const isLastMessageFromUser = lastMessage?.role === "user"
+	const lastMessage = history[history.length - 1];
+	const isLastMessageFromUser = lastMessage?.role === 'user';
 
 	// Convert string content to structured content if needed
-	if (typeof lastMessage?.content === "string") {
+	if (typeof lastMessage?.content === 'string') {
 		lastMessage.content = [
 			{
-				type: "text",
+				type: 'text',
 				text: lastMessage.content,
 			},
-		]
+		];
 	}
 
 	// Cleanup last message
-	const cleanedLastMessage = cleanUpMsg(lastMessage)
+	const cleanedLastMessage = cleanUpMsg(lastMessage);
 	if (cleanedLastMessage === null) {
 		lastMessage.content = [
 			{
-				type: "text",
-				text: "Please continue the conversation.",
+				type: 'text',
+				text: 'Please continue the conversation.',
 			},
-		]
-		history[history.length - 1] = lastMessage
+		];
+		history[history.length - 1] = lastMessage;
 	} else {
-		history[history.length - 1] = cleanedLastMessage
+		history[history.length - 1] = cleanedLastMessage;
 	}
 
 	// interleave the messages
-	const interleavedMessages = interleaveMessages(history)
-	history.length = 0
+	const interleavedMessages = interleaveMessages(history);
+	history.length = 0;
 	// set the interleaved messages back to the history
-	history.push(...interleavedMessages)
+	history.push(...interleavedMessages);
 
 	// remove duplicate the content
-	const dedupedMessages = removeDuplicateContent(history)
-	history.length = 0
-	history.push(...dedupedMessages)
+	const dedupedMessages = removeDuplicateContent(history);
+	history.length = 0;
+	history.push(...dedupedMessages);
 
 	// Enrich conversation history with environment details and critical messages
-	await enrichConversationHistory(provider, history, isLastMessageFromUser, criticalMsg)
+	await enrichConversationHistory(
+		provider,
+		history,
+		isLastMessageFromUser,
+		criticalMsg
+	);
 
 	if (autoSaveToDisk) {
-		await provider.getStateManager().apiHistoryManager.overwriteApiConversationHistory(history)
+		await provider
+			.getStateManager()
+			.apiHistoryManager.overwriteApiConversationHistory(history);
 	}
 }
 
@@ -78,26 +89,29 @@ export async function processConversationHistory(
  * remove duplicate content from the messages
  */
 export function removeDuplicateContent(messages: Anthropic.MessageParam[]) {
-	const newMessages: Anthropic.MessageParam[] = []
+	const newMessages: Anthropic.MessageParam[] = [];
 	for (const message of messages) {
 		if (Array.isArray(message.content)) {
 			const newContent = message.content.filter((content, index, self) => {
 				if (isTextBlock(content)) {
-					return self.findIndex((c) => isTextBlock(c) && c.text === content.text) === index
+					return (
+						self.findIndex((c) => isTextBlock(c) && c.text === content.text) ===
+						index
+					);
 				}
-				return true
-			})
+				return true;
+			});
 			if (newContent.length > 0) {
 				newMessages.push({
 					...message,
 					content: newContent,
-				})
+				});
 			}
 		} else {
-			newMessages.push(message)
+			newMessages.push(message);
 		}
 	}
-	return newMessages
+	return newMessages;
 }
 
 /**
@@ -105,24 +119,24 @@ export function removeDuplicateContent(messages: Anthropic.MessageParam[]) {
  * it interleave the user/assistant messages so we always have user > assistant > user > assistant > ...
  */
 function interleaveMessages(messages: Anthropic.MessageParam[]) {
-	const interleavedMessages: Anthropic.MessageParam[] = []
-	let lastRole = "user"
+	const interleavedMessages: Anthropic.MessageParam[] = [];
+	let lastRole = 'user';
 	for (const message of messages) {
 		if (message.role === lastRole) {
-			const lastInterleavedMessage = interleavedMessages.at(-1)
+			const lastInterleavedMessage = interleavedMessages.at(-1);
 			if (
 				lastInterleavedMessage &&
 				Array.isArray(lastInterleavedMessage.content) &&
 				Array.isArray(message.content)
 			) {
-				lastInterleavedMessage.content.push(...message.content)
-				continue
+				lastInterleavedMessage.content.push(...message.content);
+				continue;
 			}
 		}
-		interleavedMessages.push(message)
-		lastRole = message.role
+		interleavedMessages.push(message);
+		lastRole = message.role;
 	}
-	return interleavedMessages
+	return interleavedMessages;
 }
 
 /**
@@ -138,15 +152,16 @@ export async function enrichConversationHistory(
 	criticalMsg?: string
 ): Promise<void> {
 	if (!provider) {
-		return
+		return;
 	}
 
 	// Add critical messages every 8th message or the first message
-	const userMessageCount = (history.length + 1) / 2
-	const shouldAddCriticalMsg = userMessageCount === 1 || userMessageCount % 8 === 0
+	const userMessageCount = (history.length + 1) / 2;
+	const shouldAddCriticalMsg =
+		userMessageCount === 1 || userMessageCount % 8 === 0;
 
-	const lastMessage = history[history.length - 1]
-	const isFirstMessage = history.length === 1
+	const lastMessage = history[history.length - 1];
+	const isFirstMessage = history.length === 1;
 
 	if (
 		isLastMessageFromUser &&
@@ -155,32 +170,37 @@ export async function enrichConversationHistory(
 		criticalMsg
 	) {
 		lastMessage.content.push({
-			type: "text",
+			type: 'text',
 			text: criticalMsg,
-		})
+		});
 	}
 
-	const environmentDetails = await provider.getEnvironmentDetails(isFirstMessage)
+	const environmentDetails =
+		await provider.getEnvironmentDetails(isFirstMessage);
 
-	if (Array.isArray(lastMessage.content) && environmentDetails && isLastMessageFromUser) {
+	if (
+		Array.isArray(lastMessage.content) &&
+		environmentDetails &&
+		isLastMessageFromUser
+	) {
 		const hasEnvDetails = lastMessage.content.some(
 			(block) =>
 				isTextBlock(block) &&
-				block.text.includes("<environment_details>") &&
-				block.text.includes("</environment_details>")
-		)
+				block.text.includes('<environment_details>') &&
+				block.text.includes('</environment_details>')
+		);
 
 		if (!hasEnvDetails) {
 			lastMessage.content.push({
-				type: "text",
+				type: 'text',
 				text: environmentDetails,
-			})
+			});
 		}
 	}
 
 	// now we want to reverse of the content so the first content is the last message (gives it better attention)
 	if (Array.isArray(lastMessage.content)) {
-		lastMessage.content.reverse()
+		lastMessage.content.reverse();
 	}
 }
 
@@ -196,79 +216,113 @@ export async function enrichConversationHistory(
 export async function manageContextWindow(
 	provider: MainAgent,
 	api: ApiHandler,
-	logFn: (status: "info" | "debug" | "error", message: string, ...args: any[]) => void
-): Promise<"chat_finished" | "compressed"> {
+	logFn: (
+		status: 'info' | 'debug' | 'error',
+		message: string,
+		...args: any[]
+	) => void
+): Promise<'chat_finished' | 'compressed'> {
 	if (!provider) {
-		throw new Error("Provider reference has been garbage collected")
+		throw new Error('Provider reference has been garbage collected');
 	}
-	const history = provider.getStateManager().state.apiConversationHistory || []
-	const isAutoSummaryEnabled = provider.getStateManager().autoSummarize ?? false
+	const history = provider.getStateManager().state.apiConversationHistory || [];
+	const isAutoSummaryEnabled =
+		provider.getStateManager().autoSummarize ?? false;
 
 	if (!isAutoSummaryEnabled) {
-		const updatedMessages = truncateHalfConversation(history)
-		await provider.getStateManager().apiHistoryManager.overwriteApiConversationHistory(updatedMessages)
-		return "compressed"
+		const updatedMessages = truncateHalfConversation(history);
+		await provider
+			.getStateManager()
+			.apiHistoryManager.overwriteApiConversationHistory(updatedMessages);
+		return 'compressed';
 	}
 
-	const contextWindow = api.getModel().info.contextWindow
-	const terminalCompressionThreshold = await provider.getStateManager().state.terminalCompressionThreshold
-	
+	const contextWindow = api.getModel().info.contextWindow;
+	const terminalCompressionThreshold =
+		await provider.getStateManager().state.terminalCompressionThreshold;
+
 	// Notify webview that compression started
-	const extensionProvider = provider.providerRef.deref()
+	const extensionProvider = provider.providerRef.deref();
 	if (extensionProvider) {
 		extensionProvider.getWebviewManager().postMessageToWebview({
-			type: "compressionStatus",
-			status: "started"
-		})
+			type: 'compressionStatus',
+			status: 'started',
+		});
 	}
-	
-	const compressedMessages = await smartTruncation(history, api, terminalCompressionThreshold)
-	const newMemorySize = compressedMessages.reduce((acc, message) => acc + estimateTokenCount(message), 0)
-	
+
+	const compressedMessages = await smartTruncation(
+		history,
+		api,
+		terminalCompressionThreshold
+	);
+	const newMemorySize = compressedMessages.reduce(
+		(acc, message) => acc + estimateTokenCount(message),
+		0
+	);
+
 	// Notify webview that compression completed
 	if (extensionProvider) {
 		extensionProvider.getWebviewManager().postMessageToWebview({
-			type: "compressionStatus",
-			status: "completed"
-		})
+			type: 'compressionStatus',
+			status: 'completed',
+		});
 	}
-	logFn("info", `API History before compression:`, history)
-	logFn("info", `Total tokens after compression: ${newMemorySize}`)
-	const maxPostTruncationTokens = contextWindow - 13_314 + api.getModel().info.maxTokens
-	await provider.getStateManager().apiHistoryManager.overwriteApiConversationHistory(compressedMessages)
+	logFn('info', `API History before compression:`, history);
+	logFn('info', `Total tokens after compression: ${newMemorySize}`);
+	const maxPostTruncationTokens =
+		contextWindow - 13_314 + api.getModel().info.maxTokens;
+	await provider
+		.getStateManager()
+		.apiHistoryManager.overwriteApiConversationHistory(compressedMessages);
 
 	if (newMemorySize >= maxPostTruncationTokens) {
-		console.error(`We have reached the maximum token limit: ${newMemorySize}`)
+		console.error(`We have reached the maximum token limit: ${newMemorySize}`);
 		// reached the end
-		provider?.taskExecutor.say("chat_finished", undefined, undefined, undefined, {
-			isSubMessage: true,
-		})
-		provider.taskExecutor.blockTask()
-		return "chat_finished"
+		provider?.taskExecutor.say(
+			'chat_finished',
+			undefined,
+			undefined,
+			undefined,
+			{
+				isSubMessage: true,
+			}
+		);
+		provider.taskExecutor.blockTask();
+		return 'chat_finished';
 	}
 
-	await provider.taskExecutor.say("chat_truncated", undefined, undefined, undefined, {
-		isSubMessage: true,
-	})
-	return "compressed"
+	await provider.taskExecutor.say(
+		'chat_truncated',
+		undefined,
+		undefined,
+		undefined,
+		{
+			isSubMessage: true,
+		}
+	);
+	return 'compressed';
 }
 
 function ensureLastMessageFromUser(history: Anthropic.MessageParam[]) {
 	// check if the conversation includes user messages
-	const hasUserMessage = history.some((message) => message.role === "user")
+	const hasUserMessage = history.some((message) => message.role === 'user');
 	if (!hasUserMessage) {
-		throw new Error("Conversation history must include at least one user message")
+		throw new Error(
+			'Conversation history must include at least one user message'
+		);
 	}
 	// checks if the last message if from the user
-	const lastMessage = history[history.length - 1]
-	if (lastMessage.role === "assistant") {
+	const lastMessage = history[history.length - 1];
+	if (lastMessage.role === 'assistant') {
 		// we are going to remove the assistant reply
-		history.pop()
+		history.pop();
 		// now we check if the following message is from the user or assistant
-		const nextMessage = history[history.length - 1]
-		if (nextMessage.role === "assistant") {
+		const nextMessage = history[history.length - 1];
+		if (nextMessage.role === 'assistant') {
 			// this should never happen so we throw an error
-			throw new Error("Conversation history must be in the USER > ASSISTANT > USER pattern")
+			throw new Error(
+				'Conversation history must be in the USER > ASSISTANT > USER pattern'
+			);
 		}
 	}
 }

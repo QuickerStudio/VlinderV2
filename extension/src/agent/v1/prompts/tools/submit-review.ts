@@ -1,13 +1,14 @@
-import { ToolPromptSchema } from "../utils/utils"
+import { ToolPromptSchema } from '../utils/utils';
 
 export const submitReviewPrompt: ToolPromptSchema = {
-	name: "submit_review",
+	name: 'submit_review',
 	description:
-		"Submit the current progress for review with questions or concerns. This tool helps maintain quality by prompting for self-review and gathering feedback on specific aspects of the implementation. Use this when you want to validate your approach or get feedback on specific decisions.",
+		'Submit the current progress for review with questions or concerns. This tool helps maintain quality by prompting for self-review and gathering feedback on specific aspects of the implementation. Use this when you want to validate your approach or get feedback on specific decisions.',
 	parameters: {
 		review: {
-			type: "string",
-			description: "A formatted string containing the progress summary, questions, and next steps in XML format",
+			type: 'string',
+			description:
+				'A formatted string containing the progress summary, questions, and next steps in XML format',
 			required: true,
 		},
 	},
@@ -16,7 +17,7 @@ export const submitReviewPrompt: ToolPromptSchema = {
 	],
 	examples: [
 		{
-			description: "Submit a review with progress, questions, and next steps",
+			description: 'Submit a review with progress, questions, and next steps',
 			output: `<submit_review>
 <review>
 <progress_summary>Implemented basic user profile management with data validation endpoints</progress_summary>
@@ -29,4 +30,4 @@ export const submitReviewPrompt: ToolPromptSchema = {
 </submit_review>`,
 		},
 	],
-}
+};

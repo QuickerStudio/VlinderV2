@@ -1,24 +1,24 @@
-import { ToolPromptSchema } from "../utils/utils"
+import { ToolPromptSchema } from '../utils/utils';
 
 export const exitAgentPrompt: ToolPromptSchema = {
-	name: "exit_agent",
+	name: 'exit_agent',
 	description:
-		"Exit the current task and return the final result of the task, the result must be detailed and to the point, this result will be passed back to the user for further processing or task completion.",
+		'Exit the current task and return the final result of the task, the result must be detailed and to the point, this result will be passed back to the user for further processing or task completion.',
 	parameters: {
 		result: {
-			type: "string",
+			type: 'string',
 			description:
-				"The final result or output of the agent operation. This should be a string describing what was accomplished or any relevant output that should be passed back to the user.",
+				'The final result or output of the agent operation. This should be a string describing what was accomplished or any relevant output that should be passed back to the user.',
 			required: true,
 		},
 	},
 	capabilities: [
-		"Once you finish and finalized the task, you can use exit_agent tool to exit the current task and return the final result of the task, the result must be detailed and to the point, this result will be passed back to the user for further processing or task completion, this tool is used to let the user know that the task is completed and the final result is ready for review.",
+		'Once you finish and finalized the task, you can use exit_agent tool to exit the current task and return the final result of the task, the result must be detailed and to the point, this result will be passed back to the user for further processing or task completion, this tool is used to let the user know that the task is completed and the final result is ready for review.',
 	],
 	examples: [
 		{
 			description:
-				"Exit a task after completing the user request to install the dependencies and run the unit tests",
+				'Exit a task after completing the user request to install the dependencies and run the unit tests',
 			output: `<exit_agent>
 <result>
 I've installed the following dependencies:
@@ -37,4 +37,4 @@ FAIL src/components/Profile.test.js - Expected 1, received 0 (I think this is re
 </exit_agent>`,
 		},
 	],
-}
+};

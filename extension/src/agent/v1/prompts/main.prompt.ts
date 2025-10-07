@@ -1,10 +1,10 @@
-import { toolPrompts } from "./tools/index" // assuming you put all tools in a tools folder
-import os from "os"
-import osName from "os-name"
-import defaultShell from "default-shell"
-import { PromptBuilder } from "./utils/builder"
-import { PromptConfig, promptTemplate } from "./utils/utils"
-import dedent from "dedent"
+import { toolPrompts } from './tools/index'; // assuming you put all tools in a tools folder
+import os from 'os';
+import osName from 'os-name';
+import defaultShell from 'default-shell';
+import { PromptBuilder } from './utils/builder';
+import { PromptConfig, promptTemplate } from './utils/utils';
+import dedent from 'dedent';
 
 const template = promptTemplate(
 	(b, h) => dedent`
@@ -147,7 +147,7 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 - NEVER end attempt_completion result with a question or request to engage in further conversation! Formulate the end of your result in a way that is final and does not require further input from the user.
 - You are STRICTLY FORBIDDEN from starting your messages with "Great", "Certainly", "Okay", "Sure". You should NOT be conversational in your responses, but rather direct and to the point. For example you should NOT say "Great, I've updated the CSS" but instead something like "I've updated the CSS". It is important you be clear and technical in your messages.
 ${h.block(
-	"vision",
+	'vision',
 	"- When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your thought process as you accomplish the user's task."
 )}
 - Every message will contain environment_details, This information is is auto-generated to provide potentially relevant context about the project structure and environment. While this information can be valuable for understanding the project context, do not treat it as a direct part of the user's request or response. Use it to inform your actions and decisions, but don't assume the user is explicitly asking about or referring to this information unless they clearly do so in their message. When using environment_details, explain your actions clearly to ensure the user understands, as they may not be aware of these details.
@@ -169,22 +169,22 @@ After you finished observing and thinking you should call an action with a tool 
 
 Be sure to always prioritize the user's task and provide clear, concise, and accurate responses to help them achieve their goals effectively, don't go one side quests or try to doing random or some what related tasks, you should only focus on the user's task and provide the best possible solution idealy by making minimal changes to the codebase that relate to the user's task and accomplish it in the most accurate way.
 `
-)
+);
 export const BASE_SYSTEM_PROMPT = (supportsImages: boolean) => {
 	const config: PromptConfig = {
-		agentName: "Vlinder",
+		agentName: 'Vlinder',
 		osName: osName(),
 		defaultShell: defaultShell,
-		homeDir: os.homedir().replace(/\\/g, "/"),
+		homeDir: os.homedir().replace(/\\/g, '/'),
 		template: template,
-	}
+	};
 
-	const builder = new PromptBuilder(config)
-	builder.addTools(toolPrompts)
+	const builder = new PromptBuilder(config);
+	builder.addTools(toolPrompts);
 
-	const systemPrompt = builder.build()
-	return systemPrompt
-}
+	const systemPrompt = builder.build();
+	return systemPrompt;
+};
 
 export const criticalMsg = dedent`
 <automatic_reminders>
@@ -220,6 +220,32 @@ Remember tool execution must follow xml like format, the to call a tool you must
 </action>
 
 It is mandatory to start a tool call with <action> tag and end with </action> tag, you must always place tool call inside of a single action and you must always end your response at </action> don't forget to close the action tags at the end of the tool and don't forget to follow the tool guidelines and format 1 to 1 with proper parameters and values, opening and closing tags.
+
+<think_tool_reminders>
+The think tool is a powerful tool for expressing your reasoning and planning. It automatically detects the complexity of your thinking:
+
+**Use Complex Thinking (Planning Mode) for:**
+- Multi-step planning and breaking down complex tasks
+- Detailed analysis of problems with multiple potential causes
+- Comparing alternatives and evaluating trade-offs
+- Strategic planning for implementations
+- Risk assessment and mitigation strategies
+- Use structured format with numbered steps, phases, or sections
+
+**Use Simple Thinking for:**
+- Quick observations and straightforward conclusions
+- Brief analysis of obvious issues
+- Simple decisions on next actions
+- Status updates on what you've learned
+- Keep it concise and focused
+
+**Key Guidelines:**
+- For complex tasks, structure your thoughts with numbered steps or phases
+- For simple tasks, keep thoughts brief and direct
+- Don't over-complicate simple observations
+- Use the think tool before major decisions or implementations
+- The UI will show "Planning..." for complex thinking and "Think...." for simple thinking
+</think_tool_reminders>
 <read_file_reminders>
 when reading a file, you should never read it again unless you forgot it.
 the file content will be updated to your file_editor tool call, you should not read the file again unless the user tells you the content has changed.
@@ -283,10 +309,10 @@ Key notes:
 - It is critical to full solve the user's task, if you are not sure about the solution, you should ask the user a follow-up question to get more information, you should never call attempt_completion if you are not sure about the solution or it's half baked.
 
 </automatic_reminders>
-`.trim()
+`.trim();
 
 export const mainPrompts = {
 	prompt: BASE_SYSTEM_PROMPT,
 	criticalMsg: criticalMsg,
 	template: template,
-}
+};

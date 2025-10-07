@@ -1,5 +1,5 @@
 // schema/add_interested_file.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool add_interested_file
@@ -32,9 +32,15 @@ import { z } from "zod"
  * ```
  */
 const schema = z.object({
-	path: z.string().describe("The path of the file to track (relative to the current working directory)"),
-	why: z.string().describe("Explanation of why this file is relevant to the current task"),
-})
+	path: z
+		.string()
+		.describe(
+			'The path of the file to track (relative to the current working directory)'
+		),
+	why: z
+		.string()
+		.describe('Explanation of why this file is relevant to the current task'),
+});
 
 const examples = [
 	`<tool name="add_interested_file">
@@ -51,17 +57,17 @@ const examples = [
   <path>/src/utils/validation.ts</path>
   <why>Contains validation helpers that will be reused in the new feature</why>
 </tool>`,
-]
+];
 
 export const addInterestedFileTool = {
 	schema: {
-		name: "add_interested_file",
+		name: 'add_interested_file',
 		schema,
 	},
 	examples,
-}
+};
 
 export type AddInterestedFileToolParams = {
-	name: "add_interested_file"
-	input: z.infer<typeof schema>
-}
+	name: 'add_interested_file';
+	input: z.infer<typeof schema>;
+};

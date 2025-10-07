@@ -1,13 +1,13 @@
-import dedent from "dedent"
-import { ToolPromptSchema } from "../utils/utils"
+import dedent from 'dedent';
+import { ToolPromptSchema } from '../utils/utils';
 
 export const fileEditorPrompt: ToolPromptSchema = {
-	name: "file_editor",
+	name: 'file_editor',
 	description:
-		"Requests to create or edit a specific file. Edit mode for precise changes, whole_write mode for full content replacement",
+		'Requests to create or edit a specific file. Edit mode for precise changes, whole_write mode for full content replacement',
 	parameters: {
 		mode: {
-			type: "string",
+			type: 'string',
 			description: dedent`
         The operation mode of the file_editor tool:
         - "whole_write": create or completely rewrite a file.
@@ -15,12 +15,13 @@ export const fileEditorPrompt: ToolPromptSchema = {
 			required: true,
 		},
 		path: {
-			type: "string",
-			description: "The relative path (from {{cwd}}) of the file to edit, create, or roll back.",
+			type: 'string',
+			description:
+				'The relative path (from {{cwd}}) of the file to edit, create, or roll back.',
 			required: true,
 		},
 		commit_message: {
-			type: "string",
+			type: 'string',
 			description: dedent`
         A short, concise commit message describing the change. 
         Required if "mode" is "whole_write" or "edit".
@@ -29,7 +30,7 @@ export const fileEditorPrompt: ToolPromptSchema = {
 			required: 'Required for "whole_write" or "edit" mode',
 		},
 		diff: {
-			type: "string",
+			type: 'string',
 			description: dedent`it is required to make a precise diff if "mode" is "edit".
 Must use standard Git conflict merge format as follows:
 <<<<<<< HEAD
@@ -43,7 +44,7 @@ The content between <<<<<<< HEAD and ======= must exactly match the file's curre
 			required: 'Required for "edit" mode',
 		},
 		content: {
-			type: "string",
+			type: 'string',
 			description: dedent`
         Required if "mode" is "whole_write". This must be the complete, final content of the file with no placeholders or omissions. It overwrites the file if it already exists or creates a new one if it does not.`,
 			required: 'Required for "whole_write" mode',
@@ -90,7 +91,7 @@ The content between <<<<<<< HEAD and ======= must exactly match the file's curre
   `,
 	examples: [
 		{
-			description: "Adding Imports and Removing a Function",
+			description: 'Adding Imports and Removing a Function',
 			thinking: `<thinking>I have the latest file content... I will add an import and rename a function using 2 conflict blocks.</thinking>`,
 			output: `<file_editor>
 <path>myapp/utility.py</path>
@@ -111,7 +112,7 @@ The content between <<<<<<< HEAD and ======= must exactly match the file's curre
 </file_editor>`,
 		},
 		{
-			description: "Multiple Related Changes in One Go",
+			description: 'Multiple Related Changes in One Go',
 			thinking: `<thinking>I must update a function call and add logging in the same file with 1 conflict block.</thinking>`,
 			output: `<file_editor>
 <path>mathweb/flask/app.py</path>
@@ -127,7 +128,7 @@ The content between <<<<<<< HEAD and ======= must exactly match the file's curre
 </file_editor>`,
 		},
 		{
-			description: "Creating a New File or Rewriting an Existing File",
+			description: 'Creating a New File or Rewriting an Existing File',
 			thinking: `<thinking>I need to create or overwrite a React component file with entire content.</thinking>`,
 			output: `<file_editor>
 <path>src/components/UserProfile.tsx</path>
@@ -139,4 +140,4 @@ The content between <<<<<<< HEAD and ======= must exactly match the file's curre
 </file_editor>`,
 		},
 	],
-}
+};

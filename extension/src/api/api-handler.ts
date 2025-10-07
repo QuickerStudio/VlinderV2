@@ -4,64 +4,71 @@
  * token calculations, and conversation history management.
  */
 
-import axios from "axios"
-import { ApiConstructorOptions, ApiHandler, buildApiHandler } from "."
-import { ExtensionProvider } from "../providers/extension-provider"
-import { amplitudeTracker } from "../utils/amplitude"
-import { ApiHistoryItem } from "../agent/v1/types"
-import { isTextBlock } from "../agent/v1/utils"
-import { SSEResponse } from "../agent/v1/task-executor/task-executor"
+import axios from 'axios';
+import { ApiConstructorOptions, ApiHandler, buildApiHandler } from '.';
+import { ExtensionProvider } from '../providers/extension-provider';
+import { amplitudeTracker } from '../utils/amplitude';
+import { ApiHistoryItem } from '../agent/v1/types';
+import { isTextBlock } from '../agent/v1/utils';
+import { SSEResponse } from '../agent/v1/task-executor/task-executor';
 
 // Simple error class to replace VlinderError
 export class ApiError extends Error {
-	public errorCode: number
+	public errorCode: number;
 	constructor({ code }: { code: number }) {
-		super(`API Error: ${code}`)
-		this.name = "ApiError"
-		this.errorCode = code
+		super(`API Error: ${code}`);
+		this.name = 'ApiError';
+		this.errorCode = code;
 	}
 }
 
 // Imported utility functions
-import { processConversationHistory, manageContextWindow } from "./conversation-utils"
-import { mainPrompts } from "../agent/v1/prompts/main.prompt"
-import dedent from "dedent"
-import { PromptStateManager } from "../providers/state/prompt-state-manager"
-import { buildPromptFromTemplate } from "../agent/v1/prompts/utils/utils"
-import { CustomProviderError } from "./providers/custom-provider"
-import { getCurrentApiSettings } from "../router/routes/provider-router"
-import { GlobalStateManager } from "../providers/state/global-state-manager"
+import {
+	processConversationHistory,
+	manageContextWindow,
+} from './conversation-utils';
+import { mainPrompts } from '../agent/v1/prompts/main.prompt';
+import dedent from 'dedent';
+import { PromptStateManager } from '../providers/state/prompt-state-manager';
+import { buildPromptFromTemplate } from '../agent/v1/prompts/utils/utils';
+import { CustomProviderError } from './providers/custom-provider';
+import { getCurrentApiSettings } from '../router/routes/provider-router';
+import { GlobalStateManager } from '../providers/state/global-state-manager';
 
 /**
  * Main API Manager class that handles all Claude API interactions
  */
 export class ApiManager {
-	private api: ApiHandler
-	private customInstructions?: string
-	private providerRef: WeakRef<ExtensionProvider>
+	private api: ApiHandler;
+	private customInstructions?: string;
+	private providerRef: WeakRef<ExtensionProvider>;
 
-	constructor(provider: ExtensionProvider, apiConfiguration: ApiConstructorOptions, customInstructions?: string) {
-		this.api = buildApiHandler(apiConfiguration)
-		this.customInstructions = customInstructions
-		this.providerRef = new WeakRef(provider)
+	constructor(
+		provider: ExtensionProvider,
+		apiConfiguration: ApiConstructorOptions,
+		customInstructions?: string
+	) {
+		this.api = buildApiHandler(apiConfiguration);
+		this.customInstructions = customInstructions;
+		this.providerRef = new WeakRef(provider);
 	}
 
 	/**
 	 * Returns the current API handler instance
 	 */
 	public getApi(): ApiHandler {
-		return this.api
+		return this.api;
 	}
 
 	/**
 	 * Returns the current model ID
 	 */
 	public getModelId(): string {
-		return this.api.getModel().id
+		return this.api.getModel().id;
 	}
 
 	public getModelInfo() {
-		return this.api.getModel().info
+		return this.api.getModel().info;
 	}
 
 	/**
@@ -69,29 +76,31 @@ export class ApiManager {
 	 * @param apiConfiguration - New API configuration
 	 */
 	public updateApi(apiConfiguration: ApiConstructorOptions): void {
-		this.log("info", "Updating API configuration", apiConfiguration)
-		this.api = buildApiHandler(apiConfiguration)
+		this.log('info', 'Updating API configuration', apiConfiguration);
+		this.api = buildApiHandler(apiConfiguration);
 	}
 
 	/**
 	 * pulls the latest API from the secure store and rebuilds the API handler
 	 */
 	public async pullLatestApi() {
-		this.log("info", "Pulling latest API configuration")
-		const settings = await getCurrentApiSettings()
-		
+		this.log('info', 'Pulling latest API configuration');
+		const settings = await getCurrentApiSettings();
+
 		if (!settings) {
-			throw new Error("No API settings available")
+			throw new Error('No API settings available');
 		}
 
-		this.api = buildApiHandler(settings)
+		this.api = buildApiHandler(settings);
 	}
 	/**
 	 * Updates custom instructions for the API
 	 * @param customInstructions - New custom instructions
 	 */
-	public updateCustomInstructions(customInstructions: string | undefined): void {
-		this.customInstructions = customInstructions
+	public updateCustomInstructions(
+		customInstructions: string | undefined
+	): void {
+		this.customInstructions = customInstructions;
 	}
 
 	/**
@@ -100,7 +109,7 @@ export class ApiManager {
 	 */
 	public formatCustomInstructions(): string | undefined {
 		if (!this.customInstructions?.trim()) {
-			return undefined
+			return undefined;
 		}
 
 		return dedent`====
@@ -108,7 +117,7 @@ USER'S CUSTOM INSTRUCTIONS
 The following additional instructions are provided by the user. They should be followed and given precedence in case of conflicts with previous instructions.
 
 ${this.customInstructions.trim()}
-`
+`;
 	}
 
 	/**
@@ -125,40 +134,46 @@ ${this.customInstructions.trim()}
 		apiConversationHistory: ApiHistoryItem[],
 		abortController: AbortController,
 		customSystemPrompt?: {
-			automaticReminders?: string
-			systemPrompt?: string | []
-			customInstructions?: string
-			useExistingSystemPrompt?: (systemPrompt: string[]) => string[]
+			automaticReminders?: string;
+			systemPrompt?: string | [];
+			customInstructions?: string;
+			useExistingSystemPrompt?: (systemPrompt: string[]) => string[];
 		},
 		skipProcessing = false,
-		postProcessConversationCallback?: (apiConversationHistory: ApiHistoryItem[]) => Promise<void>,
+		postProcessConversationCallback?: (
+			apiConversationHistory: ApiHistoryItem[]
+		) => Promise<void>,
 		silent = false
 	): AsyncGenerator<SSEResponse> {
-		const provider = this.providerRef.deref()
+		const provider = this.providerRef.deref();
 		if (!provider || !provider.MainAgent) {
-			throw new Error("Provider reference has been garbage collected")
+			throw new Error('Provider reference has been garbage collected');
 		}
 		// first pull latest api settings
-		await this.pullLatestApi()
+		await this.pullLatestApi();
 
-		const executeRequest = async ({ shouldResetContext }: { shouldResetContext: boolean }) => {
+		const executeRequest = async ({
+			shouldResetContext,
+		}: {
+			shouldResetContext: boolean;
+		}) => {
 			let conversationHistory =
 				apiConversationHistory ??
-				(await provider.MainAgent?.getStateManager().apiHistoryManager.getSavedApiConversationHistory())
+				(await provider.MainAgent?.getStateManager().apiHistoryManager.getSavedApiConversationHistory());
 
-			let baseSystem = [await this.getCurrentPrompts()]
+			let baseSystem = [await this.getCurrentPrompts()];
 			if (customSystemPrompt?.systemPrompt) {
 				if (Array.isArray(customSystemPrompt.systemPrompt)) {
-					baseSystem = customSystemPrompt.systemPrompt
+					baseSystem = customSystemPrompt.systemPrompt;
 				} else {
-					baseSystem = [customSystemPrompt.systemPrompt]
+					baseSystem = [customSystemPrompt.systemPrompt];
 				}
 			}
-			if (this.getModelId() === "claude-3-7-sonnet-20250219") {
-				const globalStateManager = GlobalStateManager.getInstance()
-				const thinking = globalStateManager.getGlobalState("thinking")
+			if (this.getModelId() === 'claude-3-7-sonnet-20250219') {
+				const globalStateManager = GlobalStateManager.getInstance();
+				const thinking = globalStateManager.getGlobalState('thinking');
 				// we are going to add more critical instructions to the system prompt
-				if (thinking?.type === "enabled") {
+				if (thinking?.type === 'enabled') {
 					baseSystem.push(`<critical_instructions>
 				In every message output you should document your current step, finalized reasoning and thoughts, your next steps, and any other relevant information.
 				This must be present in every message and should be concise and to the point.
@@ -171,196 +186,213 @@ ${this.customInstructions.trim()}
 				Your plan of execution, what you are going to do next, and how you are going to do it.
 				</execution_plan>
 				<action>...the best tool call for this step...</action>
-				</critical_instructions>`)
+				</critical_instructions>`);
 				}
 			}
 
-			let criticalMsg: string | undefined = mainPrompts.criticalMsg
+			let criticalMsg: string | undefined = mainPrompts.criticalMsg;
 			if (customSystemPrompt) {
-				criticalMsg = customSystemPrompt.automaticReminders
+				criticalMsg = customSystemPrompt.automaticReminders;
 			}
 			// we want to replace {{task}} with the current task if it exists in the critical message
 			if (criticalMsg) {
-				const firstRequest = conversationHistory.at(0)?.content
+				const firstRequest = conversationHistory.at(0)?.content;
 				const firstRequestTextBlock = Array.isArray(firstRequest)
 					? firstRequest.find(isTextBlock)?.text
-					: firstRequest
-				if (firstRequestTextBlock && criticalMsg.includes("{{task}}")) {
-					criticalMsg = criticalMsg.replace("{{task}}", this.getTaskText(firstRequestTextBlock))
+					: firstRequest;
+				if (firstRequestTextBlock && criticalMsg.includes('{{task}}')) {
+					criticalMsg = criticalMsg.replace(
+						'{{task}}',
+						this.getTaskText(firstRequestTextBlock)
+					);
 				}
 			}
 			if (shouldResetContext) {
 				// Compress the context and retry
-				const result = await manageContextWindow(provider.MainAgent!, this.api, (s, msg, ...args) =>
-					this.log(s, msg, ...args)
-				)
-				if (result === "chat_finished") {
-					throw new ApiError({ code: 413 })
+				const result = await manageContextWindow(
+					provider.MainAgent!,
+					this.api,
+					(s, msg, ...args) => this.log(s, msg, ...args)
+				);
+				if (result === 'chat_finished') {
+					throw new ApiError({ code: 413 });
 				}
 			}
 			// Process conversation history using our external utility
 			if (!skipProcessing) {
-				await processConversationHistory(provider.MainAgent!, conversationHistory, criticalMsg, true)
+				await processConversationHistory(
+					provider.MainAgent!,
+					conversationHistory,
+					criticalMsg,
+					true
+				);
 			} else {
-				this.log("info", `Skipping conversation history processing`)
+				this.log('info', `Skipping conversation history processing`);
 			}
 			if (postProcessConversationCallback) {
-				await postProcessConversationCallback?.(conversationHistory)
+				await postProcessConversationCallback?.(conversationHistory);
 			}
 			// log the last 2 messages
-			this.log("info", `Last 2 messages:`, conversationHistory.slice(-2))
+			this.log('info', `Last 2 messages:`, conversationHistory.slice(-2));
 
-			let systemPrompt = [...baseSystem]
-			const customInstructions = this.formatCustomInstructions()
+			let systemPrompt = [...baseSystem];
+			const customInstructions = this.formatCustomInstructions();
 			if (customInstructions && !customSystemPrompt?.customInstructions) {
-				systemPrompt.push(customInstructions)
+				systemPrompt.push(customInstructions);
 			}
 			if (customSystemPrompt?.customInstructions) {
-				systemPrompt.push(customSystemPrompt.customInstructions)
+				systemPrompt.push(customSystemPrompt.customInstructions);
 			}
 			if (customSystemPrompt?.useExistingSystemPrompt) {
-				systemPrompt = customSystemPrompt.useExistingSystemPrompt(systemPrompt)
+				systemPrompt = customSystemPrompt.useExistingSystemPrompt(systemPrompt);
 			}
 			const stream = await this.api.createMessageStream({
 				systemPrompt,
 				messages: conversationHistory,
 				modelId: this.getModelId(),
 				abortSignal: abortController?.signal,
-			})
+			});
 
-			return stream
-		}
+			return stream;
+		};
 
-		let lastMessageAt = 0
-		const TIMEOUT_MS = 60_000 // 60 seconds
-		const STARTED_AT = Date.now()
+		let lastMessageAt = 0;
+		const TIMEOUT_MS = 60_000; // 60 seconds
+		const STARTED_AT = Date.now();
 		const checkInactivity = setInterval(() => {
-			const timeSinceLastMessage = Date.now() - lastMessageAt
-			const timeSinceStart = Date.now() - STARTED_AT
+			const timeSinceLastMessage = Date.now() - lastMessageAt;
+			const timeSinceStart = Date.now() - STARTED_AT;
 			if (lastMessageAt === 0 && timeSinceStart > TIMEOUT_MS) {
-				abortController?.abort(new Error("Provider request timed out, no response received"))
-				return
+				abortController?.abort(
+					new Error('Provider request timed out, no response received')
+				);
+				return;
 			}
 			if (lastMessageAt > 0 && timeSinceLastMessage > TIMEOUT_MS) {
-				abortController?.abort(new Error("Provider request timed out because of inactivity"))
-				return
+				abortController?.abort(
+					new Error('Provider request timed out because of inactivity')
+				);
+				return;
 			}
-		}, 1000)
+		}, 1000);
 
 		try {
 			// Update the UI with the request running state (only if not silent)
 			if (!silent) {
 				this.providerRef.deref()?.getWebviewManager().postMessageToWebview({
-					type: "requestStatus",
+					type: 'requestStatus',
 					isRunning: true,
-				})
+				});
 			}
 
-			let retryAttempt = 0
-			const MAX_RETRIES = 5
-			let shouldResetContext = false
+			let retryAttempt = 0;
+			const MAX_RETRIES = 5;
+			let shouldResetContext = false;
 
 			while (retryAttempt <= MAX_RETRIES) {
 				try {
 					const stream = await executeRequest({
 						shouldResetContext,
-					})
+					});
 					if (shouldResetContext) {
-						shouldResetContext = false
+						shouldResetContext = false;
 					}
 
 					for await (const chunk of stream) {
 						if (chunk.code === 1) {
-							clearInterval(checkInactivity)
-							yield* this.processStreamChunk(chunk)
-							return
+							clearInterval(checkInactivity);
+							yield* this.processStreamChunk(chunk);
+							return;
 						}
 
 						if (
 							(chunk.code === -1 &&
 								[
-									"maximum context length",
-									"context window exceeded",
-									"context window size exceeded",
-									"reduce length of context",
-									"reduce length of the messages",
-									"prompt is too long",
-									"Payload Too Large",
-									"exceed context limit:",
-									"exceed context limit",
+									'maximum context length',
+									'context window exceeded',
+									'context window size exceeded',
+									'reduce length of context',
+									'reduce length of the messages',
+									'prompt is too long',
+									'Payload Too Large',
+									'exceed context limit:',
+									'exceed context limit',
 								].some((msg) => chunk.body.msg?.includes(msg))) ||
 							shouldResetContext
 						) {
-							shouldResetContext = true
+							shouldResetContext = true;
 							// clear the interval
-							clearInterval(checkInactivity)
-							retryAttempt++
-							break // Break the for loop to retry with compressed history
+							clearInterval(checkInactivity);
+							retryAttempt++;
+							break; // Break the for loop to retry with compressed history
 						}
 
-						lastMessageAt = Date.now()
-						yield* this.processStreamChunk(chunk)
+						lastMessageAt = Date.now();
+						yield* this.processStreamChunk(chunk);
 					}
 				} catch (streamError) {
 					if (streamError instanceof CustomProviderError) {
 						// requires manual intervention
-						retryAttempt = MAX_RETRIES
-						throw streamError
+						retryAttempt = MAX_RETRIES;
+						throw streamError;
 					}
-					if (streamError instanceof Error && streamError.message === "aborted") {
-						throw new ApiError({ code: 1 })
+					if (
+						streamError instanceof Error &&
+						streamError.message === 'aborted'
+					) {
+						throw new ApiError({ code: 1 });
 					}
 					if (axios.isAxiosError(streamError)) {
 						if (streamError.response?.status === 401) {
-							throw new ApiError({ code: 401 })
+							throw new ApiError({ code: 401 });
 						}
 						if (streamError.response?.status === 402) {
-							throw new ApiError({ code: 402 })
+							throw new ApiError({ code: 402 });
 						}
 						// convert axios error to api error
-						throw new ApiError({ code: streamError.response?.status || 500 })
+						throw new ApiError({ code: streamError.response?.status || 500 });
 					}
 					if (
 						[
-							"maximum context length",
-							"context window exceeded",
-							"context window size exceeded",
-							"reduce length of context",
-							"reduce length of the messages",
-							"prompt is too long",
-							"Payload Too Large",
-							"exceed context limit:",
-							"exceed context limit",
+							'maximum context length',
+							'context window exceeded',
+							'context window size exceeded',
+							'reduce length of context',
+							'reduce length of the messages',
+							'prompt is too long',
+							'Payload Too Large',
+							'exceed context limit:',
+							'exceed context limit',
 						].some((msg) => `${streamError}`.includes(msg))
 					) {
-						shouldResetContext = true
+						shouldResetContext = true;
 						// we should continue to retry
-						continue
+						continue;
 					}
 
-					throw streamError
+					throw streamError;
 				}
 			}
 
 			// If we've exhausted all retries
-			throw new Error("Maximum retry attempts reached for context compression")
+			throw new Error('Maximum retry attempts reached for context compression');
 		} catch (error) {
-			if (error instanceof Error && error.message === "aborted") {
-				error = new ApiError({ code: 1 })
+			if (error instanceof Error && error.message === 'aborted') {
+				error = new ApiError({ code: 1 });
 			}
 			if (axios.isAxiosError(error)) {
-				error = new ApiError({ code: 1 })
+				error = new ApiError({ code: 1 });
 			}
-			this.handleStreamError(error)
+			this.handleStreamError(error);
 		} finally {
 			// Update the UI with the request running state (only if not silent)
 			if (!silent) {
 				this.providerRef.deref()?.getWebviewManager().postMessageToWebview({
-					type: "requestStatus",
+					type: 'requestStatus',
 					isRunning: false,
-				})
+				});
 			}
-			clearInterval(checkInactivity)
+			clearInterval(checkInactivity);
 		}
 	}
 
@@ -368,16 +400,18 @@ ${this.customInstructions.trim()}
 	 * Processes stream chunks from the API response
 	 * @param chunk - SSE response chunk
 	 */
-	private async *processStreamChunk(chunk: SSEResponse): AsyncGenerator<SSEResponse> {
+	private async *processStreamChunk(
+		chunk: SSEResponse
+	): AsyncGenerator<SSEResponse> {
 		switch (chunk.code) {
 			case 0:
-				break
+				break;
 			case 1:
-				await this.handleFinalResponse(chunk)
-				break
+				await this.handleFinalResponse(chunk);
+				break;
 		}
 
-		yield chunk
+		yield chunk;
 	}
 
 	/**
@@ -385,21 +419,26 @@ ${this.customInstructions.trim()}
 	 * @param chunk - Final response chunk
 	 */
 	private async handleFinalResponse(chunk: SSEResponse): Promise<void> {
-		const provider = this.providerRef.deref()
+		const provider = this.providerRef.deref();
 		if (!provider) {
-			return
+			return;
 		}
 		if (chunk.code !== 1) {
-			return
+			return;
 		}
-		const response = chunk?.body?.anthropic
-		const apiCost = chunk.body.internal.cost
-		const { input_tokens, output_tokens } = response.usage
-		const { cache_creation_input_tokens, cache_read_input_tokens } = response.usage as any
+		const response = chunk?.body?.anthropic;
+		const apiCost = chunk.body.internal.cost;
+		const { input_tokens, output_tokens } = response.usage;
+		const { cache_creation_input_tokens, cache_read_input_tokens } =
+			response.usage as any;
 
 		// Track metrics
-		const state = await provider.getState()
-		this.log("info", `API REQUEST FINISHED: ${apiCost} tokens used data:`, response)
+		const state = await provider.getState();
+		this.log(
+			'info',
+			`API REQUEST FINISHED: ${apiCost} tokens used data:`,
+			response
+		);
 
 		amplitudeTracker.taskRequest({
 			taskId: state?.currentTaskId!,
@@ -409,16 +448,16 @@ ${this.customInstructions.trim()}
 			cacheReadTokens: cache_read_input_tokens,
 			cacheWriteTokens: cache_creation_input_tokens,
 			outputTokens: output_tokens,
-			provider: this.getModelInfo().provider ?? "Vlinder",
-		})
+			provider: this.getModelInfo().provider ?? 'Vlinder',
+		});
 	}
 
 	private async getCurrentPrompts() {
 		const template =
 			(await PromptStateManager.getInstance().getActivePromptContent()) ??
-			PromptStateManager.getInstance().getDefaultPromptContent()
+			PromptStateManager.getInstance().getDefaultPromptContent();
 
-		return await buildPromptFromTemplate(template)
+		return await buildPromptFromTemplate(template);
 	}
 
 	/**
@@ -427,26 +466,30 @@ ${this.customInstructions.trim()}
 	 */
 	private handleStreamError(error: unknown): never {
 		if (error instanceof ApiError) {
-			console.error("Vlinder API request failed", error)
-			throw error
+			console.error('Vlinder API request failed', error);
+			throw error;
 		}
 
 		if (axios.isAxiosError(error)) {
 			throw new ApiError({
 				code: error.response?.status || 500,
-			})
+			});
 		}
 
-		throw error
+		throw error;
 	}
 
 	private getTaskText(str: string) {
-		const [taskStartTag, taskEndTag] = ["<task>", "</task>"]
-		const [start, end] = [str.indexOf(taskStartTag), str.indexOf(taskEndTag)]
-		return str.slice(start + taskStartTag.length, end)
+		const [taskStartTag, taskEndTag] = ['<task>', '</task>'];
+		const [start, end] = [str.indexOf(taskStartTag), str.indexOf(taskEndTag)];
+		return str.slice(start + taskStartTag.length, end);
 	}
 
-	private log(status: "info" | "debug" | "error", message: string, ...args: any[]) {
-		console[status](`[API Manager] ${message}`, ...args)
+	private log(
+		status: 'info' | 'debug' | 'error',
+		message: string,
+		...args: any[]
+	) {
+		console[status](`[API Manager] ${message}`, ...args);
 	}
 }

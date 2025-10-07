@@ -1,1 +1,1 @@
-export { default } from "./dna-context-protocol"
+export { default } from './dna-context-protocol';

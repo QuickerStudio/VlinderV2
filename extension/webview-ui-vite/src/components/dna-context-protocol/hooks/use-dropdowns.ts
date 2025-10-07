@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export function useDropdowns() {
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
@@ -11,26 +11,26 @@ export function useDropdowns() {
       const target = event.target as Element;
       if (
         showTemplateDropdown &&
-        !target.closest(".template-dropdown-container")
+        !target.closest('.template-dropdown-container')
       ) {
         setShowTemplateDropdown(false);
       }
       if (
         showSaveFilesDropdown &&
-        !target.closest(".save-files-dropdown-container")
+        !target.closest('.save-files-dropdown-container')
       ) {
         setShowSaveFilesDropdown(false);
       }
       if (
         showSnippetsDropdown &&
-        !target.closest(".snippets-dropdown-container")
+        !target.closest('.snippets-dropdown-container')
       ) {
         setShowSnippetsDropdown(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showTemplateDropdown, showSaveFilesDropdown, showSnippetsDropdown]);
 
   return {

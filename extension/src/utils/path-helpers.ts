@@ -1,5 +1,5 @@
-import { access, accessSync } from "fs"
-import * as path from "path"
+import { access, accessSync } from 'fs';
+import * as path from 'path';
 
 /*
 The Node.js 'path' module resolves and normalizes paths differently depending on the platform:
@@ -35,37 +35,37 @@ function normalizePathEncoding(p: string): string {
 	try {
 		// Ensure the path is properly encoded as UTF-8
 		// This helps handle paths with non-English characters
-		const buffer = Buffer.from(p, 'utf8')
-		return buffer.toString('utf8')
+		const buffer = Buffer.from(p, 'utf8');
+		return buffer.toString('utf8');
 	} catch (error) {
 		// If encoding fails, return the original path
-		console.warn('Path encoding normalization failed:', error)
-		return p
+		console.warn('Path encoding normalization failed:', error);
+		return p;
 	}
 }
 
 function toPosixPath(p: string) {
 	// Extended-Length Paths in Windows start with "\\?\" to allow longer paths and bypass usual parsing. If detected, we return the path unmodified to maintain functionality, as altering these paths could break their special syntax.
-	const isExtendedLengthPath = p.startsWith("\\\\?\\")
+	const isExtendedLengthPath = p.startsWith('\\\\?\\');
 
 	if (isExtendedLengthPath) {
-		return normalizePathEncoding(p)
+		return normalizePathEncoding(p);
 	}
 
-	return normalizePathEncoding(p.replace(/\\/g, "/"))
+	return normalizePathEncoding(p.replace(/\\/g, '/'));
 }
 
 // Declaration merging allows us to add a new method to the String type
 // You must import this file in your entry point (extension.ts) to have access at runtime
 declare global {
 	interface String {
-		toPosix(): string
+		toPosix(): string;
 	}
 }
 
 String.prototype.toPosix = function (this: string): string {
-	return toPosixPath(this)
-}
+	return toPosixPath(this);
+};
 
 /**
  * Export the path encoding normalization function for external use
@@ -73,42 +73,45 @@ String.prototype.toPosix = function (this: string): string {
  * @returns Normalized path string with proper UTF-8 encoding
  */
 export function normalizePathEncodingExport(pathStr: string): string {
-	return normalizePathEncoding(pathStr)
+	return normalizePathEncoding(pathStr);
 }
 
 // Safe path comparison that works across different platforms
 export function arePathsEqual(path1?: string, path2?: string): boolean {
 	if (!path1 && !path2) {
-		return true
+		return true;
 	}
 	if (!path1 || !path2) {
-		return false
+		return false;
 	}
 
 	// Normalize encoding before path normalization
-	path1 = normalizePathEncoding(path1)
-	path2 = normalizePathEncoding(path2)
+	path1 = normalizePathEncoding(path1);
+	path2 = normalizePathEncoding(path2);
 
-	path1 = normalizePath(path1)
-	path2 = normalizePath(path2)
+	path1 = normalizePath(path1);
+	path2 = normalizePath(path2);
 
-	if (process.platform === "win32") {
-		return path1.toLowerCase() === path2.toLowerCase()
+	if (process.platform === 'win32') {
+		return path1.toLowerCase() === path2.toLowerCase();
 	}
-	return path1 === path2
+	return path1 === path2;
 }
 
 function normalizePath(p: string): string {
 	// Ensure proper encoding first
-	p = normalizePathEncoding(p)
+	p = normalizePathEncoding(p);
 	// normalize resolve ./.. segments, removes duplicate slashes, and standardizes path separators
-	let normalized = path.normalize(p)
+	let normalized = path.normalize(p);
 	// however it doesn't remove trailing slashes
 	// remove trailing slash, except for root paths
-	if (normalized.length > 1 && (normalized.endsWith("/") || normalized.endsWith("\\"))) {
-		normalized = normalized.slice(0, -1)
+	if (
+		normalized.length > 1 &&
+		(normalized.endsWith('/') || normalized.endsWith('\\'))
+	) {
+		normalized = normalized.slice(0, -1);
 	}
-	return normalized
+	return normalized;
 }
 
 /**
@@ -120,10 +123,10 @@ function normalizePath(p: string): string {
 export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 	try {
 		// Normalize encoding to handle non-ASCII characters properly
-		filePath = normalizePathEncoding(filePath)
-		accessSync(filePath)
-		return true
+		filePath = normalizePathEncoding(filePath);
+		accessSync(filePath);
+		return true;
 	} catch {
-		return false
+		return false;
 	}
 }

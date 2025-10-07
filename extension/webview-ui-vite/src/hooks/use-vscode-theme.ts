@@ -7,18 +7,18 @@ interface VSCodeTheme {
 
 export function useVSCodeTheme(): VSCodeTheme {
   const [theme, setTheme] = useState<VSCodeTheme>({
-    kind: document.body.getAttribute("data-vscode-theme-kind"),
-    name: document.body.getAttribute("data-vscode-theme-name"),
+    kind: document.body.getAttribute('data-vscode-theme-kind'),
+    name: document.body.getAttribute('data-vscode-theme-name'),
   });
 
   useEffect(() => {
     // Create observer for theme changes
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === "attributes") {
+        if (mutation.type === 'attributes') {
           setTheme({
-            kind: document.body.getAttribute("data-vscode-theme-kind"),
-            name: document.body.getAttribute("data-vscode-theme-name"),
+            kind: document.body.getAttribute('data-vscode-theme-kind'),
+            name: document.body.getAttribute('data-vscode-theme-name'),
           });
         }
       });
@@ -27,7 +27,7 @@ export function useVSCodeTheme(): VSCodeTheme {
     // Start observing the body element
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ["data-vscode-theme-kind", "data-vscode-theme-name"],
+      attributeFilter: ['data-vscode-theme-kind', 'data-vscode-theme-name'],
     });
 
     return () => observer.disconnect();
@@ -43,7 +43,7 @@ export function useVSCodeTheme(): VSCodeTheme {
 
     styleObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["style"],
+      attributeFilter: ['style'],
     });
 
     return () => styleObserver.disconnect();

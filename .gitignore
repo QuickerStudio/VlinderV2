@@ -1,0 +1,54 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+*.d.ts
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# IDE specific files
+.vscode/
+.idea/
+
+# Coverage and test reports
+coverage/
+
+# Test artifacts and temp outputs
+/test-output*
+/test-*.txt
+/test-*.log
+*.test-output
+*.test.js
+*.test.ts
+*.test.md
+*.test.mermaid
+*.test.ps1
+*.test.bat
+
+# Ignore specific extensions
+*.vsix
+
+# Ignore lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore specific directories
+extension/webview-ui-vite/
+

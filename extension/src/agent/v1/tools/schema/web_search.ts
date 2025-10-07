@@ -1,5 +1,5 @@
 // schema/web_search.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool web_search
@@ -30,26 +30,30 @@ import { z } from "zod"
  * ```
  */
 const schema = z.object({
-	searchQuery: z.string().describe("The question you want to search for on the web."),
+	searchQuery: z
+		.string()
+		.describe('The question you want to search for on the web.'),
 	baseLink: z
 		.string()
 		.optional()
-		.describe("The base link provided by the user. If it is provided, you can start your search from here."),
+		.describe(
+			'The base link provided by the user. If it is provided, you can start your search from here.'
+		),
 	browserModel: z
-		.enum(["smart", "fast"])
-		.default("fast")
+		.enum(['smart', 'fast'])
+		.default('fast')
 		.optional()
 		.describe(
 			"The browser model to use for the search. Use 'smart' for slower but smarter search, use 'fast' for faster but less smart search."
 		),
 	browserMode: z
-		.enum(["api_docs", "generic"])
-		.default("generic")
+		.enum(['api_docs', 'generic'])
+		.default('generic')
 		.optional()
 		.describe(
 			"The browser mode to use for the search. Use 'generic' to search the web. Use 'api_docs' when you want to search API docs."
 		),
-})
+});
 
 const examples = [
 	`<tool name="web_search">
@@ -74,17 +78,17 @@ const examples = [
   <searchQuery>Fixing type error in my code</searchQuery>
   <browserModel>fast</browserModel>
 </tool>`,
-]
+];
 
 export const webSearchTool = {
 	schema: {
-		name: "web_search",
+		name: 'web_search',
 		schema,
 	},
 	examples,
-}
+};
 
 export type WebSearchToolParams = {
-	name: "web_search"
-	input: z.infer<typeof schema>
-}
+	name: 'web_search';
+	input: z.infer<typeof schema>;
+};

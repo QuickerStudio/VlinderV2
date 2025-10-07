@@ -1,5 +1,5 @@
 // schema/attempt_completion.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool attempt_completion
@@ -41,7 +41,7 @@ const schema = z.object({
 	// 	.describe(
 	// 		'The CLI command to execute to show a live demo of the result to the user. For example, use "open index.html" to display a created website. This should be valid for the current operating system. Ensure the command is properly formatted and does not contain any harmful instructions.'
 	// 	),
-})
+});
 
 const examples = [
 	`<tool name="attempt_completion">
@@ -56,17 +56,17 @@ const examples = [
 	`<tool name="attempt_completion">
   <result>The data analysis is complete. Please find the report attached.</result>
 </tool>`,
-]
+];
 
 export const attemptCompletionTool = {
 	schema: {
-		name: "attempt_completion",
+		name: 'attempt_completion',
 		schema,
 	},
 	examples,
-}
+};
 
 export type AttemptCompletionToolParams = {
-	name: "attempt_completion"
-	input: z.infer<typeof schema>
-}
+	name: 'attempt_completion';
+	input: z.infer<typeof schema>;
+};

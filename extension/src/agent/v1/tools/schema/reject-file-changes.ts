@@ -1,9 +1,9 @@
 // schema/reject-file-changes.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 const schema = z.object({
-	reason: z.string().describe("The reason for rejecting the file changes."),
-})
+	reason: z.string().describe('The reason for rejecting the file changes.'),
+});
 
 const examples = [
 	`<tool name="reject_file_changes">
@@ -17,17 +17,17 @@ const examples = [
 	`<tool name="reject_file_changes">
   <path>/components</path>
 </tool>`,
-]
+];
 
 export const rejectFileChangesTool = {
 	schema: {
-		name: "reject_file_changes",
+		name: 'reject_file_changes',
 		schema,
 	},
 	examples,
-}
+};
 
 export type RejectFileChangesParams = {
-	name: "reject_file_changes"
-	input: z.infer<typeof schema>
-}
+	name: 'reject_file_changes';
+	input: z.infer<typeof schema>;
+};

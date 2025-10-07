@@ -1,13 +1,13 @@
-import dedent from "dedent"
-import { ApiHistoryItem, MainAgent } from "../main-agent"
-import { promptTemplate } from "../prompts/utils/utils"
-import { BaseHook, HookOptions } from "./base-hook"
-import { PromptBuilder } from "../prompts/utils/builder"
-import { ApiMetrics } from "../../../api/api-utils"
-import { V1ClaudeMessage } from "../../../shared/messages/extension-message"
-import { spawnAgentTool } from "../tools/schema/agents/agent-spawner"
-import { ApiManager } from "../../../api/api-handler"
-import { serverRPC } from "../../../router/utils/extension-server"
+import dedent from 'dedent';
+import { ApiHistoryItem, MainAgent } from '../main-agent';
+import { promptTemplate } from '../prompts/utils/utils';
+import { BaseHook, HookOptions } from './base-hook';
+import { PromptBuilder } from '../prompts/utils/builder';
+import { ApiMetrics } from '../../../api/api-utils';
+import { V1ClaudeMessage } from '../../../shared/messages/extension-message';
+import { spawnAgentTool } from '../tools/schema/agents/agent-spawner';
+import { ApiManager } from '../../../api/api-handler';
+import { serverRPC } from '../../../router/utils/extension-server';
 
 /**
  * Options specific to the memory hook
@@ -136,67 +136,86 @@ The agent's action is positive because it's using the \`askFollowupQuestion\` to
 <score>7</score>
 
 Now, it's your turn to evaluate the agent's last action. Remember to provide a clear and concise explanation for your score.
-`
+`;
 
 /**
  * Hook that maintains and injects relevant memory context
  */
 export class ObserverHook extends BaseHook {
-	private options: ObserverHookOptions
+	private options: ObserverHookOptions;
 
 	constructor(options: ObserverHookOptions, MainAgent: MainAgent) {
-		super(options, MainAgent)
-		this.options = options
+		super(options, MainAgent);
+		this.options = options;
 	}
 
 	private shouldExecute(): boolean {
 		// check if last message spawned agent
 
 		try {
-			const lastMessage = this.MainAgent.getStateManager().state.apiConversationHistory.slice(-1)?.[0]?.content?.[0]
+			const lastMessage =
+				this.MainAgent.getStateManager().state.apiConversationHistory.slice(
+					-1
+				)?.[0]?.content?.[0];
 			const lastMessageText =
-				typeof lastMessage === "string" ? lastMessage : lastMessage.type === "text" ? lastMessage.text : ""
-			const lastAgentTag = `</${spawnAgentTool.schema.name}>`
-			const isSpawnAgentAction = lastMessageText.includes(lastAgentTag)
-			const isInSubAgent = !!this.MainAgent.getStateManager().subAgentManager.currentSubAgentId
-			const pastFirstMsg = this.MainAgent.getStateManager().state.apiConversationHistory.length > 2
+				typeof lastMessage === 'string'
+					? lastMessage
+					: lastMessage.type === 'text'
+						? lastMessage.text
+						: '';
+			const lastAgentTag = `</${spawnAgentTool.schema.name}>`;
+			const isSpawnAgentAction = lastMessageText.includes(lastAgentTag);
+			const isInSubAgent =
+				!!this.MainAgent.getStateManager().subAgentManager.currentSubAgentId;
+			const pastFirstMsg =
+				this.MainAgent.getStateManager().state.apiConversationHistory.length >
+				2;
 
 			return (
 				pastFirstMsg &&
 				!isInSubAgent &&
 				// if we spawn agent we don't want to execute observer hook because the follow up message will be different context (agent)
 				!isSpawnAgentAction
-			)
+			);
 		} catch (e) {
-			return false
+			return false;
 		}
 	}
 
 	protected async executeHook(): Promise<string | null> {
-		const ts = Date.now()
-		const { providerData, model } = await serverRPC().getClient().currentObserverModel({})
-		const { observerSettings } = await serverRPC().getClient().getObserverSettings({})
+		const ts = Date.now();
+		const { providerData, model } = await serverRPC()
+			.getClient()
+			.currentObserverModel({});
+		const { observerSettings } = await serverRPC()
+			.getClient()
+			.getObserverSettings({});
 		if (!observerSettings) {
-			throw new Error("Observer settings not found")
+			throw new Error('Observer settings not found');
 		}
 		try {
 			if (!this.shouldExecute()) {
-				return null
+				return null;
 			}
-			console.log("[ObserverHook] - executing observer hook")
+			console.log('[ObserverHook] - executing observer hook');
 			// Get current context from state
-			const currentContext = this.getCurrentContext()
+			const currentContext = this.getCurrentContext();
 
 			// we take the last x pairs of messages
-			const taskHistory = [...currentContext.history].slice(-observerSettings.observePullMessages * 2)
-			const lastMessage = taskHistory.at(-1)
+			const taskHistory = [...currentContext.history].slice(
+				-observerSettings.observePullMessages * 2
+			);
+			const lastMessage = taskHistory.at(-1);
 			// must happen
-			if (lastMessage?.role === "assistant" && Array.isArray(lastMessage.content)) {
+			if (
+				lastMessage?.role === 'assistant' &&
+				Array.isArray(lastMessage.content)
+			) {
 				taskHistory.push({
-					role: "user",
+					role: 'user',
 					content: [
 						{
-							type: "text",
+							type: 'text',
 							text: dedent`Here is the task that the agent is trying to solve <task>${currentContext.taskMsgText}</task>
 							Now based on the agent conversation history, You must provide feedback on the last action the AI took, be critical and to the point.
 							Your response should be structured in the following format:
@@ -208,72 +227,82 @@ export class ObserverHook extends BaseHook {
 							`,
 						},
 					],
-				})
+				});
 			} else {
 				// should not happen
 				console.error(
 					`[ObserverHook] - last message is not a assistant message [${lastMessage?.role} | length: ${lastMessage?.content.length}]`
-				)
-				return null
+				);
+				return null;
 			}
 			this.MainAgent.taskExecutor.sayHook({
-				hookName: "observer",
-				state: "pending",
-				output: "",
-				input: "",
+				hookName: 'observer',
+				state: 'pending',
+				output: '',
+				input: '',
 				ts,
 				modelId: model.id,
-			})
+			});
 			const providerSettings = {
 				providerSettings: providerData.currentProvider || {
 					providerId: model.provider,
-					apiKey: "", // Will be filled by the provider
+					apiKey: '', // Will be filled by the provider
 				},
 				models: providerData.models,
 				model,
-			}
-			const apiManager = new ApiManager(this.MainAgent.providerRef.deref()!, providerSettings)
+			};
+			const apiManager = new ApiManager(
+				this.MainAgent.providerRef.deref()!,
+				providerSettings
+			);
 			const thirdPartyObserver = await apiManager.createApiStreamRequest(
 				taskHistory,
 				this.MainAgent.taskExecutor.abortController!,
 				{
-					systemPrompt: observerSettings.observePrompt ?? observerHookDefaultPrompt,
+					systemPrompt:
+						observerSettings.observePrompt ?? observerHookDefaultPrompt,
 				},
 				true
-			)
+			);
 
-			let finalOutput = ``
-			let apiMetrics: V1ClaudeMessage["apiMetrics"]
+			let finalOutput = ``;
+			let apiMetrics: V1ClaudeMessage['apiMetrics'];
 			for await (const message of thirdPartyObserver) {
 				if (message.code === -1) {
-					console.error("Observer hook failed to execute:", message.body)
-					throw new Error("Observer hook failed to execute")
+					console.error('Observer hook failed to execute:', message.body);
+					throw new Error('Observer hook failed to execute');
 				}
 				if (message.code === 1) {
-					const { inputTokens, outputTokens, cacheCreationInputTokens, cacheReadInputTokens } =
-						message.body.internal
+					const {
+						inputTokens,
+						outputTokens,
+						cacheCreationInputTokens,
+						cacheReadInputTokens,
+					} = message.body.internal;
 					finalOutput =
-						message.body.anthropic.content[0].type === "text" ? message.body.anthropic.content[0].text : ``
+						message.body.anthropic.content[0].type === 'text'
+							? message.body.anthropic.content[0].text
+							: ``;
 					apiMetrics = {
 						cost: message.body.internal.cost,
 						inputTokens,
 						outputTokens,
 						inputCacheRead: cacheReadInputTokens,
 						inputCacheWrite: cacheCreationInputTokens,
-					}
-					break
+					};
+					break;
 				}
 			}
 
 			this.MainAgent.taskExecutor.sayHook({
-				hookName: "observer",
-				state: "completed",
+				hookName: 'observer',
+				state: 'completed',
 				output: finalOutput,
-				input: "",
+				input: '',
 				apiMetrics,
 				ts,
 				modelId: model.id,
-			})
+			});
 
 			if (finalOutput.length > 0) {
 				return dedent`## Observer Feedback ##
@@ -281,31 +310,31 @@ export class ObserverHook extends BaseHook {
 				Here is the feedback based on the last action you took:
 				<observer_feedback>${finalOutput}</observer_feedback>
 				## End of Observer Feedback ##
-				`
+				`;
 			} else {
 				this.MainAgent.taskExecutor.sayHook({
-					hookName: "observer",
-					state: "error",
+					hookName: 'observer',
+					state: 'error',
 					output: finalOutput,
-					input: "",
+					input: '',
 					apiMetrics,
 					ts,
 					modelId: model.id,
-				})
+				});
 			}
 
-			return finalOutput
+			return finalOutput;
 		} catch (error) {
 			this.MainAgent.taskExecutor.sayHook({
-				hookName: "observer",
-				state: "error",
-				output: "",
-				input: "",
+				hookName: 'observer',
+				state: 'error',
+				output: '',
+				input: '',
 				ts,
 				modelId: model.id,
-			})
-			console.error("Failed to execute observer hook:", error)
-			return null
+			});
+			console.error('Failed to execute observer hook:', error);
+			return null;
 		}
 	}
 
@@ -313,42 +342,43 @@ export class ObserverHook extends BaseHook {
 	 * Get current context from state
 	 */
 	private getCurrentContext() {
-		const history = this.MainAgent.getStateManager().state.apiConversationHistory
+		const history =
+			this.MainAgent.getStateManager().state.apiConversationHistory;
 		if (history.length === 0) {
 			return {
 				history: [],
 				taskMsg: null,
-				taskMsgText: "",
-			}
+				taskMsgText: '',
+			};
 		}
 		// we take the first message anyway
-		const taskMsg = history.at(0)
+		const taskMsg = history.at(0);
 
 		if (!taskMsg || !taskMsg.content || !Array.isArray(taskMsg.content)) {
 			return {
 				history: [],
 				taskMsg: null,
-				taskMsgText: "",
-			}
+				taskMsgText: '',
+			};
 		}
 		const taskMsgText = this.getTaskText(
-			typeof taskMsg?.content?.[0] === "string"
+			typeof taskMsg?.content?.[0] === 'string'
 				? taskMsg.content[0]
-				: typeof taskMsg.content[0].type === "string"
-				? taskMsg.content[0].type
-				: "No message"
-		)
+				: typeof taskMsg.content[0].type === 'string'
+					? taskMsg.content[0].type
+					: 'No message'
+		);
 
 		return {
 			history,
 			taskMsg,
 			taskMsgText,
-		}
+		};
 	}
 
 	private getTaskText(str: string) {
-		const [taskStartTag, taskEndTag] = ["<task>", "</task>"]
-		const [start, end] = [str.indexOf(taskStartTag), str.indexOf(taskEndTag)]
-		return str.slice(start + taskStartTag.length, end)
+		const [taskStartTag, taskEndTag] = ['<task>', '</task>'];
+		const [start, end] = [str.indexOf(taskStartTag), str.indexOf(taskEndTag)];
+		return str.slice(start + taskStartTag.length, end);
 	}
 }

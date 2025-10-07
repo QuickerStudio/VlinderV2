@@ -1,10 +1,14 @@
-import dedent from "dedent"
-import { buildPromptFromTemplate, PromptConfig, promptTemplate } from "../utils/utils"
-import osName from "os-name"
-import defaultShell from "default-shell"
-import os from "os"
-import { PromptBuilder } from "../utils/builder"
-import { fileEditorPrompt } from "../tools/file-editor"
+import dedent from 'dedent';
+import {
+	buildPromptFromTemplate,
+	PromptConfig,
+	promptTemplate,
+} from '../utils/utils';
+import osName from 'os-name';
+import defaultShell from 'default-shell';
+import os from 'os';
+import { PromptBuilder } from '../utils/builder';
+import { fileEditorPrompt } from '../tools/file-editor';
 
 const diffFixerPrompt = promptTemplate(
 	(b, h) =>
@@ -50,20 +54,20 @@ Default Shell: ${b.defaultShell}
 Home Directory: ${b.homeDir}
 Current Working Directory: ${b.cwd}
 `
-)
+);
 
 export default () => {
 	const config: PromptConfig = {
-		agentName: "Vlinder",
+		agentName: 'Vlinder',
 		osName: osName(),
 		defaultShell: defaultShell,
-		homeDir: os.homedir().replace(/\\/g, "/"),
+		homeDir: os.homedir().replace(/\\/g, '/'),
 		template: diffFixerPrompt,
-	}
+	};
 
-	const builder = new PromptBuilder(config)
-	builder.addTool(fileEditorPrompt)
+	const builder = new PromptBuilder(config);
+	builder.addTool(fileEditorPrompt);
 
-	const systemPrompt = builder.build()
-	return systemPrompt
-}
+	const systemPrompt = builder.build();
+	return systemPrompt;
+};

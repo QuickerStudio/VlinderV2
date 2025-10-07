@@ -1,5 +1,5 @@
 // schema/search_symbol.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool search_symbol
@@ -28,8 +28,12 @@ import { z } from "zod"
  * ```
  */
 const schema = z.object({
-	symbolName: z.string().describe("The name of the symbol to search for (e.g., function name, class name)"),
-})
+	symbolName: z
+		.string()
+		.describe(
+			'The name of the symbol to search for (e.g., function name, class name)'
+		),
+});
 
 const examples = [
 	`<tool name="search_symbol">
@@ -43,17 +47,17 @@ const examples = [
 	`<tool name="search_symbol">
   <symbolName>processData</symbolName>
 </tool>`,
-]
+];
 
 export const searchSymbolTool = {
 	schema: {
-		name: "search_symbol",
+		name: 'search_symbol',
 		schema,
 	},
 	examples,
-}
+};
 
 export type SearchSymbolsToolParams = {
-	name: "search_symbol"
-	input: z.infer<typeof schema>
-}
+	name: 'search_symbol';
+	input: z.infer<typeof schema>;
+};

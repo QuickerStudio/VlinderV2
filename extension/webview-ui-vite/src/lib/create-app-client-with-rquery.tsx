@@ -1,19 +1,19 @@
 // create-app-client-with-rquery.ts
 import {
-	useQuery,
-	useMutation,
-	UseQueryOptions,
-	UseQueryResult,
-	UseMutationOptions,
-	UseMutationResult,
-	MutationOptions,
-	QueryOptions,
-} from "@tanstack/react-query"
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
+  MutationOptions,
+  QueryOptions,
+} from '@tanstack/react-query';
 
-import type { AppRouter } from "extension/router/app-router"
-import { ProcedureInstance } from "extension/router/utils/procedure"
-import { Router } from "extension/router/utils/router"
-import { WebviewTransport } from "extension/shared/rpc-client"
+import type { AppRouter } from 'extension/router/app-router';
+import { ProcedureInstance } from 'extension/router/utils/procedure';
+import { Router } from 'extension/router/utils/router';
+import { WebviewTransport } from 'extension/shared/rpc-client';
 
 /**
  * For each route key in TRouter, produce an object that contains:
@@ -21,21 +21,31 @@ import { WebviewTransport } from "extension/shared/rpc-client"
  *   - useMutation: a hook for mutating data (with typed input/output)
  */
 type ReactQueryClientForRouter<TRouter extends Router> = {
-	[K in keyof TRouter]: TRouter[K] extends ProcedureInstance<any, infer TInput, infer TOutput>
-		? {
-				useQuery: (
-					input: TInput,
-					options?: Omit<UseQueryOptions<TOutput, unknown, TOutput, [K, TInput]>, "queryKey" | "queryFn">
-				) => UseQueryResult<TOutput, unknown>
+  [K in keyof TRouter]: TRouter[K] extends ProcedureInstance<
+    any,
+    infer TInput,
+    infer TOutput
+  >
+    ? {
+        useQuery: (
+          input: TInput,
+          options?: Omit<
+            UseQueryOptions<TOutput, unknown, TOutput, [K, TInput]>,
+            'queryKey' | 'queryFn'
+          >
+        ) => UseQueryResult<TOutput, unknown>;
 
-				useMutation: (
-					options?: Omit<UseMutationOptions<TOutput, unknown, TInput, unknown>, "mutationFn">
-				) => UseMutationResult<TOutput, unknown, TInput, unknown>
+        useMutation: (
+          options?: Omit<
+            UseMutationOptions<TOutput, unknown, TInput, unknown>,
+            'mutationFn'
+          >
+        ) => UseMutationResult<TOutput, unknown, TInput, unknown>;
 
-				use: (input: TInput) => Promise<TOutput>
-		  }
-		: never
-}
+        use: (input: TInput) => Promise<TOutput>;
+      }
+    : never;
+};
 
 /**
  * Creates a typed client that exposes `useQuery` and `useMutation`
@@ -56,52 +66,52 @@ type ReactQueryClientForRouter<TRouter extends Router> = {
  *   }
  */
 export function createAppClientWithRQuery<TRouter extends Router>(
-	transport: WebviewTransport
+  transport: WebviewTransport
 ): ReactQueryClientForRouter<TRouter> {
-	return new Proxy({} as ReactQueryClientForRouter<TRouter>, {
-		get(_target, routeKey: string) {
-			// Because we’re inside a Proxy, `propKey` is a string,
-			// but we’ll treat it as the route name (K).
-			return {
-				/**
-				 * Typed useQuery for this route.
-				 */
-				useQuery: (input: unknown, options: QueryOptions) => {
-					return useQuery({
-						// This array uniquely identifies the query
-						queryKey: [routeKey, input] as const,
-						// Function to actually call our RPC endpoint
-						queryFn: () => transport.call(routeKey, input),
-						// Spread in any user-supplied options (e.g. staleTime, enabled, etc.)
-						...options,
-					})
-				},
+  return new Proxy({} as ReactQueryClientForRouter<TRouter>, {
+    get(_target, routeKey: string) {
+      // Because we’re inside a Proxy, `propKey` is a string,
+      // but we’ll treat it as the route name (K).
+      return {
+        /**
+         * Typed useQuery for this route.
+         */
+        useQuery: (input: unknown, options: QueryOptions) => {
+          return useQuery({
+            // This array uniquely identifies the query
+            queryKey: [routeKey, input] as const,
+            // Function to actually call our RPC endpoint
+            queryFn: () => transport.call(routeKey, input),
+            // Spread in any user-supplied options (e.g. staleTime, enabled, etc.)
+            ...options,
+          });
+        },
 
-				/**
-				 * Typed useMutation for this route.
-				 */
-				useMutation: (options: MutationOptions) => {
-					return useMutation({
-						// Provide the mutationFn here
-						mutationFn: (input: unknown) => transport.call(routeKey, input),
-						// Spread in any user-supplied options (e.g. onSuccess, onError, etc.)
-						...options,
-					})
-				},
-				/**
-				 * Typed direct call for this route.
-				 */
-				use: (input: unknown) => {
-					return transport.call(routeKey, input)
-				},
-			}
-		},
-	})
+        /**
+         * Typed useMutation for this route.
+         */
+        useMutation: (options: MutationOptions) => {
+          return useMutation({
+            // Provide the mutationFn here
+            mutationFn: (input: unknown) => transport.call(routeKey, input),
+            // Spread in any user-supplied options (e.g. onSuccess, onError, etc.)
+            ...options,
+          });
+        },
+        /**
+         * Typed direct call for this route.
+         */
+        use: (input: unknown) => {
+          return transport.call(routeKey, input);
+        },
+      };
+    },
+  });
 }
 
 /**
  * Convenience function specifically for your AppRouter.
  */
 export function createAppClientWithRQueryForApp(transport: WebviewTransport) {
-	return createAppClientWithRQuery<AppRouter>(transport)
+  return createAppClientWithRQuery<AppRouter>(transport);
 }

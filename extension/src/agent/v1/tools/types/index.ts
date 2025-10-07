@@ -1,41 +1,61 @@
-import { ClaudeAsk, ClaudeSay } from "../../../../shared/messages/extension-message"
-import { ClaudeAskResponse } from "../../../../shared/messages/client-message"
-import { MainAgent } from "../../main-agent"
-import { TaskExecutorUtils } from "../../task-executor/utils"
-import { ServerRunnerTool } from "../../../../shared/new-tools"
-import { AddInterestedFileToolParams } from "../schema/add_interested_file"
-import { AskFollowupQuestionToolParams } from "../schema/ask_followup_question"
-import { AttemptCompletionToolParams } from "../schema/attempt_completion"
-import { ServerRunnerToolParams } from "../schema/dev_server"
-import { ExecuteCommandToolParams } from "../schema/execute_command"
-import { ExploreRepoFolderToolParams } from "../schema/explore-repo-folder.schema"
-import { ListFilesToolParams } from "../schema/list_files"
-import { ReadFileToolParams } from "../schema/read_file"
-import { SearchFilesToolParams } from "../schema/search_files"
-import { SearchSymbolsToolParams } from "../schema/search_symbols"
-import { UrlScreenshotToolParams } from "../schema/url_screenshot"
-import { WebSearchToolParams } from "../schema/web_search"
-import { WebFetchToolParams } from "../schema/web_fetch"
-import { EditFileBlocksToolParams, WriteToFileToolParams } from "../schema/write_to_file"
-import { FileChangePlanParams } from "../schema/file-change-plan"
-import { RejectFileChangesParams } from "../schema/reject-file-changes"
-import { FileEditorToolParams } from "../schema/file_editor_tool"
-import { SpawnAgentOptions, SpawnAgentToolParams } from "../schema/agents/agent-spawner"
-import { ExitAgentToolParams } from "../schema/agents/agent-exit"
-import { SubmitReviewToolParams } from "../schema/submit_review"
-import { MoveToolParams } from "../schema/move"
-import { RemoveToolParams } from "../schema/remove"
-import { RenameToolParams } from "../schema/rename"
-import { GitBashToolParams } from "../schema/git-bash"
-import { KillBashToolParams } from "../schema/kill-bash"
-import { ReadProgressToolParams } from "../schema/read-progress"
-import { TerminalToolParams } from "../schema/terminal"
+import {
+	ClaudeAsk,
+	ClaudeSay,
+} from '../../../../shared/messages/extension-message';
+import { ClaudeAskResponse } from '../../../../shared/messages/client-message';
+import { MainAgent } from '../../main-agent';
+import { TaskExecutorUtils } from '../../task-executor/utils';
+import { ServerRunnerTool } from '../../../../shared/new-tools';
+import { AddInterestedFileToolParams } from '../schema/add_interested_file';
+import { AskFollowupQuestionToolParams } from '../schema/ask_followup_question';
+import { AttemptCompletionToolParams } from '../schema/attempt_completion';
+import { ServerRunnerToolParams } from '../schema/dev_server';
+import { ExecuteCommandToolParams } from '../schema/execute_command';
+import { ExploreRepoFolderToolParams } from '../schema/explore-repo-folder.schema';
+import { ListFilesToolParams } from '../schema/list_files';
+import { ReadFileToolParams } from '../schema/read_file';
+import { SearchFilesToolParams } from '../schema/search_files';
+import { SearchSymbolsToolParams } from '../schema/search_symbols';
+import { UrlScreenshotToolParams } from '../schema/url_screenshot';
+import { WebSearchToolParams } from '../schema/web_search';
+import {
+	EditFileBlocksToolParams,
+	WriteToFileToolParams,
+} from '../schema/write_to_file';
+import { FileChangePlanParams } from '../schema/file-change-plan';
+import { RejectFileChangesParams } from '../schema/reject-file-changes';
+import { FileEditorToolParams } from '../schema/file_editor_tool';
+import {
+	SpawnAgentOptions,
+	SpawnAgentToolParams,
+} from '../schema/agents/agent-spawner';
+import { ExitAgentToolParams } from '../schema/agents/agent-exit';
+import { SubmitReviewToolParams } from '../schema/submit_review';
+import { MoveToolParams } from '../schema/move';
+import { RemoveToolParams } from '../schema/remove';
+import { RenameToolParams } from '../schema/rename';
+import { GitBashToolParams } from '../schema/git-bash';
+import { KillBashToolParams } from '../schema/kill-bash';
+import { ReadProgressToolParams } from '../schema/read-progress';
+import { TerminalToolParams } from '../schema/terminal';
+import { GetErrorsToolParams } from '../schema/get-errors';
+import { ReplaceStringToolParams } from '../schema/replace-string';
+import { MultiReplaceStringToolParams } from '../schema/multi-replace-string';
+import { InsertEditToolParams } from '../schema/insert-edit';
+import { FetchWebpageToolParams } from '../schema/fetch-webpage';
+import { VscodeApiToolParams } from '../schema/vscode-api';
+import { GrepSearchToolParams } from '../schema/grep-search';
+import { GetTerminalOutputToolParams } from '../schema/get-terminal-output';
+import { ThinkToolParams } from '../schema/think';
+import { FastEditorToolParams } from '../schema/fast-editor';
+import { TimerToolParams } from '../schema/timer';
+import { PatternSearchToolParams } from '../schema/pattern-search';
 
 export type UpsertMemoryInput = {
-	milestoneName: string
-	summary: string
-	content: string
-}
+	milestoneName: string;
+	summary: string;
+	content: string;
+};
 
 export type ToolParams =
 	| AddInterestedFileToolParams
@@ -50,7 +70,6 @@ export type ToolParams =
 	| SearchSymbolsToolParams
 	| UrlScreenshotToolParams
 	| WebSearchToolParams
-	| WebFetchToolParams
 	| FileChangePlanParams
 	| RejectFileChangesParams
 	| WriteToFileToolParams
@@ -66,43 +85,58 @@ export type ToolParams =
 	| KillBashToolParams
 	| ReadProgressToolParams
 	| TerminalToolParams
+	| GetErrorsToolParams
+	| ReplaceStringToolParams
+	| MultiReplaceStringToolParams
+	| InsertEditToolParams
+	| FetchWebpageToolParams
+	| VscodeApiToolParams
+	| GrepSearchToolParams
+	| GetTerminalOutputToolParams
+	| ThinkToolParams
+	| FastEditorToolParams
+	| TimerToolParams
+	| PatternSearchToolParams;
 
-export type ToolName = ToolParams["name"]
+export type ToolName = ToolParams['name'];
 
 export type AgentToolParams = {
-	name: ToolParams["name"]
-	id: string
-	input: ToolParams["input"]
-	ts: number
+	name: ToolParams['name'];
+	id: string;
+	input: ToolParams['input'];
+	ts: number;
 	/**
 	 * If this is a sub message, it will force it to stick to previous tool call in the ui (same message)
 	 */
-	isSubMsg?: boolean
-	isLastWriteToFile: boolean
-	isFinal?: boolean
-	ask: TaskExecutorUtils["ask"]
-	say: TaskExecutorUtils["say"]
-	updateAsk: TaskExecutorUtils["updateAsk"]
-	returnEmptyStringOnSuccess?: boolean
-}
+	isSubMsg?: boolean;
+	isLastWriteToFile: boolean;
+	isFinal?: boolean;
+	ask: TaskExecutorUtils['ask'];
+	say: TaskExecutorUtils['say'];
+	updateAsk: TaskExecutorUtils['updateAsk'];
+	returnEmptyStringOnSuccess?: boolean;
+};
 
 export type AskConfirmationResponse = {
-	response: ClaudeAskResponse
-	text?: string
-	images?: string[]
-}
+	response: ClaudeAskResponse;
+	text?: string;
+	images?: string[];
+};
 
 export type AgentToolOptions = {
-	cwd: string
-	alwaysAllowReadOnly: boolean
-	alwaysAllowWriteOnly: boolean
-	MainAgent: MainAgent
-	setRunningProcessId?: (pid: number | undefined) => void
-	agentName?: SpawnAgentOptions
-}
+	cwd: string;
+	alwaysAllowReadOnly: boolean;
+	alwaysAllowWriteOnly: boolean;
+	MainAgent: MainAgent;
+	setRunningProcessId?: (pid: number | undefined) => void;
+	agentName?: SpawnAgentOptions;
+};
 
 export type CommitInfo = {
-	branch: string
-	commitHash: string
-	preCommitHash?: string
-}
+	branch: string;
+	commitHash: string;
+	preCommitHash?: string;
+};
+
+// Re-export ToolResponseV2 from agent types
+export type { ToolResponseV2 } from '../../types';

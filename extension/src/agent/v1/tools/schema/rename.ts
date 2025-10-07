@@ -1,5 +1,5 @@
 // schema/rename.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool rename
@@ -50,22 +50,28 @@ import { z } from "zod"
 const schema = z.object({
 	path: z
 		.string()
-		.describe("The current path of the file or directory to rename (relative to the current working directory)."),
+		.describe(
+			'The current path of the file or directory to rename (relative to the current working directory).'
+		),
 	new_name: z
 		.string()
-		.describe("The new name for the file or directory (just the name, not the full path)."),
+		.describe(
+			'The new name for the file or directory (just the name, not the full path).'
+		),
 	type: z
-		.enum(["file", "directory", "auto"])
+		.enum(['file', 'directory', 'auto'])
 		.optional()
-		.default("auto")
-		.describe("Specify what type of item to rename. 'auto' will automatically detect the type. Default is 'auto'."),
+		.default('auto')
+		.describe(
+			"Specify what type of item to rename. 'auto' will automatically detect the type. Default is 'auto'."
+		),
 	overwrite: z
 		.boolean()
 		.optional()
 		.describe(
-			"Whether to overwrite if a file or directory with the new name already exists in the same location. Default is false."
+			'Whether to overwrite if a file or directory with the new name already exists in the same location. Default is false.'
 		),
-})
+});
 
 const examples = [
 	`<tool name="rename">
@@ -96,17 +102,17 @@ const examples = [
   <path>./src/components</path>
   <new_name>ui-components</new_name>
 </tool>`,
-]
+];
 
 export const renameTool = {
 	schema: {
-		name: "rename",
+		name: 'rename',
 		schema,
 	},
 	examples,
-}
+};
 
 export type RenameToolParams = {
-	name: "rename"
-	input: z.infer<typeof schema>
-}
+	name: 'rename';
+	input: z.infer<typeof schema>;
+};

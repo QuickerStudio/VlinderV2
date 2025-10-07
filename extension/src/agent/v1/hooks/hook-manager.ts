@@ -1,15 +1,15 @@
-import { MainAgent } from "../main-agent"
-import { BaseHook, HookOptions } from "./base-hook"
+import { MainAgent } from '../main-agent';
+import { BaseHook, HookOptions } from './base-hook';
 
 /**
  * Manages the lifecycle and execution of hooks
  */
 export class HookManager {
-	private hooks: BaseHook[] = []
-	private MainAgent: MainAgent
+	private hooks: BaseHook[] = [];
+	private MainAgent: MainAgent;
 
 	constructor(MainAgent: MainAgent) {
-		this.MainAgent = MainAgent
+		this.MainAgent = MainAgent;
 	}
 
 	/**
@@ -19,21 +19,21 @@ export class HookManager {
 		HookClass: new (options: HookOptions, MainAgent: MainAgent) => T,
 		options: HookOptions
 	): T {
-		const hook = new HookClass(options, this.MainAgent)
-		this.hooks.push(hook)
-		return hook
+		const hook = new HookClass(options, this.MainAgent);
+		this.hooks.push(hook);
+		return hook;
 	}
 
 	/**
 	 * Update hook settings
 	 */
 	public updateHook(hookName: string, options: Partial<HookOptions>): void {
-		const hook = this.getHook(hookName)
+		const hook = this.getHook(hookName);
 		if (!hook) {
-			throw new Error(`Hook with name ${hookName} does not exist`)
+			throw new Error(`Hook with name ${hookName} does not exist`);
 		}
 
-		hook.updateOptions(options)
+		hook.updateOptions(options);
 	}
 
 	/**
@@ -41,53 +41,59 @@ export class HookManager {
 	 * Returns concatenated content from all triggered hooks
 	 */
 	public async checkAndExecuteHooks(): Promise<string | null> {
-		const triggeredHooks = this.hooks.filter((hook) => hook.shouldTrigger())
+		const triggeredHooks = this.hooks.filter((hook) => hook.shouldTrigger());
 		if (triggeredHooks.length === 0) {
-			return null
+			return null;
 		}
 
-		const results = await Promise.all(triggeredHooks.map((hook) => hook.execute()))
-		const validResults = results.filter((result): result is string => result !== null)
+		const results = await Promise.all(
+			triggeredHooks.map((hook) => hook.execute())
+		);
+		const validResults = results.filter(
+			(result): result is string => result !== null
+		);
 
 		if (validResults.length === 0) {
-			return null
+			return null;
 		}
 
-		return validResults.join("\n\n")
+		return validResults.join('\n\n');
 	}
 
 	/**
 	 * Remove a hook from the manager
 	 */
 	public removeHook(hookName: string): void {
-		this.hooks = this.hooks.filter((hook) => hook.hookOptions.hookName !== hookName)
+		this.hooks = this.hooks.filter(
+			(hook) => hook.hookOptions.hookName !== hookName
+		);
 	}
 
 	/**
 	 * Get a hook by name
 	 */
 	public getHook(hookName: string): BaseHook | undefined {
-		return this.hooks.find((hook) => hook.hookOptions.hookName === hookName)
+		return this.hooks.find((hook) => hook.hookOptions.hookName === hookName);
 	}
 
 	/**
 	 * Check if a hook exists
 	 */
 	public hasHook(hookName: string): boolean {
-		return this.hooks.some((hook) => hook.hookOptions.hookName === hookName)
+		return this.hooks.some((hook) => hook.hookOptions.hookName === hookName);
 	}
 
 	/**
 	 * Get all registered hooks
 	 */
 	public getHooks(): BaseHook[] {
-		return [...this.hooks]
+		return [...this.hooks];
 	}
 
 	/**
 	 * Clear all hooks
 	 */
 	public clearHooks(): void {
-		this.hooks = []
+		this.hooks = [];
 	}
 }

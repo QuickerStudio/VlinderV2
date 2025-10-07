@@ -7,7 +7,12 @@ export interface TooltipProps {
   align?: 'left' | 'center' | 'right';
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ text, isVisible, position, align = 'center' }) => {
+const Tooltip: React.FC<TooltipProps> = ({
+  text,
+  isVisible,
+  position,
+  align = 'center',
+}) => {
   let leftPosition = position.x;
   let triangleStyle: React.CSSProperties = {
     left: '50%',

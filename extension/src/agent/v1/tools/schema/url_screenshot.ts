@@ -1,5 +1,5 @@
 // schema/url_screenshot.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool url_screenshot
@@ -27,8 +27,8 @@ import { z } from "zod"
  * ```
  */
 const schema = z.object({
-	url: z.string().describe("The URL provided by the user."),
-})
+	url: z.string().describe('The URL provided by the user.'),
+});
 
 const examples = [
 	`<tool name="url_screenshot">
@@ -42,17 +42,17 @@ const examples = [
 	`<tool name="url_screenshot">
   <url>https://www.designinspiration.com/portfolio</url>
 </tool>`,
-]
+];
 
 export const urlScreenshotTool = {
 	schema: {
-		name: "url_screenshot",
+		name: 'url_screenshot',
 		schema,
 	},
 	examples,
-}
+};
 
 export type UrlScreenshotToolParams = {
-	name: "url_screenshot"
-	input: z.infer<typeof schema>
-}
+	name: 'url_screenshot';
+	input: z.infer<typeof schema>;
+};

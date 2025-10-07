@@ -1,5 +1,5 @@
 // schema/git-bash.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool git_bash
@@ -40,19 +40,21 @@ const schema = z.object({
 	command: z
 		.string()
 		.describe(
-			"The Git Bash command to execute. Can use Unix utilities like grep, find, sed, awk, curl, jq, etc."
+			'The Git Bash command to execute. Can use Unix utilities like grep, find, sed, awk, curl, jq, etc.'
 		),
 	timeout: z
 		.number()
 		.optional()
 		.default(300000)
-		.describe("Maximum execution time in milliseconds. Default is 300000 (5 minutes)."),
+		.describe(
+			'Maximum execution time in milliseconds. Default is 300000 (5 minutes).'
+		),
 	captureOutput: z
 		.boolean()
 		.optional()
 		.default(true)
-		.describe("Whether to capture and return command output. Default is true."),
-})
+		.describe('Whether to capture and return command output. Default is true.'),
+});
 
 const examples = [
 	`<tool name="git_bash">
@@ -71,18 +73,17 @@ const examples = [
   <command>npm run build</command>
   <timeout>600000</timeout>
 </tool>`,
-]
+];
 
 export const gitBashTool = {
 	schema: {
-		name: "git_bash",
+		name: 'git_bash',
 		schema,
 	},
 	examples,
-}
+};
 
 export type GitBashToolParams = {
-	name: "git_bash"
-	input: z.infer<typeof schema>
-}
-
+	name: 'git_bash';
+	input: z.infer<typeof schema>;
+};

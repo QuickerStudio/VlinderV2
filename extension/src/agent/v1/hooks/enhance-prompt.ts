@@ -1,9 +1,9 @@
-import dedent from "dedent"
-import { BaseHook, HookOptions } from "./base-hook"
-import { MainAgent } from "../main-agent"
-import { ApiManager } from "../../../api/api-handler"
-import { serverRPC } from "../../../router/utils/extension-server"
-import { PLANNER_SYSTEM_PROMPT } from "../prompts/agents/planner.prompt"
+import dedent from 'dedent';
+import { BaseHook, HookOptions } from './base-hook';
+import { MainAgent } from '../main-agent';
+import { ApiManager } from '../../../api/api-handler';
+import { serverRPC } from '../../../router/utils/extension-server';
+import { PLANNER_SYSTEM_PROMPT } from '../prompts/agents/planner.prompt';
 
 /**
  * Options specific to the enhance prompt hook
@@ -12,11 +12,11 @@ export interface EnhancePromptOptions extends HookOptions {
 	/**
 	 * Model to use for prompt enhancement (optional, will use current model if not specified)
 	 */
-	modelId?: string
+	modelId?: string;
 	/**
 	 * Provider to use for prompt enhancement (optional, will use current provider if not specified)
 	 */
-	providerId?: string
+	providerId?: string;
 }
 
 export const enhancePromptDefaultPrompt = dedent`
@@ -41,17 +41,17 @@ Your role is the FIRST STAGE of a two-stage enhancement process:
 
 **Output Format:**
 Provide only the cleaned and initially enhanced prompt as your response, without any additional explanation, formatting, or meta-commentary. The output should be ready for further analysis by a planning agent.
-`
+`;
 
 /**
  * Hook for enhancing user prompts using AI
  */
 export class EnhancePromptHook extends BaseHook {
-	private options: EnhancePromptOptions
+	private options: EnhancePromptOptions;
 
 	constructor(options: EnhancePromptOptions, MainAgent: MainAgent) {
-		super(options, MainAgent)
-		this.options = options
+		super(options, MainAgent);
+		this.options = options;
 	}
 
 	/**
@@ -63,61 +63,78 @@ export class EnhancePromptHook extends BaseHook {
 	 */
 	public async enhancePrompt(userPrompt: string): Promise<string | null> {
 		if (!userPrompt.trim()) {
-			return null
+			return null;
 		}
 
 		try {
-			console.log("[EnhancePrompt] Starting two-stage enhancement process")
+			console.log('[EnhancePrompt] Starting two-stage enhancement process');
 
 			// Stage 1: Initial enhancement and cleanup
-			const stage1Result = await this.performStage1Enhancement(userPrompt)
+			const stage1Result = await this.performStage1Enhancement(userPrompt);
 			if (!stage1Result) {
-				console.error("[EnhancePrompt] Stage 1 enhancement failed")
-				return null
+				console.error('[EnhancePrompt] Stage 1 enhancement failed');
+				return null;
 			}
 
-			console.log("[EnhancePrompt] Stage 1 completed, starting Stage 2")
+			console.log('[EnhancePrompt] Stage 1 completed, starting Stage 2');
 
 			// Stage 2: Deep analysis using planner agent
-			const stage2Result = await this.performStage2Planning(stage1Result)
+			const stage2Result = await this.performStage2Planning(stage1Result);
 			if (!stage2Result) {
-				console.error("[EnhancePrompt] Stage 2 planning failed")
-				return stage1Result // Return stage 1 result as fallback
+				console.error('[EnhancePrompt] Stage 2 planning failed');
+				return stage1Result; // Return stage 1 result as fallback
 			}
 
-			console.log("[EnhancePrompt] Two-stage enhancement completed successfully")
-			return stage2Result
+			console.log(
+				'[EnhancePrompt] Two-stage enhancement completed successfully'
+			);
+			return stage2Result;
 		} catch (error) {
-			console.error("Failed to enhance prompt:", error)
-			return null
+			console.error('Failed to enhance prompt:', error);
+			return null;
 		}
 	}
 
 	/**
 	 * Stage 1: Initial prompt cleanup and structuring
 	 */
-	private async performStage1Enhancement(userPrompt: string): Promise<string | null> {
+	private async performStage1Enhancement(
+		userPrompt: string
+	): Promise<string | null> {
 		try {
-			console.log("[EnhancePrompt] Starting Stage 1 enhancement")
+			console.log('[EnhancePrompt] Starting Stage 1 enhancement');
 
 			// Try to get observer model first, fallback to current main model if not configured
-			let providerData, model
+			let providerData, model;
 			try {
-				const observerModelInfo = await serverRPC().getClient().currentObserverModel({})
-				providerData = observerModelInfo.providerData
-				model = observerModelInfo.model
-				console.log("[EnhancePrompt] Using observer model:", { modelId: model.id, provider: model.provider })
+				const observerModelInfo = await serverRPC()
+					.getClient()
+					.currentObserverModel({});
+				providerData = observerModelInfo.providerData;
+				model = observerModelInfo.model;
+				console.log('[EnhancePrompt] Using observer model:', {
+					modelId: model.id,
+					provider: model.provider,
+				});
 			} catch (error) {
-				console.log("[EnhancePrompt] Observer model not configured, falling back to current main model")
-				const currentModelInfo = await serverRPC().getClient().currentModelInfo({})
-				providerData = currentModelInfo.providerData
-				model = currentModelInfo.model
-				console.log("[EnhancePrompt] Using current main model:", { modelId: model.id, provider: model.provider })
+				console.log(
+					'[EnhancePrompt] Observer model not configured, falling back to current main model'
+				);
+				const currentModelInfo = await serverRPC()
+					.getClient()
+					.currentModelInfo({});
+				providerData = currentModelInfo.providerData;
+				model = currentModelInfo.model;
+				console.log('[EnhancePrompt] Using current main model:', {
+					modelId: model.id,
+					provider: model.provider,
+				});
 			}
 
-			const targetModel = this.options.modelId ?
-				providerData.models.find(m => m.id === this.options.modelId) || model :
-				model
+			const targetModel = this.options.modelId
+				? providerData.models.find((m) => m.id === this.options.modelId) ||
+					model
+				: model;
 
 			const stage1Request = dedent`
 				Please perform initial cleanup and structuring of the following user prompt. This is Stage 1 of a two-stage process.
@@ -134,33 +151,37 @@ export class EnhancePromptHook extends BaseHook {
 				"""
 
 				Provide only the cleaned and structured prompt, ready for further analysis.
-			`
+			`;
 
 			const messages = [
 				{
-					role: "user" as const,
+					role: 'user' as const,
 					content: [
 						{
-							type: "text" as const,
+							type: 'text' as const,
 							text: stage1Request,
 						},
 					],
 				},
-			]
+			];
 
 			const providerSettings = {
 				providerSettings: providerData.currentProvider || {
 					providerId: targetModel.provider,
-					apiKey: "",
+					apiKey: '',
 				},
 				models: providerData.models,
 				model: targetModel,
-			}
+			};
 
-			const apiManager = new ApiManager(this.MainAgent.providerRef.deref()!, providerSettings)
+			const apiManager = new ApiManager(
+				this.MainAgent.providerRef.deref()!,
+				providerSettings
+			);
 
 			// Create abort controller if not available (e.g., when MainAgent is initialized with noTask)
-			const abortController = this.MainAgent.taskExecutor.abortController || new AbortController()
+			const abortController =
+				this.MainAgent.taskExecutor.abortController || new AbortController();
 
 			const response = apiManager.createApiStreamRequest(
 				messages,
@@ -171,36 +192,40 @@ export class EnhancePromptHook extends BaseHook {
 				true, // skipProcessing
 				undefined, // postProcessConversationCallback
 				true // silent mode - don't update UI status
-			)
+			);
 
-			let output = ""
+			let output = '';
 			for await (const message of response) {
 				if (message.code === -1) {
-					throw new Error("Stage 1 enhancement failed")
+					throw new Error('Stage 1 enhancement failed');
 				}
 				if (message.code === 1) {
-					output = message.body.anthropic.content[0].type === "text" ?
-						message.body.anthropic.content[0].text : ""
-					break
+					output =
+						message.body.anthropic.content[0].type === 'text'
+							? message.body.anthropic.content[0].text
+							: '';
+					break;
 				}
 			}
 
-			return output.trim() || null
+			return output.trim() || null;
 		} catch (error) {
-			console.error("Stage 1 enhancement error:", error)
-			return null
+			console.error('Stage 1 enhancement error:', error);
+			return null;
 		}
 	}
 
 	/**
 	 * Stage 2: Deep analysis and planning using actual planner agent
 	 */
-	private async performStage2Planning(stage1Prompt: string): Promise<string | null> {
+	private async performStage2Planning(
+		stage1Prompt: string
+	): Promise<string | null> {
 		try {
-			console.log("[EnhancePrompt] Starting Stage 2 with planner agent")
+			console.log('[EnhancePrompt] Starting Stage 2 with planner agent');
 
-			const ts = Date.now()
-			const stateManager = this.MainAgent.getStateManager()
+			const ts = Date.now();
+			const stateManager = this.MainAgent.getStateManager();
 
 			// Create planner agent instructions for prompt enhancement
 			const plannerInstructions = dedent`
@@ -224,65 +249,74 @@ export class EnhancePromptHook extends BaseHook {
 				Just provide the final, optimized prompt ready for immediate use.
 
 				Use your planning expertise to create the best possible version, then use exit_agent with the final enhanced prompt as your result.
-			`
+			`;
 
 			// Spawn planner agent
-			const plannerSystemPrompt = PLANNER_SYSTEM_PROMPT(this.MainAgent.getApiManager().getModelInfo()?.supportsImages || false)
+			const plannerSystemPrompt = PLANNER_SYSTEM_PROMPT(
+				this.MainAgent.getApiManager().getModelInfo()?.supportsImages || false
+			);
 
 			await stateManager.subAgentManager.spawnSubAgent(ts, {
-				name: "planner",
-				state: "RUNNING",
+				name: 'planner',
+				state: 'RUNNING',
 				ts,
 				apiConversationHistory: [],
 				historyErrors: {},
 				systemPrompt: plannerSystemPrompt,
-			})
+			});
 
 			// Get the spawned planner agent state
-			const plannerAgent = stateManager.subAgentManager.state
+			const plannerAgent = stateManager.subAgentManager.state;
 			if (!plannerAgent) {
-				throw new Error("Failed to create planner agent")
+				throw new Error('Failed to create planner agent');
 			}
 
 			// Execute planner agent with instructions
-			const plannerResult = await this.executePlannerAgent(plannerAgent, plannerInstructions)
+			const plannerResult = await this.executePlannerAgent(
+				plannerAgent,
+				plannerInstructions
+			);
 
 			// Clean up the sub-agent
-			await stateManager.subAgentManager.exitSubAgent()
+			await stateManager.subAgentManager.exitSubAgent();
 
-			return plannerResult
+			return plannerResult;
 		} catch (error) {
-			console.error("Stage 2 planning error:", error)
-			return null
+			console.error('Stage 2 planning error:', error);
+			return null;
 		}
 	}
 
 	/**
 	 * Execute planner agent and get the enhanced prompt result
 	 */
-	private async executePlannerAgent(plannerAgent: any, instructions: string): Promise<string | null> {
+	private async executePlannerAgent(
+		plannerAgent: any,
+		instructions: string
+	): Promise<string | null> {
 		try {
-			console.log("[EnhancePrompt] Executing planner agent with instructions")
+			console.log('[EnhancePrompt] Executing planner agent with instructions');
 
 			// Create a message for the planner agent
 			const userMessage = {
-				role: "user" as const,
+				role: 'user' as const,
 				content: [
 					{
-						type: "text" as const,
+						type: 'text' as const,
 						text: instructions,
 					},
 				],
-			}
+			};
 
 			// Add message to planner's conversation history
-			plannerAgent.apiConversationHistory.push(userMessage)
+			plannerAgent.apiConversationHistory.push(userMessage);
 
 			// Execute the planner agent using the API manager
-			const apiManager = this.MainAgent.getApiManager()
+			const apiManager = this.MainAgent.getApiManager();
 
 			// Create abort controller if not available (e.g., when MainAgent is initialized with noTask)
-			const abortController = this.MainAgent.taskExecutor.abortController || new AbortController()
+			const abortController =
+				this.MainAgent.taskExecutor.abortController || new AbortController();
 
 			const response = apiManager.createApiStreamRequest(
 				plannerAgent.apiConversationHistory,
@@ -293,72 +327,90 @@ export class EnhancePromptHook extends BaseHook {
 				true, // skipProcessing
 				undefined, // postProcessConversationCallback
 				true // silent mode - don't update UI status
-			)
+			);
 
-			let finalOutput = ""
-			let hasCompleted = false
+			let finalOutput = '';
+			let hasCompleted = false;
 
 			for await (const message of response) {
 				if (message.code === -1) {
-					console.error("[EnhancePrompt] Planner agent execution failed:", message.body)
-					throw new Error("Planner agent execution failed")
+					console.error(
+						'[EnhancePrompt] Planner agent execution failed:',
+						message.body
+					);
+					throw new Error('Planner agent execution failed');
 				}
 				if (message.code === 1) {
-					const content = message.body.anthropic.content[0]
-					if (content.type === "text") {
-						finalOutput += content.text
+					const content = message.body.anthropic.content[0];
+					if (content.type === 'text') {
+						finalOutput += content.text;
 					}
-					hasCompleted = true
-					break
+					hasCompleted = true;
+					break;
 				}
 			}
 
 			if (!hasCompleted) {
-				throw new Error("Planner agent did not complete successfully")
+				throw new Error('Planner agent did not complete successfully');
 			}
 
-			console.log("[EnhancePrompt] Planner agent completed, extracting enhanced prompt")
+			console.log(
+				'[EnhancePrompt] Planner agent completed, extracting enhanced prompt'
+			);
 
 			// Extract the final enhanced prompt from planner's output
-			const enhancedPrompt = this.extractEnhancedPromptFromPlannerOutput(finalOutput)
+			const enhancedPrompt =
+				this.extractEnhancedPromptFromPlannerOutput(finalOutput);
 
 			if (enhancedPrompt) {
-				console.log("[EnhancePrompt] Successfully extracted enhanced prompt from planner output")
-				return enhancedPrompt
+				console.log(
+					'[EnhancePrompt] Successfully extracted enhanced prompt from planner output'
+				);
+				return enhancedPrompt;
 			} else {
-				console.log("[EnhancePrompt] No structured output found, using raw planner output")
+				console.log(
+					'[EnhancePrompt] No structured output found, using raw planner output'
+				);
 				// Fallback to cleaned raw output if no structured result found
-				return this.cleanPlannerOutput(finalOutput)
+				return this.cleanPlannerOutput(finalOutput);
 			}
 		} catch (error) {
-			console.error("Planner agent execution error:", error)
-			return null
+			console.error('Planner agent execution error:', error);
+			return null;
 		}
 	}
 
 	/**
 	 * Extract the enhanced prompt from planner agent's output
 	 */
-	private extractEnhancedPromptFromPlannerOutput(output: string): string | null {
+	private extractEnhancedPromptFromPlannerOutput(
+		output: string
+	): string | null {
 		// Look for exit_agent tool call with the enhanced prompt
-		const exitAgentMatch = output.match(/<exit_agent>\s*<result>([\s\S]*?)<\/result>\s*<\/exit_agent>/i)
+		const exitAgentMatch = output.match(
+			/<exit_agent>\s*<result>([\s\S]*?)<\/result>\s*<\/exit_agent>/i
+		);
 		if (exitAgentMatch) {
-			return exitAgentMatch[1].trim()
+			return exitAgentMatch[1].trim();
 		}
 
 		// Look for attempt_completion tool call with the enhanced prompt
-		const attemptCompletionMatch = output.match(/<attempt_completion>\s*<result>([\s\S]*?)<\/result>\s*<\/attempt_completion>/i)
+		const attemptCompletionMatch = output.match(
+			/<attempt_completion>\s*<result>([\s\S]*?)<\/result>\s*<\/attempt_completion>/i
+		);
 		if (attemptCompletionMatch) {
-			return attemptCompletionMatch[1].trim()
+			return attemptCompletionMatch[1].trim();
 		}
 
 		// Look for any tool call that might contain the result
-		const toolResultMatch = output.match(/<[^>]+>\s*<result>([\s\S]*?)<\/result>\s*<\/[^>]+>/i)
+		const toolResultMatch = output.match(
+			/<[^>]+>\s*<result>([\s\S]*?)<\/result>\s*<\/[^>]+>/i
+		);
 		if (toolResultMatch) {
-			return toolResultMatch[1].trim()
+			return toolResultMatch[1].trim();
 		}
 
-		return null
+		return null;
 	}
 
 	/**
@@ -366,49 +418,51 @@ export class EnhancePromptHook extends BaseHook {
 	 */
 	private cleanPlannerOutput(output: string): string | null {
 		// Remove tool calls (anything between < and >)
-		let cleaned = output.replace(/<[^>]*>[\s\S]*?<\/[^>]*>/g, '')
+		let cleaned = output.replace(/<[^>]*>[\s\S]*?<\/[^>]*>/g, '');
 
 		// Remove thinking tags and their content
-		cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+		cleaned = cleaned.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
 
 		// Remove observation tags and their content
-		cleaned = cleaned.replace(/<observation>[\s\S]*?<\/observation>/gi, '')
+		cleaned = cleaned.replace(/<observation>[\s\S]*?<\/observation>/gi, '');
 
 		// Remove action tags and their content
-		cleaned = cleaned.replace(/<action>[\s\S]*?<\/action>/gi, '')
+		cleaned = cleaned.replace(/<action>[\s\S]*?<\/action>/gi, '');
 
 		// Remove markdown headers and bold text
-		cleaned = cleaned.replace(/#{1,6}\s+/g, '')
-		cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1')
+		cleaned = cleaned.replace(/#{1,6}\s+/g, '');
+		cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1');
 
 		// Split into lines and filter out meta-commentary
-		const lines = cleaned.split('\n')
-		const contentLines: string[] = []
+		const lines = cleaned.split('\n');
+		const contentLines: string[] = [];
 
 		for (const line of lines) {
-			const trimmed = line.trim()
-			if (trimmed &&
+			const trimmed = line.trim();
+			if (
+				trimmed &&
 				!trimmed.startsWith('I ') &&
 				!trimmed.startsWith('Let me ') &&
 				!trimmed.startsWith('Now ') &&
 				!trimmed.startsWith('First ') &&
 				!trimmed.includes('analyze') &&
 				!trimmed.includes('planning') &&
-				!trimmed.includes('approach')) {
-				contentLines.push(line)
+				!trimmed.includes('approach')
+			) {
+				contentLines.push(line);
 			}
 		}
 
-		const result = contentLines.join('\n').trim()
-		return result || null
+		const result = contentLines.join('\n').trim();
+		return result || null;
 	}
 
 	/**
 	 * Update enhancement options
 	 */
 	public updateEnhanceOptions(options: Partial<EnhancePromptOptions>): void {
-		this.options = { ...this.options, ...options }
-		this.updateOptions(options)
+		this.options = { ...this.options, ...options };
+		this.updateOptions(options);
 	}
 
 	/**
@@ -417,19 +471,22 @@ export class EnhancePromptHook extends BaseHook {
 	protected async executeHook(): Promise<string | null> {
 		// This hook is not meant to be triggered automatically
 		// It's called manually via enhancePrompt method
-		return null
+		return null;
 	}
 }
 
 /**
  * Create an enhance prompt hook instance
  */
-export function createEnhancePromptHook(MainAgent: MainAgent, options?: Partial<EnhancePromptOptions>): EnhancePromptHook {
+export function createEnhancePromptHook(
+	MainAgent: MainAgent,
+	options?: Partial<EnhancePromptOptions>
+): EnhancePromptHook {
 	const defaultOptions: EnhancePromptOptions = {
-		hookName: "enhance-prompt",
+		hookName: 'enhance-prompt',
 		triggerEvery: undefined, // Manual trigger only
-		...options
-	}
+		...options,
+	};
 
-	return new EnhancePromptHook(defaultOptions, MainAgent)
+	return new EnhancePromptHook(defaultOptions, MainAgent);
 }

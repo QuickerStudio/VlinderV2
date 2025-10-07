@@ -3,10 +3,10 @@
  * It handles tool creation, execution queuing, state management, and cleanup of running tools.
  */
 
-import treeKill from "tree-kill"
-import { ToolResponseV2 } from "../types"
-import { MainAgent } from "../main-agent"
-import { AgentToolOptions, ToolName } from "./types"
+import treeKill from 'tree-kill';
+import { ToolResponseV2 } from '../types';
+import { MainAgent } from '../main-agent';
+import { AgentToolOptions, ToolName } from './types';
 import {
 	SearchFilesTool,
 	ListFilesTool,
@@ -17,7 +17,6 @@ import {
 	ReadFileTool,
 	FileEditorTool,
 	UrlScreenshotTool,
-	WebFetchTool,
 	MoveTool,
 	RemoveTool,
 	RenameTool,
@@ -25,17 +24,29 @@ import {
 	KillBashTool,
 	ReadProgressTool,
 	TerminalTool,
-} from "."
-import { SearchSymbolsTool } from "./runners/search-symbols.tool"
-import { BaseAgentTool, FullToolParams } from "./base-agent.tool"
-import ToolParser from "./tool-parser/tool-parser"
-import { tools, writeToFileTool } from "./schema"
-import pWaitFor from "p-wait-for"
-import PQueue from "p-queue"
-import { DevServerTool } from "./runners/dev-server.tool"
-import { SpawnAgentTool } from "./runners/agents/spawn-agent.tool"
-import { ExitAgentTool } from "./runners/agents/exit-agent.tool"
-import { SubmitReviewTool } from "./runners/submit-review.tool"
+	GetErrorsTool,
+	ReplaceStringTool,
+	MultiReplaceStringTool,
+	InsertEditTool,
+	FetchWebpageTool,
+	VscodeApiTool,
+	GrepSearchTool,
+	GetTerminalOutputTool,
+	ThinkTool,
+	FastEditorTool,
+	TimerTool,
+	PatternSearchTool,
+} from '.';
+import { SearchSymbolsTool } from './runners/search-symbols.tool';
+import { BaseAgentTool, FullToolParams } from './base-agent.tool';
+import ToolParser from './tool-parser/tool-parser';
+import { tools, writeToFileTool } from './schema';
+import pWaitFor from 'p-wait-for';
+import PQueue from 'p-queue';
+import { DevServerTool } from './runners/dev-server.tool';
+import { SpawnAgentTool } from './runners/agents/spawn-agent.tool';
+import { ExitAgentTool } from './runners/agents/exit-agent.tool';
+import { SubmitReviewTool } from './runners/submit-review.tool';
 
 /**
  * Represents the context and state of a tool during its lifecycle
@@ -43,13 +54,13 @@ import { SubmitReviewTool } from "./runners/submit-review.tool"
  */
 interface ToolContext {
 	/** Unique identifier for the tool context */
-	id: string
+	id: string;
 	/** Instance of the tool being executed */
-	tool: BaseAgentTool<any>
+	tool: BaseAgentTool<any>;
 	/** Current execution status of the tool */
-	status: "pending" | "processing" | "completed" | "error"
+	status: 'pending' | 'processing' | 'completed' | 'error';
 	/** Error object if the tool execution failed */
-	error?: Error
+	error?: Error;
 }
 
 /**
@@ -58,31 +69,31 @@ interface ToolContext {
  */
 export class ToolExecutor {
 	/** Process ID of the currently running tool, if any */
-	private runningProcessId: number | undefined
+	private runningProcessId: number | undefined;
 	/** Current working directory for tool execution */
-	private readonly cwd: string
+	private readonly cwd: string;
 	/** Reference to the MainAgent instance */
-	private readonly MainAgent: MainAgent
+	private readonly MainAgent: MainAgent;
 	/** Parser for handling tool commands and updates */
-	private readonly toolParser: ToolParser
+	private readonly toolParser: ToolParser;
 	/** Queue for managing sequential tool execution */
-	private readonly queue: PQueue
+	private readonly queue: PQueue;
 
 	/** Map of active tool contexts indexed by their IDs */
-	private toolContexts: Map<string, ToolContext> = new Map()
+	private toolContexts: Map<string, ToolContext> = new Map();
 	/** Array of completed tool execution results */
-	private toolResults: { name: string; result: ToolResponseV2 }[] = []
+	private toolResults: { name: string; result: ToolResponseV2 }[] = [];
 	/** Flag indicating if tool execution is being aborted */
-	private isAborting: boolean = false
+	private isAborting: boolean = false;
 
 	/**
 	 * Creates a new ToolExecutor instance
 	 * @param options Configuration options for the tool executor
 	 */
 	constructor(options: AgentToolOptions) {
-		this.cwd = options.cwd
-		this.MainAgent = options.MainAgent
-		this.queue = new PQueue({ concurrency: 1 })
+		this.cwd = options.cwd;
+		this.MainAgent = options.MainAgent;
+		this.queue = new PQueue({ concurrency: 1 });
 
 		this.toolParser = new ToolParser(
 			tools.map((tool) => tool.schema),
@@ -91,7 +102,7 @@ export class ToolExecutor {
 				onToolEnd: this.handleToolEnd.bind(this),
 				onToolError: this.handleToolError.bind(this),
 			}
-		)
+		);
 	}
 
 	/**
@@ -102,11 +113,12 @@ export class ToolExecutor {
 		return {
 			cwd: this.cwd,
 			alwaysAllowReadOnly: this.MainAgent.getStateManager().alwaysAllowReadOnly,
-			alwaysAllowWriteOnly: this.MainAgent.getStateManager().alwaysAllowWriteOnly,
+			alwaysAllowWriteOnly:
+				this.MainAgent.getStateManager().alwaysAllowWriteOnly,
 			MainAgent: this.MainAgent,
 			setRunningProcessId: this.setRunningProcessId.bind(this),
 			agentName: this.MainAgent.getStateManager().subAgentManager.state?.name,
-		}
+		};
 	}
 
 	/**
@@ -114,7 +126,7 @@ export class ToolExecutor {
 	 * @returns True if there are active or queued tools, false otherwise
 	 */
 	public hasActiveTools(): boolean {
-		return this.toolContexts.size > 0 || this.queue.size > 0
+		return this.toolContexts.size > 0 || this.queue.size > 0;
 	}
 
 	/**
@@ -133,7 +145,6 @@ export class ToolExecutor {
 			ask_followup_question: AskFollowupQuestionTool,
 			attempt_completion: AttemptCompletionTool,
 			url_screenshot: UrlScreenshotTool,
-			web_fetch: WebFetchTool,
 			server_runner: DevServerTool,
 			search_symbol: SearchSymbolsTool,
 			file_editor: FileEditorTool,
@@ -146,16 +157,28 @@ export class ToolExecutor {
 			kill_bash: KillBashTool,
 			read_progress: ReadProgressTool,
 			terminal: TerminalTool,
-		} as const
+			get_errors: GetErrorsTool,
+			replace_string_in_file: ReplaceStringTool,
+			multi_replace_string_in_file: MultiReplaceStringTool,
+			insert_edit_into_file: InsertEditTool,
+			fetch_webpage: FetchWebpageTool,
+			get_vscode_api: VscodeApiTool,
+			grep_search: GrepSearchTool,
+			get_terminal_output: GetTerminalOutputTool,
+			think: ThinkTool,
+			fast_editor: FastEditorTool,
+			timer: TimerTool,
+			pattern_search: PatternSearchTool,
+		} as const;
 
-		const ToolClass = toolMap[params.name as keyof typeof toolMap]
+		const ToolClass = toolMap[params.name as keyof typeof toolMap];
 		if (!ToolClass) {
-			throw new Error(`Unknown tool: ${params.name}`)
+			throw new Error(`Unknown tool: ${params.name}`);
 		}
 
 		// Cast params to any to bypass type checking since we know the tool implementations
 		// handle their own type validation
-		return new ToolClass(params, this.options)
+		return new ToolClass(params, this.options);
 	}
 
 	/**
@@ -163,7 +186,7 @@ export class ToolExecutor {
 	 * @param pid Process ID to set, or undefined to clear
 	 */
 	public setRunningProcessId(pid: number | undefined) {
-		this.runningProcessId = pid
+		this.runningProcessId = pid;
 	}
 
 	/**
@@ -172,59 +195,62 @@ export class ToolExecutor {
 	 */
 	public async abortTask(): Promise<void> {
 		if (this.isAborting) {
-			return
+			return;
 		}
 
-		this.isAborting = true
+		this.isAborting = true;
 		try {
-			this.queue.clear()
-			this.toolParser.reset()
+			this.queue.clear();
+			this.toolParser.reset();
 
 			const cleanup = async () => {
 				if (this.runningProcessId) {
 					await new Promise<void>((resolve) => {
-						treeKill(this.runningProcessId!, "SIGTERM", (err) => {
+						treeKill(this.runningProcessId!, 'SIGTERM', (err) => {
 							if (err) {
-								console.error("Error killing process:", err)
+								console.error('Error killing process:', err);
 							}
-							this.runningProcessId = undefined
-							resolve()
-						})
-					})
+							this.runningProcessId = undefined;
+							resolve();
+						});
+					});
 				}
 
 				// Capture interrupted tool results before cleanup
 				for (const context of this.toolContexts.values()) {
-					if (context.status === "processing") {
+					if (context.status === 'processing') {
 						this.toolResults.push({
 							name: context.tool.name,
 							result: {
 								toolName: context.tool.name,
 								toolId: context.id,
-								status: "error",
-								text: "Tool execution was interrupted",
+								status: 'error',
+								text: 'Tool execution was interrupted',
 							},
-						})
+						});
 					}
 				}
 
-				const cancelPromises = Array.from(this.toolContexts.values()).map((context) =>
-					context.tool
-						.abortToolExecution()
-						.catch((error) => console.error(`Error cancelling tool ${context.id}:`, error))
-				)
+				const cancelPromises = Array.from(this.toolContexts.values()).map(
+					(context) =>
+						context.tool
+							.abortToolExecution()
+							.catch((error) =>
+								console.error(`Error cancelling tool ${context.id}:`, error)
+							)
+				);
 
-				await Promise.allSettled(cancelPromises)
-				await this.queue.onIdle()
+				await Promise.allSettled(cancelPromises);
+				await this.queue.onIdle();
 
-				this.toolContexts.clear()
-			}
+				this.toolContexts.clear();
+			};
 
-			await cleanup()
+			await cleanup();
 		} catch (error) {
-			console.error("Cleanup error:", error)
+			console.error('Cleanup error:', error);
 		} finally {
-			this.isAborting = false
+			this.isAborting = false;
 		}
 	}
 
@@ -235,10 +261,10 @@ export class ToolExecutor {
 	 */
 	public async processToolUse(text: string) {
 		if (this.isAborting) {
-			return text
+			return text;
 		}
-		const res = this.toolParser.appendText(text)
-		return res
+		const res = this.toolParser.appendText(text);
+		return res;
 	}
 
 	/**
@@ -251,7 +277,7 @@ export class ToolExecutor {
 			interval: 10,
 			// after 6 minutes, give up
 			timeout: 6 * 60 * 1000,
-		})
+		});
 	}
 
 	/**
@@ -261,16 +287,23 @@ export class ToolExecutor {
 	 * @param params Updated tool parameters
 	 * @param ts Timestamp of the update
 	 */
-	private async handleToolUpdate(id: string, toolName: string, params: any, ts: number): Promise<void> {
+	private async handleToolUpdate(
+		id: string,
+		toolName: string,
+		params: any,
+		ts: number
+	): Promise<void> {
 		// check if any other tool is processing or pending if so skip the update for now
 		const ifAnyToolisProcessing = Array.from(this.toolContexts.values()).some(
-			(context) => context.status === "processing" || (context.status === "pending" && context.id !== id)
-		)
+			(context) =>
+				context.status === 'processing' ||
+				(context.status === 'pending' && context.id !== id)
+		);
 		if (this.isAborting || ifAnyToolisProcessing) {
-			return
+			return;
 		}
 
-		let context = this.toolContexts.get(id)
+		let context = this.toolContexts.get(id);
 		if (!context) {
 			const tool = this.createTool({
 				name: toolName as ToolName,
@@ -281,30 +314,32 @@ export class ToolExecutor {
 				isLastWriteToFile: false,
 				ask: this.MainAgent.taskExecutor.ask.bind(this.MainAgent.taskExecutor),
 				say: this.MainAgent.taskExecutor.say.bind(this.MainAgent.taskExecutor),
-				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(this.MainAgent.taskExecutor),
-			})
+				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(
+					this.MainAgent.taskExecutor
+				),
+			});
 
-			context = { id, tool, status: "pending" }
-			this.toolContexts.set(id, context)
+			context = { id, tool, status: 'pending' };
+			this.toolContexts.set(id, context);
 		} else {
-			context.tool.updateParams(params)
-			context.tool.updateIsFinal(false)
+			context.tool.updateParams(params);
+			context.tool.updateIsFinal(false);
 		}
 
 		// Handle partial updates for write file tool
 		if (context.tool instanceof FileEditorTool && params.path) {
 			if (params.content) {
 				if (params.content) {
-					await context.tool.handlePartialUpdate(params.path, params.content)
+					await context.tool.handlePartialUpdate(params.path, params.content);
 				}
 			}
 			// enable after updating the animation
 			if (params.diff) {
 				// this.updateToolStatus(context, params, ts)
-				await context.tool.handlePartialUpdateDiff(params.path, params.diff)
+				await context.tool.handlePartialUpdateDiff(params.path, params.diff);
 			}
 		} else {
-			await this.updateToolStatus(context, params, ts)
+			await this.updateToolStatus(context, params, ts);
 		}
 	}
 
@@ -314,13 +349,17 @@ export class ToolExecutor {
 	 * @param toolName Name of the tool
 	 * @param params Final tool parameters
 	 */
-	private async handleToolEnd(id: string, toolName: string, params: any): Promise<void> {
+	private async handleToolEnd(
+		id: string,
+		toolName: string,
+		params: any
+	): Promise<void> {
 		if (this.isAborting) {
-			console.log(`Tool is aborting, skipping tool: ${toolName}`)
-			return
+			console.log(`Tool is aborting, skipping tool: ${toolName}`);
+			return;
 		}
 
-		let context = this.toolContexts.get(id)
+		let context = this.toolContexts.get(id);
 		if (!context) {
 			const tool = this.createTool({
 				name: toolName as ToolName,
@@ -331,18 +370,20 @@ export class ToolExecutor {
 				isLastWriteToFile: false,
 				ask: this.MainAgent.taskExecutor.ask.bind(this.MainAgent.taskExecutor),
 				say: this.MainAgent.taskExecutor.say.bind(this.MainAgent.taskExecutor),
-				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(this.MainAgent.taskExecutor),
-			})
+				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(
+					this.MainAgent.taskExecutor
+				),
+			});
 
-			context = { id, tool, status: "pending" }
-			this.toolContexts.set(id, context)
+			context = { id, tool, status: 'pending' };
+			this.toolContexts.set(id, context);
 		}
 
-		context.tool.updateParams(params)
-		context.tool.updateIsFinal(true)
+		context.tool.updateParams(params);
+		context.tool.updateIsFinal(true);
 
-		this.queue.add(() => this.processTool(context!))
-		this.updateToolStatus(context, params, context.tool.ts)
+		this.queue.add(() => this.processTool(context!));
+		this.updateToolStatus(context, params, context.tool.ts);
 	}
 
 	/**
@@ -352,33 +393,70 @@ export class ToolExecutor {
 	 * @param error Error that occurred
 	 * @param ts Timestamp of the error
 	 */
-	private async handleToolError(id: string, toolName: string, error: Error, ts: number): Promise<void> {
-		console.error(`Error processing tool: ${id}`, error)
+	private async handleToolError(
+		id: string,
+		toolName: string,
+		error: Error,
+		ts: number
+	): Promise<void> {
+		console.error(`Error processing tool: ${id}`, error);
 
-		const context = this.toolContexts.get(id)
+		const context = this.toolContexts.get(id);
 		if (context) {
-			context.status = "error"
-			context.error = error
+			context.status = 'error';
+			context.error = error;
 			// if (context.tool instanceof FileEditorTool) {
 			// 	context.tool.
 			// }
 		}
 
-		await context?.tool.abortToolExecution()
+		await context?.tool.abortToolExecution();
+
+		// Safely handle tool params - provide defaults for array fields that might be undefined
+		const toolParams = context?.tool.paramsInput || {};
+		const safeToolParams: any = { ...toolParams };
+
+		// For multi_replace_string_in_file, ensure replacements is always an array
+		if (toolName === 'multi_replace_string_in_file' && !Array.isArray(safeToolParams.replacements)) {
+			safeToolParams.replacements = [];
+		}
+
+		// For fetch_webpage, ensure urls is always an array
+		if (toolName === 'fetch_webpage' && !Array.isArray(safeToolParams.urls)) {
+			safeToolParams.urls = [];
+		}
+
+		// For insert_edit_into_file, ensure required fields have default values
+		if (toolName === 'insert_edit_into_file') {
+			safeToolParams.explanation = safeToolParams.explanation || 'No explanation provided';
+			safeToolParams.filePath = safeToolParams.filePath || 'Unknown file';
+			safeToolParams.code = safeToolParams.code || '';
+			safeToolParams.startLine = safeToolParams.startLine || 0;
+		}
+
+		// For fast-editor, ensure edits is always an array
+		if (toolName === 'fast-editor' && !Array.isArray(safeToolParams.edits)) {
+			safeToolParams.edits = [];
+		}
+
+		// For pattern_search, ensure files is always an array
+		if (toolName === 'pattern_search' && !Array.isArray(safeToolParams.files)) {
+			safeToolParams.files = [];
+		}
 
 		await this.MainAgent.taskExecutor.updateAsk(
-			"tool",
+			'tool',
 			{
 				tool: {
 					tool: toolName as any,
 					ts,
-					approvalState: "error",
-					...context?.tool.paramsInput!,
+					approvalState: 'error',
+					...safeToolParams,
 					error: error.message,
 				},
 			},
 			ts
-		)
+		);
 	}
 
 	/**
@@ -387,20 +465,25 @@ export class ToolExecutor {
 	 * @param params Parameters for the update
 	 * @param ts Timestamp of the update
 	 */
-	private async updateToolStatus(context: ToolContext, params: any, ts: number) {
+	private async updateToolStatus(
+		context: ToolContext,
+		params: any,
+		ts: number
+	) {
 		await this.MainAgent.taskExecutor.updateAsk(
-			"tool",
+			'tool',
 			{
 				tool: {
 					tool: context.tool.name,
-					agentName: this.MainAgent.getStateManager().subAgentManager.state?.name,
+					agentName:
+						this.MainAgent.getStateManager().subAgentManager.state?.name,
 					...params,
 					ts,
-					approvalState: "loading",
+					approvalState: 'loading',
 				},
 			},
 			ts
-		)
+		);
 	}
 
 	/**
@@ -408,7 +491,7 @@ export class ToolExecutor {
 	 * @returns True if parser is in a tool tag, false otherwise
 	 */
 	public isParserInToolTag() {
-		return this.toolParser.isInToolTag
+		return this.toolParser.isInToolTag;
 	}
 
 	/**
@@ -418,13 +501,13 @@ export class ToolExecutor {
 	 */
 	private async processTool(context: ToolContext): Promise<void> {
 		if (this.isAborting) {
-			return
+			return;
 		}
 
-		await pWaitFor(() => context.tool.isFinal, { interval: 10 })
+		await pWaitFor(() => context.tool.isFinal, { interval: 10 });
 
 		try {
-			context.status = "processing"
+			context.status = 'processing';
 			const result = await context.tool.execute({
 				name: context.tool.name as ToolName,
 				input: context.tool.paramsInput,
@@ -434,38 +517,60 @@ export class ToolExecutor {
 				isLastWriteToFile: false,
 				ask: this.MainAgent.taskExecutor.ask.bind(this.MainAgent.taskExecutor),
 				say: this.MainAgent.taskExecutor.say.bind(this.MainAgent.taskExecutor),
-				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(this.MainAgent.taskExecutor),
-			})
+				updateAsk: this.MainAgent.taskExecutor.updateAsk.bind(
+					this.MainAgent.taskExecutor
+				),
+			});
 
-			this.toolResults.push({ name: context.tool.name, result })
-			console.log(`Tool execution completed: ${context.tool.name}`)
-			context.status = "completed"
+			this.toolResults.push({ name: context.tool.name, result });
+			console.log(`Tool execution completed: ${context.tool.name}`);
+			context.status = 'completed';
+
+			// Update approval state to 'approved' for tools that don't manage their own state
+			// Tools like grep_search, list_files, etc. that don't call ask() need this
+			if (result.status === 'success') {
+				await this.MainAgent.taskExecutor.partialUpdateTool(
+					{
+						ts: context.tool.ts,
+						approvalState: 'approved',
+					},
+					context.tool.ts
+				);
+			}
 		} catch (error) {
-			console.error(`Error executing tool: ${context.tool.name}`, error)
-			context.status = "error"
-			context.error = error as Error
+			console.error(`Error executing tool: ${context.tool.name}`, error);
+			context.status = 'error';
+			context.error = error as Error;
 			await this.MainAgent.taskExecutor.partialUpdateTool(
 				{
 					ts: context.tool.ts,
-					approvalState: "error",
-					error: error instanceof Error ? error.message : `unknown error for tool ${context.tool.name}`,
+					approvalState: 'error',
+					error:
+						error instanceof Error
+							? error.message
+							: `unknown error for tool ${context.tool.name}`,
 				},
 				context.tool.ts
-			)
+			);
 
 			// Add error result to toolResults
-			const errorMessage = error instanceof Error ? error.message : `unknown error for tool ${context.tool.name}`
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: `unknown error for tool ${context.tool.name}`;
 			this.toolResults.push({
 				name: context.tool.name,
 				result: {
 					toolName: context.tool.name,
 					toolId: context.id,
-					status: "error",
-					text: this.isAborting ? "Tool execution was interrupted" : `Error: ${errorMessage}`,
+					status: 'error',
+					text: this.isAborting
+						? 'Tool execution was interrupted'
+						: `Error: ${errorMessage}`,
 				},
-			})
+			});
 		} finally {
-			this.toolContexts.delete(context.id)
+			this.toolContexts.delete(context.id);
 		}
 	}
 
@@ -474,7 +579,7 @@ export class ToolExecutor {
 	 * @returns Array of tool execution results
 	 */
 	public getToolResults(): { name: string; result: ToolResponseV2 }[] {
-		return [...this.toolResults]
+		return [...this.toolResults];
 	}
 
 	/**
@@ -482,7 +587,7 @@ export class ToolExecutor {
 	 * Aborts any running tasks and clears results
 	 */
 	public async resetToolState() {
-		await this.abortTask()
-		this.toolResults = []
+		await this.abortTask();
+		this.toolResults = [];
 	}
 }

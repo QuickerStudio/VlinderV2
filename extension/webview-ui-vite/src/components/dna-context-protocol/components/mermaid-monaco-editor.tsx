@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import * as monaco from 'monaco-editor';
 import { cn } from '@/lib/utils';
 import { useVSCodeTheme } from '@/hooks/use-vscode-theme';
 import { formatMermaidCode } from '../hooks/mermaid-formatter';
-
-
-
-
-
 
 interface MermaidMonacoEditorProps {
   value: string;
@@ -34,15 +35,18 @@ monaco.languages.setMonarchTokensProvider('mermaid', {
   tokenizer: {
     root: [
       // Graph types
-      [/\b(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gitgraph|pie|quadrantChart|requirement|mindmap|timeline|zenuml|sankey|block-beta)\b/, 'keyword'],
-      
+      [
+        /\b(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gitgraph|pie|quadrantChart|requirement|mindmap|timeline|zenuml|sankey|block-beta)\b/,
+        'keyword',
+      ],
+
       // Directions
       [/\b(TD|TB|BT|RL|LR)\b/, 'keyword.direction'],
-      
+
       // Node shapes and connections
       [/-->|---|-\.-|==>|===|-.->|<-->|<--->|x--x|o--o/, 'operator.connection'],
       [/\|[^|]*\|/, 'string.label'],
-      
+
       // Node definitions with shapes
       [/\w+\[\[.*?\]\]/, 'entity.name.function.subroutine'],
       [/\w+\[.*?\]/, 'entity.name.function.rectangle'],
@@ -55,46 +59,46 @@ monaco.languages.setMonarchTokensProvider('mermaid', {
       [/\w+\{\{.*?\}\}/, 'entity.name.function.hexagon'],
       [/\w+\[\/.*?\/\]/, 'entity.name.function.parallelogram'],
       [/\w+\[\/.*?\\\]/, 'entity.name.function.trapezoid'],
-      
+
       // Base64 image data (collapsed display)
       [/data:image\/[^;]+;base64,[A-Za-z0-9+/=]{50,}/, 'string.base64'],
-      
+
       // HTML content in quotes
       [/"<[^"]*>"/, 'string.html'],
       [/'<[^']*>'/, 'string.html'],
-      
+
       // Comments
       [/%%.*$/, 'comment'],
-      
+
       // Strings
       [/"([^"\\]|\\.)*$/, 'string.invalid'],
       [/'([^'\\]|\\.)*$/, 'string.invalid'],
       [/"/, 'string', '@string_double'],
       [/'/, 'string', '@string_single'],
-      
+
       // Node IDs
       [/\b[A-Za-z_][A-Za-z0-9_]*\b/, 'variable.name'],
-      
+
       // Numbers
       [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
       [/\d+/, 'number'],
-      
+
       // Whitespace
       [/[ \t\r\n]+/, ''],
     ],
-    
+
     string_double: [
       [/[^\\"]+/, 'string'],
       [/\\./, 'string.escape'],
-      [/"/, 'string', '@pop']
+      [/"/, 'string', '@pop'],
     ],
-    
+
     string_single: [
       [/[^\\']+/, 'string'],
       [/\\./, 'string.escape'],
-      [/'/, 'string', '@pop']
-    ]
-  }
+      [/'/, 'string', '@pop'],
+    ],
+  },
 });
 
 // Define custom theme for Mermaid
@@ -124,7 +128,7 @@ monaco.editor.defineTheme('mermaid-dark', {
     { token: 'variable.name', foreground: '9cdcfe' },
     { token: 'number', foreground: 'b5cea8' },
   ],
-  colors: {}
+  colors: {},
 });
 
 monaco.editor.defineTheme('mermaid-light', {
@@ -153,18 +157,22 @@ monaco.editor.defineTheme('mermaid-light', {
     { token: 'variable.name', foreground: '001080' },
     { token: 'number', foreground: '098658' },
   ],
-  colors: {}
+  colors: {},
 });
 
-export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMonacoEditorProps>(
-  ({ value, onChange, className, placeholder, containerWidth }, ref) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-    const theme = useVSCodeTheme();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+export const MermaidMonacoEditor = forwardRef<
+  MermaidMonacoEditorRef,
+  MermaidMonacoEditorProps
+>(({ value, onChange, className, placeholder, containerWidth }, ref) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const theme = useVSCodeTheme();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-    // Expose methods via ref
-    useImperativeHandle(ref, () => ({
+  // Expose methods via ref
+  useImperativeHandle(
+    ref,
+    () => ({
       insertSnippet: (snippet: string) => {
         if (!editorRef.current) return;
 
@@ -172,10 +180,12 @@ export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMon
         const model = editorRef.current.getModel();
 
         if (selection && model) {
-          editorRef.current.executeEdits('insert-snippet', [{
-            range: selection,
-            text: snippet
-          }]);
+          editorRef.current.executeEdits('insert-snippet', [
+            {
+              range: selection,
+              text: snippet,
+            },
+          ]);
           editorRef.current.focus();
         }
       },
@@ -211,20 +221,22 @@ export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMon
           if (formattedValue !== currentValue) {
             // 应用格式化后的代码
             const fullRange = model.getFullModelRange();
-            editorRef.current.executeEdits('format-document', [{
-              range: fullRange,
-              text: formattedValue
-            }]);
+            editorRef.current.executeEdits('format-document', [
+              {
+                range: fullRange,
+                text: formattedValue,
+              },
+            ]);
           }
         } catch (error) {
           console.error('格式化失败:', error);
         }
 
         editorRef.current.focus();
-      }
-    }), []);
-
-
+      },
+    }),
+    []
+  );
 
   // Initialize Monaco Editor
   useEffect(() => {
@@ -300,8 +312,6 @@ export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMon
     return () => clearTimeout(timeoutId);
   }, [containerWidth]);
 
-
-
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -324,19 +334,25 @@ export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMon
   };
 
   // Check if there are Base64 images in the code
-  const hasBase64Images = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]{100,}/.test(value);
+  const hasBase64Images = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]{100,}/.test(
+    value
+  );
 
   return (
-    <div className={cn("relative w-full h-full", className)}>
+    <div className={cn('relative w-full h-full', className)}>
       {/* Base64 collapse toggle */}
       {hasBase64Images && (
-        <div className="absolute top-2 right-2 z-10">
+        <div className='absolute top-2 right-2 z-10'>
           <button
             onClick={toggleBase64Collapse}
-            className="px-2 py-1 text-xs rounded border bg-background hover:bg-accent border-border flex items-center gap-1"
-            title={isCollapsed ? "Expand Base64 images" : "Collapse Base64 images"}
+            className='px-2 py-1 text-xs rounded border bg-background hover:bg-accent border-border flex items-center gap-1'
+            title={
+              isCollapsed ? 'Expand Base64 images' : 'Collapse Base64 images'
+            }
           >
-            <span className={`codicon codicon-${isCollapsed ? 'expand-all' : 'collapse-all'}`}></span>
+            <span
+              className={`codicon codicon-${isCollapsed ? 'expand-all' : 'collapse-all'}`}
+            ></span>
             {isCollapsed ? 'Expand' : 'Collapse'}
           </button>
         </div>
@@ -344,10 +360,10 @@ export const MermaidMonacoEditor = forwardRef<MermaidMonacoEditorRef, MermaidMon
 
       <div
         ref={containerRef}
-        className="w-full h-full"
+        className='w-full h-full'
         style={{
           backgroundColor: 'var(--vscode-editor-background)',
-          color: 'var(--vscode-editor-foreground)'
+          color: 'var(--vscode-editor-foreground)',
         }}
       />
     </div>

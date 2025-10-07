@@ -1,5 +1,5 @@
 // schema/explore_repo_folder.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool explore_repo_folder
@@ -31,9 +31,9 @@ const schema = z.object({
 	path: z
 		.string()
 		.describe(
-			"The path of the directory (relative to the current working directory) to list top-level source code definitions for."
+			'The path of the directory (relative to the current working directory) to list top-level source code definitions for.'
 		),
-})
+});
 
 const examples = [
 	`<tool name="explore_repo_folder">
@@ -47,17 +47,17 @@ const examples = [
 	`<tool name="explore_repo_folder">
   <path>/components</path>
 </tool>`,
-]
+];
 
 export const ExploreRepoFolderTool = {
 	schema: {
-		name: "explore_repo_folder",
+		name: 'explore_repo_folder',
 		schema,
 	},
 	examples,
-}
+};
 
 export type ExploreRepoFolderToolParams = {
-	name: "explore_repo_folder"
-	input: z.infer<typeof schema>
-}
+	name: 'explore_repo_folder';
+	input: z.infer<typeof schema>;
+};

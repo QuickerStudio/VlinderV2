@@ -1,5 +1,5 @@
 // schema/write_to_file.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool write_to_file
@@ -39,20 +39,24 @@ import { z } from "zod"
  * ```
  */
 const schema = z.object({
-	path: z.string().describe("The path of the file to write to (relative to the current working directory)."),
+	path: z
+		.string()
+		.describe(
+			'The path of the file to write to (relative to the current working directory).'
+		),
 	content: z
 		.string()
 		.describe(
-			"The full content to write to the file when creating a new file. Always provide the complete content without any truncation."
+			'The full content to write to the file when creating a new file. Always provide the complete content without any truncation.'
 		)
 		.optional(),
 	diff: z
 		.string()
 		.describe(
-			"The `SEARCH/REPLACE` blocks representing the changes to be made to an existing file. These blocks must be formatted correctly, matching exact existing content for `SEARCH` and precise modifications for `REPLACE`."
+			'The `SEARCH/REPLACE` blocks representing the changes to be made to an existing file. These blocks must be formatted correctly, matching exact existing content for `SEARCH` and precise modifications for `REPLACE`.'
 		)
 		.optional(),
-})
+});
 
 const examples = [
 	`<write_to_file>
@@ -174,22 +178,22 @@ from hello import hello
 </diff>
 </content>
 </write_to_file>`,
-]
+];
 
 export const writeToFileTool = {
 	schema: {
-		name: "write_to_file",
+		name: 'write_to_file',
 		schema,
 	},
 	examples,
-}
+};
 
 export type WriteToFileToolParams = {
-	name: "write_to_file"
-	input: z.infer<typeof schema>
-}
+	name: 'write_to_file';
+	input: z.infer<typeof schema>;
+};
 
 export type EditFileBlocksToolParams = {
-	name: "edit_file_blocks"
-	input: z.infer<typeof schema>
-}
+	name: 'edit_file_blocks';
+	input: z.infer<typeof schema>;
+};

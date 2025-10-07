@@ -1,6 +1,6 @@
 // providers/deepseek.ts
-import { ProviderConfig } from "../types"
-import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from "../constants"
+import { ProviderConfig } from '../types';
+import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from '../constants';
 
 export const deepseekConfig: ProviderConfig = {
 	id: PROVIDER_IDS.DEEPSEEK,
@@ -8,8 +8,8 @@ export const deepseekConfig: ProviderConfig = {
 	baseUrl: DEFAULT_BASE_URLS[PROVIDER_IDS.DEEPSEEK],
 	models: [
 		{
-			id: "deepseek-chat",
-			name: "DeepSeek Chat",
+			id: 'deepseek-chat',
+			name: 'DeepSeek Chat',
 			contextWindow: 64000,
 			maxTokens: 8192,
 			supportsImages: false,
@@ -22,8 +22,8 @@ export const deepseekConfig: ProviderConfig = {
 			provider: PROVIDER_IDS.DEEPSEEK,
 		},
 		{
-			id: "deepseek-reasoner",
-			name: "DeepSeek R1",
+			id: 'deepseek-reasoner',
+			name: 'DeepSeek R1',
 			contextWindow: 64000,
 			maxTokens: 8192,
 			supportsImages: false,
@@ -37,5 +37,5 @@ export const deepseekConfig: ProviderConfig = {
 			provider: PROVIDER_IDS.DEEPSEEK,
 		},
 	],
-	requiredFields: ["apiKey"],
-}
+	requiredFields: ['apiKey'],
+};

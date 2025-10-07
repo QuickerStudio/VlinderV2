@@ -1,5 +1,5 @@
 // schema/ask_followup_question.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool ask_followup_question
@@ -31,9 +31,9 @@ const schema = z.object({
 	question: z
 		.string()
 		.describe(
-			"The question to ask the user. This should be a clear, specific question that addresses the information you need."
+			'The question to ask the user. This should be a clear, specific question that addresses the information you need.'
 		),
-})
+});
 
 const examples = [
 	`<tool name="ask_followup_question">
@@ -47,17 +47,17 @@ const examples = [
 	`<tool name="ask_followup_question">
   <question>Do you have any preferred programming languages for this project?</question>
 </tool>`,
-]
+];
 
 export const askFollowupQuestionTool = {
 	schema: {
-		name: "ask_followup_question",
+		name: 'ask_followup_question',
 		schema,
 	},
 	examples,
-}
+};
 
 export type AskFollowupQuestionToolParams = {
-	name: "ask_followup_question"
-	input: z.infer<typeof schema>
-}
+	name: 'ask_followup_question';
+	input: z.infer<typeof schema>;
+};

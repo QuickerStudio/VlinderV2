@@ -1,6 +1,6 @@
 // context.ts
 
-import { ExtensionProvider } from "../../providers/extension-provider"
+import { ExtensionProvider } from '../../providers/extension-provider';
 
 /**
  * Example extension context.
@@ -11,6 +11,6 @@ import { ExtensionProvider } from "../../providers/extension-provider"
  *   - workspace data, etc.
  */
 export interface ExtensionContext {
-	provider: ExtensionProvider
-	userId?: string
+	provider: ExtensionProvider;
+	userId?: string;
 }

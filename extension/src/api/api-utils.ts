@@ -1,14 +1,18 @@
-import { ApiHistoryItem } from "../agent/v1/main-agent"
-import { ClaudeMessage, isV1ClaudeMessage, V1ClaudeMessage } from "../shared/messages/extension-message"
-import { isTextBlock } from "../shared/format-tools"
-import { ModelInfo } from "./providers/types"
+import { ApiHistoryItem } from '../agent/v1/main-agent';
+import {
+	ClaudeMessage,
+	isV1ClaudeMessage,
+	V1ClaudeMessage,
+} from '../shared/messages/extension-message';
+import { isTextBlock } from '../shared/format-tools';
+import { ModelInfo } from './providers/types';
 
 export interface ApiMetrics {
-	inputTokens: number
-	outputTokens: number
-	inputCacheRead: number
-	inputCacheWrite: number
-	cost: number
+	inputTokens: number;
+	outputTokens: number;
+	inputCacheRead: number;
+	inputCacheWrite: number;
+	cost: number;
 }
 
 /**
@@ -30,17 +34,17 @@ export function calculateApiCost(
 	const cacheWritesCost =
 		cacheCreationInputTokens && modelInfo.cacheWritesPrice
 			? (modelInfo.cacheWritesPrice / 1_000_000) * cacheCreationInputTokens
-			: 0
+			: 0;
 
 	const cacheReadsCost =
 		cacheReadInputTokens && modelInfo.cacheReadsPrice
 			? (modelInfo.cacheReadsPrice / 1_000_000) * cacheReadInputTokens
-			: 0
+			: 0;
 
-	const baseInputCost = (modelInfo.inputPrice / 1_000_000) * inputTokens
-	const outputCost = (modelInfo.outputPrice / 1_000_000) * outputTokens
+	const baseInputCost = (modelInfo.inputPrice / 1_000_000) * inputTokens;
+	const outputCost = (modelInfo.outputPrice / 1_000_000) * outputTokens;
 
-	return cacheWritesCost + cacheReadsCost + baseInputCost + outputCost
+	return cacheWritesCost + cacheReadsCost + baseInputCost + outputCost;
 }
 
 /**
@@ -49,22 +53,22 @@ export function calculateApiCost(
  * @returns Cleaned up message or null if empty
  */
 export function cleanUpMsg(msg: ApiHistoryItem): ApiHistoryItem | null {
-	if (typeof msg.content === "string" && msg.content.trim() === "") {
-		return null
+	if (typeof msg.content === 'string' && msg.content.trim() === '') {
+		return null;
 	}
 	if (Array.isArray(msg.content)) {
 		const newContent = msg.content.filter((block) => {
 			if (isTextBlock(block)) {
-				return block.text.trim() !== ""
+				return block.text.trim() !== '';
 			}
-			return true
-		})
+			return true;
+		});
 		if (newContent.length === 0) {
-			return null
+			return null;
 		}
-		return { ...msg, content: newContent }
+		return { ...msg, content: newContent };
 	}
-	return msg
+	return msg;
 }
 
 /**
@@ -79,8 +83,10 @@ export function getApiMetrics(claudeMessages: ClaudeMessage[]): ApiMetrics {
 		inputCacheRead: 0,
 		inputCacheWrite: 0,
 		cost: 0,
-	}
-	const reversedMessages = claudeMessages.slice().reverse()
-	const lastV1Message = reversedMessages.find((m) => isV1ClaudeMessage(m) && m?.apiMetrics)
-	return (lastV1Message as V1ClaudeMessage)?.apiMetrics || defaultMetrics
+	};
+	const reversedMessages = claudeMessages.slice().reverse();
+	const lastV1Message = reversedMessages.find(
+		(m) => isV1ClaudeMessage(m) && m?.apiMetrics
+	);
+	return (lastV1Message as V1ClaudeMessage)?.apiMetrics || defaultMetrics;
 }

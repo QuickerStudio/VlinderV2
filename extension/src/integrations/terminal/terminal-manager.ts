@@ -1,9 +1,9 @@
-import { EventEmitter } from "events"
-import pWaitFor from "p-wait-for"
-import stripAnsi from "strip-ansi"
-import * as vscode from "vscode"
-import { arePathsEqual } from "../../utils/path-helpers"
-import delay from "delay"
+import { EventEmitter } from 'events';
+import pWaitFor from 'p-wait-for';
+import stripAnsi from 'strip-ansi';
+import * as vscode from 'vscode';
+import { arePathsEqual } from '../../utils/path-helpers';
+import delay from 'delay';
 
 /*
 TerminalManager:
@@ -27,121 +27,131 @@ Enhancements:
 - Added option to auto-close terminal after command execution
 */
 
-declare module "vscode" {
+declare module 'vscode' {
 	interface Terminal {
 		// @ts-expect-error
 		shellIntegration?: {
-			cwd?: vscode.Uri
+			cwd?: vscode.Uri;
 			executeCommand?: (command: string) => {
-				read: () => AsyncIterable<string>
-			}
-		}
+				read: () => AsyncIterable<string>;
+			};
+		};
 	}
 	interface Window {
 		onDidStartTerminalShellExecution?: (
 			listener: (e: any) => any,
 			thisArgs?: any,
 			disposables?: vscode.Disposable[]
-		) => vscode.Disposable
+		) => vscode.Disposable;
 	}
 }
 
 export interface TerminalInfo {
-	terminal: vscode.Terminal
-	busy: boolean
-	lastCommand: string
-	id: number
-	name?: string // Added optional name property
+	terminal: vscode.Terminal;
+	busy: boolean;
+	lastCommand: string;
+	id: number;
+	name?: string; // Added optional name property
 }
 
 export interface DevServerInfo {
-	terminalInfo: TerminalInfo
-	url: string | null
-	logs: string[]
-	status: "starting" | "running" | "stopped" | "error"
-	error?: string
+	terminalInfo: TerminalInfo;
+	url: string | null;
+	logs: string[];
+	status: 'starting' | 'running' | 'stopped' | 'error';
+	error?: string;
 }
 
 // TerminalRegistry class to manage terminals
 export class TerminalRegistry {
-	private static terminals: TerminalInfo[] = []
-	private static nextTerminalId = 1
-	private static devServers: DevServerInfo[] = []
-	private static terminalOutputMap: Map<number, string[]> = new Map()
-	private static outputBuffers: Map<number, string> = new Map()
+	private static terminals: TerminalInfo[] = [];
+	private static terminalMap: Map<number, TerminalInfo> = new Map();
+	private static terminalNameMap: Map<string, TerminalInfo> = new Map();
+	private static nextTerminalId = 1;
+	private static devServers: DevServerInfo[] = [];
+	private static devServerMap: Map<number, DevServerInfo> = new Map();
+	private static terminalOutputMap: Map<number, string[]> = new Map();
+	private static outputBuffers: Map<number, string> = new Map();
 
-	static createTerminal(cwd?: string | vscode.Uri | undefined, name?: string): TerminalInfo {
+	static createTerminal(
+		cwd?: string | vscode.Uri | undefined,
+		name?: string
+	): TerminalInfo {
 		const terminal = vscode.window.createTerminal({
 			cwd,
-			name: name || "Workspace Terminal",
+			name: name || 'Workspace Terminal',
 			isTransient: true,
 			env: {
-				PAGER: "cat",
+				PAGER: 'cat',
 
 				// VSCode bug#237208: Command output can be lost due to a race between completion
 				// sequences and consumers. Add 50ms delay via PROMPT_COMMAND to ensure the
 				// \x1b]633;D escape sequence arrives after command output is processed.
-				PROMPT_COMMAND: "sleep 0.050",
+				PROMPT_COMMAND: 'sleep 0.050',
 
 				// VTE must be disabled because it prevents the prompt command above from executing
 				// See https://wiki.gnome.org/Apps/Terminal/VTE
-				VTE_VERSION: "0",
+				VTE_VERSION: '0',
 			},
-		})
+		});
 		const newInfo: TerminalInfo = {
 			terminal,
 			busy: false,
-			lastCommand: "",
+			lastCommand: '',
 			id: this.nextTerminalId++,
 			name,
+		};
+		this.terminals.push(newInfo);
+		this.terminalMap.set(newInfo.id, newInfo);
+		if (name) {
+			this.terminalNameMap.set(name, newInfo);
 		}
-		this.terminals.push(newInfo)
-		this.terminalOutputMap.set(newInfo.id, [])
-		this.outputBuffers.set(newInfo.id, "")
-		return newInfo
+		this.terminalOutputMap.set(newInfo.id, []);
+		this.outputBuffers.set(newInfo.id, '');
+		return newInfo;
 	}
 
 	static addOutput(terminalId: number, output: string, flush: boolean = false) {
-		let buffer = this.outputBuffers.get(terminalId) || ""
-		buffer += output
+		let buffer = this.outputBuffers.get(terminalId) || '';
+		buffer += output;
 
-		if (flush || buffer.includes("\n")) {
-			const lines = buffer.split("\n")
-			const completeLines = lines.slice(0, -1)
-			const remainingBuffer = lines[lines.length - 1]
+		if (flush || buffer.includes('\n')) {
+			const lines = buffer.split('\n');
+			const completeLines = lines.slice(0, -1);
+			const remainingBuffer = lines[lines.length - 1];
 
 			if (completeLines.length > 0) {
-				const logs = this.terminalOutputMap.get(terminalId) || []
-				logs.push(...completeLines.filter((line) => line.trim()))
-				this.terminalOutputMap.set(terminalId, logs)
+				const logs = this.terminalOutputMap.get(terminalId) || [];
+				logs.push(...completeLines.filter((line) => line.trim()));
+				this.terminalOutputMap.set(terminalId, logs);
 
-				const devServer = this.getDevServer(terminalId)
+				const devServer = this.getDevServer(terminalId);
 				if (devServer) {
-					devServer.logs = logs
+					devServer.logs = logs;
 				}
 			}
 
-			this.outputBuffers.set(terminalId, remainingBuffer)
+			this.outputBuffers.set(terminalId, remainingBuffer);
 		}
 	}
 
 	static getTerminal(id: number): TerminalInfo | undefined {
-		const terminalInfo = this.terminals.find((t) => t.id === id)
+		const terminalInfo = this.terminalMap.get(id);
 		if (terminalInfo && this.isTerminalClosed(terminalInfo.terminal)) {
-			this.removeTerminal(id)
-			return undefined
+			this.removeTerminal(id);
+			return undefined;
 		}
-		return terminalInfo
+		return terminalInfo;
 	}
 
-	// Added method to get terminal by name
+	// Added method to get terminal by name - optimized with Map lookup
 	static getTerminalByName(name: string): TerminalInfo | undefined {
-		const terminalInfo = this.terminals.find((t) => t.name === name)
+		const terminalInfo = this.terminalNameMap.get(name);
 		if (terminalInfo && this.isTerminalClosed(terminalInfo.terminal)) {
-			this.removeTerminal(terminalInfo.id)
-			return undefined
+			this.removeTerminal(terminalInfo.id);
+			return undefined;
 		}
-		return terminalInfo
+		return terminalInfo;
 	}
 
 	/**
@@ -150,162 +160,228 @@ export class TerminalRegistry {
 	 * @returns True if the terminal was found and closed, false otherwise.
 	 */
 	static closeTerminal(id: number): boolean {
-		const terminalInfo = this.getTerminal(id)
+		const terminalInfo = this.getTerminal(id);
 		if (terminalInfo) {
-			terminalInfo.terminal.dispose()
-			this.removeTerminal(id)
+			terminalInfo.terminal.dispose();
+			this.removeTerminal(id);
 
-			return true
+			return true;
 		}
-		return false
+		return false;
 	}
 
 	static updateTerminal(id: number, updates: Partial<TerminalInfo>) {
-		const terminal = this.getTerminal(id)
+		const terminal = this.getTerminal(id);
 		if (terminal) {
-			Object.assign(terminal, updates)
+			Object.assign(terminal, updates);
 		}
 	}
 
 	static removeTerminal(id: number) {
-		this.terminals = this.terminals.filter((t) => t.id !== id)
+		const terminalInfo = this.terminalMap.get(id);
+
+		// Remove from arrays and maps
+		this.terminals = this.terminals.filter((t) => t.id !== id);
+		this.terminalMap.delete(id);
+
+		// Remove from name map if it has a name
+		if (terminalInfo?.name) {
+			this.terminalNameMap.delete(terminalInfo.name);
+		}
+
 		// Remove from devServers if exists
-		this.devServers = this.devServers.filter((ds) => ds.terminalInfo.id !== id)
-		this.terminalOutputMap.delete(id)
-		this.outputBuffers.delete(id)
-		const terminal = this.getTerminal(id)
-		if (terminal && !this.isTerminalClosed(terminal.terminal)) {
-			terminal.terminal.dispose()
-			terminal.terminal.shellIntegration?.executeCommand?.("exit")
+		this.devServers = this.devServers.filter((ds) => ds.terminalInfo.id !== id);
+		this.devServerMap.delete(id);
+
+		// Clean up output maps
+		this.terminalOutputMap.delete(id);
+		this.outputBuffers.delete(id);
+
+		// Dispose terminal if still active
+		if (terminalInfo && !this.isTerminalClosed(terminalInfo.terminal)) {
+			try {
+				terminalInfo.terminal.dispose();
+				terminalInfo.terminal.shellIntegration?.executeCommand?.('exit');
+			} catch (error) {
+				console.warn(`Warning: Error disposing terminal ${id}:`, error);
+			}
 		}
 	}
 
 	static getAllTerminals(): TerminalInfo[] {
-		this.terminals = this.terminals.filter((t) => !this.isTerminalClosed(t.terminal))
-		return this.terminals
+		this.terminals = this.terminals.filter(
+			(t) => !this.isTerminalClosed(t.terminal)
+		);
+		return this.terminals;
 	}
 
 	// The exit status of the terminal will be undefined while the terminal is active.
 	private static isTerminalClosed(terminal: vscode.Terminal): boolean {
-		return terminal.exitStatus !== undefined
+		return terminal.exitStatus !== undefined;
 	}
 
 	// Dev server management methods
 	static addDevServer(terminalInfo: TerminalInfo, url: string | null = null) {
-		const logs = this.terminalOutputMap.get(terminalInfo.id) || []
-		this.devServers.push({
+		const logs = this.terminalOutputMap.get(terminalInfo.id) || [];
+		const devServerInfo: DevServerInfo = {
 			terminalInfo,
 			url,
 			logs,
-			status: "starting",
-		})
+			status: 'starting',
+		};
+		this.devServers.push(devServerInfo);
+		this.devServerMap.set(terminalInfo.id, devServerInfo);
 	}
 
 	static updateDevServerUrl(terminalId: number, url: string) {
-		const devServer = this.devServers.find((ds) => ds.terminalInfo.id === terminalId)
+		const devServer = this.devServers.find(
+			(ds) => ds.terminalInfo.id === terminalId
+		);
 		if (devServer) {
-			devServer.url = url
-			devServer.status = "running"
+			devServer.url = url;
+			devServer.status = 'running';
 		}
 	}
 
-	static updateDevServerStatus(terminalId: number, status: DevServerInfo["status"], error?: string) {
-		const devServer = this.devServers.find((ds) => ds.terminalInfo.id === terminalId)
+	static updateDevServerStatus(
+		terminalId: number,
+		status: DevServerInfo['status'],
+		error?: string
+	) {
+		const devServer = this.devServers.find(
+			(ds) => ds.terminalInfo.id === terminalId
+		);
 		if (devServer) {
-			devServer.status = status
+			devServer.status = status;
 			if (error) {
-				devServer.error = error
+				devServer.error = error;
 			}
 		}
 	}
 
 	static getDevServer(terminalId: number): DevServerInfo | undefined {
-		return this.devServers.find((ds) => ds.terminalInfo.id === terminalId)
+		return this.devServers.find((ds) => ds.terminalInfo.id === terminalId);
 	}
 
 	static getDevServerByName(name: string): DevServerInfo | undefined {
-		const terminalInfo = this.getTerminalByName(name)
+		const terminalInfo = this.getTerminalByName(name);
 		if (terminalInfo) {
-			return this.getDevServer(terminalInfo.id)
+			return this.getDevServer(terminalInfo.id);
 		}
-		return undefined
+		return undefined;
 	}
 
 	static getAllDevServers(): DevServerInfo[] {
-		return this.devServers
+		return this.devServers;
 	}
 
 	static isDevServerRunning(terminalId: number): boolean {
-		const devServer = this.getDevServer(terminalId)
-		return !!devServer && devServer.status === "running" && !this.isTerminalClosed(devServer.terminalInfo.terminal)
+		const devServer = this.getDevServer(terminalId);
+		return (
+			!!devServer &&
+			devServer.status === 'running' &&
+			!this.isTerminalClosed(devServer.terminalInfo.terminal)
+		);
 	}
 
 	static isDevServerRunningByName(name: string): boolean {
-		const terminalInfo = this.getTerminalByName(name)
+		const terminalInfo = this.getTerminalByName(name);
 		if (terminalInfo) {
-			return this.isDevServerRunning(terminalInfo.id)
+			return this.isDevServerRunning(terminalInfo.id);
 		}
-		return false
+		return false;
 	}
 
 	static removeDevServer(terminalId: number) {
-		this.devServers = this.devServers.filter((ds) => ds.terminalInfo.id !== terminalId)
+		this.devServers = this.devServers.filter(
+			(ds) => ds.terminalInfo.id !== terminalId
+		);
 	}
 
 	static clearDevServer(terminalId: number) {
-		this.closeTerminal(terminalId)
-		this.removeDevServer(terminalId)
+		this.closeTerminal(terminalId);
+		this.removeDevServer(terminalId);
 	}
 	static clearAllDevServers() {
-		const now = Date.now()
+		const now = Date.now();
 		for (const devServer of this.devServers) {
-			this.closeTerminal(devServer.terminalInfo.id)
+			this.closeTerminal(devServer.terminalInfo.id);
 		}
-		this.devServers = []
-		console.log(`All dev servers cleared in ${Date.now() - now}ms`)
+		this.devServers = [];
+		console.log(`All dev servers cleared in ${Date.now() - now}ms`);
 	}
 
 	static getTerminalLogs(terminalId: number): string[] {
-		return this.terminalOutputMap.get(terminalId) || []
+		return this.terminalOutputMap.get(terminalId) || [];
 	}
 
 	static flushOutputBuffer(terminalId: number) {
-		const buffer = this.outputBuffers.get(terminalId)
+		const buffer = this.outputBuffers.get(terminalId);
 		if (buffer && buffer.trim()) {
-			this.addOutput(terminalId, "", true)
+			this.addOutput(terminalId, '', true);
 		}
+	}
+
+	/**
+	 * Get the current output buffer for a terminal
+	 */
+	static getOutputBuffer(terminalId: number): string {
+		return this.outputBuffers.get(terminalId) || '';
+	}
+
+	/**
+	 * Get combined terminal output (logs + current buffer)
+	 */
+	static getFullTerminalOutput(terminalId: number): string {
+		const logs = this.getTerminalLogs(terminalId);
+		const buffer = this.getOutputBuffer(terminalId);
+
+		let fullOutput = logs.join('\n');
+		if (buffer && buffer.trim()) {
+			fullOutput += (fullOutput ? '\n' : '') + buffer;
+		}
+
+		return fullOutput;
 	}
 }
 
 export class TerminalManager {
-	private terminalIds: Set<number> = new Set()
-	private processes: Map<number, TerminalProcess> = new Map()
-	private disposables: vscode.Disposable[] = []
+	private terminalIds: Set<number> = new Set();
+	private processes: Map<number, TerminalProcess> = new Map();
+	private disposables: vscode.Disposable[] = [];
 
 	constructor() {
-		let disposable: vscode.Disposable | undefined
+		let disposable: vscode.Disposable | undefined;
 		try {
-			disposable = (vscode.window as vscode.Window).onDidStartTerminalShellExecution?.(async (e) => {
-				e?.execution?.read()
-			})
+			disposable = (
+				vscode.window as vscode.Window
+			).onDidStartTerminalShellExecution?.(async (e) => {
+				e?.execution?.read();
+			});
 		} catch (error) {
-			console.error("Failed to setup shell execution listener:", error)
+			console.error('Failed to setup shell execution listener:', error);
 		}
 		if (disposable) {
-			this.disposables.push(disposable)
+			this.disposables.push(disposable);
 		}
 
 		// Listen for terminal close events
-		const closeDisposable = vscode.window.onDidCloseTerminal((closedTerminal) => {
-			const terminalInfo = TerminalRegistry.getAllTerminals().find((t) => t.terminal === closedTerminal)
-			if (terminalInfo) {
-				this.terminalIds.delete(terminalInfo.id)
-				this.processes.delete(terminalInfo.id)
-				TerminalRegistry.removeTerminal(terminalInfo.id)
-				console.log(`Terminal with ID ${terminalInfo.id} was closed externally.`)
+		const closeDisposable = vscode.window.onDidCloseTerminal(
+			(closedTerminal) => {
+				const terminalInfo = TerminalRegistry.getAllTerminals().find(
+					(t) => t.terminal === closedTerminal
+				);
+				if (terminalInfo) {
+					this.terminalIds.delete(terminalInfo.id);
+					this.processes.delete(terminalInfo.id);
+					TerminalRegistry.removeTerminal(terminalInfo.id);
+					console.log(
+						`Terminal with ID ${terminalInfo.id} was closed externally.`
+					);
+				}
 			}
-		})
-		this.disposables.push(closeDisposable)
+		);
+		this.disposables.push(closeDisposable);
 	}
 
 	runCommand(
@@ -313,98 +389,106 @@ export class TerminalManager {
 		command: string,
 		options?: { autoClose?: boolean }
 	): TerminalProcessResultPromise {
-		terminalInfo.busy = true
-		terminalInfo.lastCommand = command
+		terminalInfo.busy = true;
+		terminalInfo.lastCommand = command;
 
-		const process = new TerminalProcess()
-		this.processes.set(terminalInfo.id, process)
+		const process = new TerminalProcess();
+		this.processes.set(terminalInfo.id, process);
 
-		process.once("completed", () => {
-			terminalInfo.busy = false
-			TerminalRegistry.flushOutputBuffer(terminalInfo.id)
+		process.once('completed', () => {
+			terminalInfo.busy = false;
+			TerminalRegistry.flushOutputBuffer(terminalInfo.id);
 			if (options?.autoClose) {
-				this.closeTerminal(terminalInfo.id)
+				this.closeTerminal(terminalInfo.id);
 			}
-		})
+		});
 
-		process.once("no_shell_integration", () => {
-			process.emit("no_shell_integration")
-		})
+		process.once('no_shell_integration', () => {
+			process.emit('no_shell_integration');
+		});
 
 		const promise = new Promise<void>((resolve, reject) => {
-			process.once("continue", () => {
-				resolve()
-			})
-			process.once("error", (error) => {
-				console.error(`Error in terminal ${terminalInfo.id}:`, error)
-				reject(error)
-			})
-		})
+			process.once('continue', () => {
+				resolve();
+			});
+			process.once('error', (error) => {
+				console.error(`Error in terminal ${terminalInfo.id}:`, error);
+				reject(error);
+			});
+		});
 		if (!terminalInfo.terminal.shellIntegration) {
-			process.emit("no_shell_integration")
+			process.emit('no_shell_integration');
 		}
 
 		if (terminalInfo.terminal.shellIntegration) {
-			process.waitForShellIntegration = false
+			process.waitForShellIntegration = false;
 			// first run to make a new line needed for zsh to work correctly
-			process.run(terminalInfo.terminal, command, terminalInfo.id)
+			process.run(terminalInfo.terminal, command, terminalInfo.id);
 		} else {
 			// vscode recommends 3 seconds to wait for shell integration to be ready if not it's not available
-			pWaitFor(() => terminalInfo.terminal.shellIntegration !== undefined, { timeout: 5_000 }).finally(() => {
-				const existingProcess = this.processes.get(terminalInfo.id)
+			pWaitFor(() => terminalInfo.terminal.shellIntegration !== undefined, {
+				timeout: 5_000,
+			}).finally(() => {
+				const existingProcess = this.processes.get(terminalInfo.id);
 				if (existingProcess && existingProcess.waitForShellIntegration) {
-					existingProcess.waitForShellIntegration = false
+					existingProcess.waitForShellIntegration = false;
 					if (terminalInfo.terminal.shellIntegration) {
-						existingProcess.run(terminalInfo.terminal, command, terminalInfo.id)
+						existingProcess.run(
+							terminalInfo.terminal,
+							command,
+							terminalInfo.id
+						);
 					} else {
-						terminalInfo.terminal.sendText(command, true)
-						existingProcess.emit("no_shell_integration")
-						existingProcess.emit("continue")
-						existingProcess.emit("completed")
+						terminalInfo.terminal.sendText(command, true);
+						existingProcess.emit('no_shell_integration');
+						existingProcess.emit('continue');
+						existingProcess.emit('completed');
 					}
 				}
-			})
+			});
 		}
 
-		return mergePromise(process, promise)
+		return mergePromise(process, promise);
 	}
 
 	async getOrCreateTerminal(cwd: string, name?: string): Promise<TerminalInfo> {
 		// Find available terminal from our pool first (created for this task)
 		const availableTerminal = TerminalRegistry.getAllTerminals().find((t) => {
 			if (t.busy) {
-				return false
+				return false;
 			}
 			if (name && t.name === name) {
-				return true
+				return true;
 			}
-			let terminalCwd = t.terminal.shellIntegration?.cwd // One of Vlinder's commands could have changed the cwd of the terminal
+			let terminalCwd = t.terminal.shellIntegration?.cwd; // One of Vlinder's commands could have changed the cwd of the terminal
 			if (!terminalCwd) {
-				return false
+				return false;
 			}
-			return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd?.fsPath)
-		})
+			return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd?.fsPath);
+		});
 
 		if (availableTerminal) {
-			this.terminalIds.add(availableTerminal.id)
-			return availableTerminal
+			this.terminalIds.add(availableTerminal.id);
+			return availableTerminal;
 		}
 
-		const newTerminalInfo = TerminalRegistry.createTerminal(cwd, name)
-		this.terminalIds.add(newTerminalInfo.id)
-		return newTerminalInfo
+		const newTerminalInfo = TerminalRegistry.createTerminal(cwd, name);
+		this.terminalIds.add(newTerminalInfo.id);
+		return newTerminalInfo;
 	}
 
-	getTerminals(busy: boolean): { id: number; name?: string; lastCommand: string }[] {
+	getTerminals(
+		busy: boolean
+	): { id: number; name?: string; lastCommand: string }[] {
 		return Array.from(this.terminalIds)
 			.map((id) => TerminalRegistry.getTerminal(id))
 			.filter((t): t is TerminalInfo => t !== undefined && t.busy === busy)
-			.map((t) => ({ id: t.id, name: t.name, lastCommand: t.lastCommand }))
+			.map((t) => ({ id: t.id, name: t.name, lastCommand: t.lastCommand }));
 	}
 
 	isProcessHot(terminalId: number): boolean {
-		const process = this.processes.get(terminalId)
-		return process ? process.isHot : false
+		const process = this.processes.get(terminalId);
+		return process ? process.isHot : false;
 	}
 
 	/**
@@ -414,21 +498,25 @@ export class TerminalManager {
 	 */
 	closeTerminal(id: number): boolean {
 		if (!this.terminalIds.has(id)) {
-			console.warn(`Terminal with ID ${id} does not exist or is already closed.`)
-			return false
+			console.warn(
+				`Terminal with ID ${id} does not exist or is already closed.`
+			);
+			return false;
 		}
 
-		const closed = TerminalRegistry.closeTerminal(id)
+		const closed = TerminalRegistry.closeTerminal(id);
 		if (closed) {
 			// Remove the terminal from tracking
-			this.terminalIds.delete(id)
-			this.processes.delete(id)
-			console.log(`Terminal with ID ${id} has been closed.`)
+			this.terminalIds.delete(id);
+			this.processes.delete(id);
+			console.log(`Terminal with ID ${id} has been closed.`);
 		} else {
-			console.warn(`Failed to close terminal with ID ${id}. It may have already been disposed.`)
+			console.warn(
+				`Failed to close terminal with ID ${id}. It may have already been disposed.`
+			);
 		}
 
-		return closed
+		return closed;
 	}
 
 	/**
@@ -436,89 +524,100 @@ export class TerminalManager {
 	 */
 	closeAllTerminals(): void {
 		for (const id of Array.from(this.terminalIds)) {
-			this.closeTerminal(id)
+			this.closeTerminal(id);
 		}
 	}
 
 	disposeAll() {
-		const now = Date.now()
-		this.closeAllTerminals()
-		this.terminalIds.clear()
-		this.processes.clear()
-		this.disposables.forEach((disposable) => disposable.dispose())
-		this.disposables = []
-		console.log(`TerminalManager disposed in ${Date.now() - now}ms`)
+		const now = Date.now();
+		this.closeAllTerminals();
+		this.terminalIds.clear();
+		this.processes.clear();
+		this.disposables.forEach((disposable) => disposable.dispose());
+		this.disposables = [];
+		console.log(`TerminalManager disposed in ${Date.now() - now}ms`);
 	}
 }
 
 interface TerminalProcessEvents {
-	line: [line: string]
-	continue: []
-	completed: []
-	error: [error: Error]
-	no_shell_integration: []
+	line: [line: string];
+	continue: [];
+	completed: [];
+	error: [error: Error];
+	no_shell_integration: [];
 }
 
 export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
-	waitForShellIntegration: boolean = true
-	private isListening: boolean = true
-	private buffer: string = ""
-	private fullOutput: string[] = []
-	private lastRetrievedLineIndex: number = 0
-	isHot: boolean = false
-	private outputQueue: string[] = []
-	private processingOutput: boolean = false
-	private hotTimer: NodeJS.Timeout | null = null
+	waitForShellIntegration: boolean = true;
+	private isListening: boolean = true;
+	private buffer: string = '';
+	private fullOutput: string[] = [];
+	private lastRetrievedLineIndex: number = 0;
+	isHot: boolean = false;
+	private outputQueue: string[] = [];
+	private processingOutput: boolean = false;
+	private hotTimer: NodeJS.Timeout | null = null;
 
 	async run(terminal: vscode.Terminal, command: string, terminalId: number) {
-		this.isHot = true
+		this.isHot = true;
 		try {
 			// Try to use shell integration if available
 			if (terminal.shellIntegration) {
-				return await this.runWithShellIntegration(terminal, command, terminalId)
+				return await this.runWithShellIntegration(
+					terminal,
+					command,
+					terminalId
+				);
 			}
 
 			// Wait for shell integration to activate (up to 5 seconds)
-			const shellIntegrationPromise = new Promise<vscode.TerminalShellIntegration>((resolve, reject) => {
-				const disposable = vscode.window.onDidChangeTerminalShellIntegration?.((event) => {
-					if (event.terminal === terminal && event.shellIntegration) {
-						disposable?.dispose()
-						resolve(event.shellIntegration)
-					}
-				})
+			const shellIntegrationPromise =
+				new Promise<vscode.TerminalShellIntegration>((resolve, reject) => {
+					const disposable =
+						vscode.window.onDidChangeTerminalShellIntegration?.((event) => {
+							if (event.terminal === terminal && event.shellIntegration) {
+								disposable?.dispose();
+								resolve(event.shellIntegration);
+							}
+						});
 
-				setTimeout(() => {
-					disposable?.dispose()
-					reject(new Error("Shell integration not available"))
-				}, 5000)
-			})
+					setTimeout(() => {
+						disposable?.dispose();
+						reject(new Error('Shell integration not available'));
+					}, 5000);
+				});
 
 			try {
-				const shellIntegration = await shellIntegrationPromise
+				const shellIntegration = await shellIntegrationPromise;
 				if (shellIntegration) {
-					return await this.runWithShellIntegration(terminal, command, terminalId, shellIntegration)
+					return await this.runWithShellIntegration(
+						terminal,
+						command,
+						terminalId,
+						shellIntegration
+					);
 				}
 			} catch (error) {
 				// Shell integration not available, use fallback
 			}
 
 			// Fallback: Use sendText without shell integration
-			terminal.sendText(command, true)
-			this.emit("no_shell_integration")
-			this.emit("continue")
-			this.emit("completed")
+			terminal.sendText(command, true);
+			this.emit('no_shell_integration');
+			this.emit('continue');
+			this.emit('completed');
 		} catch (error) {
 			if (error instanceof Error) {
-				this.emit("error", error)
+				this.emit('error', error);
 			}
-			console.error(`Error in terminal process:`, error)
+			console.error(`Error in terminal process:`, error);
 		} finally {
-			this.isHot = false
-			await this.processOutputQueue(terminalId)
-			await this.emitRemainingBufferIfListening(terminalId)
-			this.isListening = false
-			this.emit("completed")
-			this.emit("continue")
+			this.isHot = false;
+			await this.processOutputQueue(terminalId);
+			await this.emitRemainingBufferIfListening(terminalId);
+			this.isListening = false;
+			this.emit('completed');
+			this.emit('continue');
 		}
 	}
 
@@ -528,108 +627,109 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 		terminalId: number,
 		shellIntegration?: vscode.TerminalShellIntegration
 	) {
-		const integration = shellIntegration || terminal.shellIntegration!
-		const execution = integration.executeCommand(command)
-		const stream = execution.read()
-		let isFirstChunk = true
-		let didEmitEmptyLine = false
+		const integration = shellIntegration || terminal.shellIntegration!;
+		const execution = integration.executeCommand(command);
+		const stream = execution.read();
+		let isFirstChunk = true;
+		let didEmitEmptyLine = false;
 
 		const noShellTimeout = setTimeout(() => {
-			this.emit("no_shell_integration")
-			this.emit("continue")
-			this.emit("completed")
-		}, 3000)
+			this.emit('no_shell_integration');
+			this.emit('continue');
+			this.emit('completed');
+		}, 3000);
 
 		for await (let data of stream) {
 			if (isFirstChunk) {
-				const outputBetweenSequences = data.match(/\]633;C([\s\S]*?)\]633;D/)?.[1] || ""
-				const vscodeSequenceRegex = /\x1b\]633;.[^\x07]*\x07/g
-				const lastMatch = [...data.matchAll(vscodeSequenceRegex)].pop()
+				const outputBetweenSequences =
+					data.match(/\]633;C([\s\S]*?)\]633;D/)?.[1] || '';
+				const vscodeSequenceRegex = /\x1b\]633;.[^\x07]*\x07/g;
+				const lastMatch = [...data.matchAll(vscodeSequenceRegex)].pop();
 				if (lastMatch?.index !== undefined) {
-					data = data.slice(lastMatch.index + lastMatch[0].length)
+					data = data.slice(lastMatch.index + lastMatch[0].length);
 				}
 				if (outputBetweenSequences.trim()) {
-					data = outputBetweenSequences + "\n" + data
+					data = outputBetweenSequences + '\n' + data;
 				}
-				data = stripAnsi(data)
-				let lines = data.split(/[\n\r]+/) // Split on both \n and \r
+				data = stripAnsi(data);
+				let lines = data.split(/[\n\r]+/); // Split on both \n and \r
 				if (lines.length > 0) {
-					lines[0] = lines[0].replace(/[^\x20-\x7E]/g, "")
+					lines[0] = lines[0].replace(/[^\x20-\x7E]/g, '');
 					if (lines[0].length >= 2 && lines[0][0] === lines[0][1]) {
-						lines[0] = lines[0].slice(1)
+						lines[0] = lines[0].slice(1);
 					}
-					lines[0] = lines[0].replace(/^[^a-zA-Z0-9]*/, "")
+					lines[0] = lines[0].replace(/^[^a-zA-Z0-9]*/, '');
 				}
-				data = lines.join("\n")
+				data = lines.join('\n');
 			} else {
-				data = stripAnsi(data)
+				data = stripAnsi(data);
 			}
-			clearTimeout(noShellTimeout)
+			clearTimeout(noShellTimeout);
 			if (!data.trim()) {
-				continue
+				continue;
 			}
 			// Remove command echo but preserve line updates
-			const lines = data.split(/[\n\r]+/)
+			const lines = data.split(/[\n\r]+/);
 			const filteredLines = lines.filter((line) => {
-				const trimmedLine = line.trim()
-				return trimmedLine && !command.includes(trimmedLine)
-			})
-			data = filteredLines.join("\n")
+				const trimmedLine = line.trim();
+				return trimmedLine && !command.includes(trimmedLine);
+			});
+			data = filteredLines.join('\n');
 
 			// Handle hot state
-			this.isHot = true
+			this.isHot = true;
 			if (this.hotTimer) {
-				clearTimeout(this.hotTimer)
+				clearTimeout(this.hotTimer);
 			}
 
-			const compilingMarkers = ["compiling", "building", "bundling"]
-			const markerNullifiers = ["compiled", "success", "finish"]
+			const compilingMarkers = ['compiling', 'building', 'bundling'];
+			const markerNullifiers = ['compiled', 'success', 'finish'];
 			const isCompiling =
 				compilingMarkers.some((m) => data.toLowerCase().includes(m)) &&
-				!markerNullifiers.some((n) => data.toLowerCase().includes(n))
+				!markerNullifiers.some((n) => data.toLowerCase().includes(n));
 
 			this.hotTimer = setTimeout(
 				() => {
-					this.isHot = false
+					this.isHot = false;
 				},
 				isCompiling ? 15000 : 2000
-			)
+			);
 
 			if (!didEmitEmptyLine && this.fullOutput.length === 0 && data) {
-				await this.queueOutput("", terminalId)
-				didEmitEmptyLine = true
+				await this.queueOutput('', terminalId);
+				didEmitEmptyLine = true;
 			}
 
-			await this.emitIfEol(data, terminalId)
-			isFirstChunk = false
+			await this.emitIfEol(data, terminalId);
+			isFirstChunk = false;
 		}
 
-		await this.processOutputQueue(terminalId)
-		await this.emitRemainingBufferIfListening(terminalId)
+		await this.processOutputQueue(terminalId);
+		await this.emitRemainingBufferIfListening(terminalId);
 	}
 
 	// Rest of your existing methods remain the same
 	private async queueOutput(line: string, terminalId: number) {
-		this.outputQueue.push(line)
-		await this.processOutputQueue(terminalId)
+		this.outputQueue.push(line);
+		await this.processOutputQueue(terminalId);
 	}
 
 	private async processOutputQueue(terminalId: number) {
 		if (this.processingOutput || this.outputQueue.length === 0) {
-			return
+			return;
 		}
 
-		this.processingOutput = true
+		this.processingOutput = true;
 		try {
 			while (this.outputQueue.length > 0) {
-				const line = this.outputQueue.shift()!
-				this.emit("line", line)
-				this.fullOutput.push(line)
-				TerminalRegistry.addOutput(terminalId, line + "\n")
+				const line = this.outputQueue.shift()!;
+				this.emit('line', line);
+				this.fullOutput.push(line);
+				TerminalRegistry.addOutput(terminalId, line + '\n');
 				// await new Promise((resolve) => setTimeout(resolve, 0))
 			}
 		} finally {
-			this.processingOutput = false
+			this.processingOutput = false;
 		}
 	}
 
@@ -637,67 +737,74 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 		// If we already have content in buffer and receiving new chunk,
 		// emit the existing buffer first
 		if (this.buffer && chunk) {
-			const existingLine = this.buffer.trim()
+			const existingLine = this.buffer.trim();
 			if (existingLine) {
-				await this.queueOutput(existingLine, terminalId)
+				await this.queueOutput(existingLine, terminalId);
 			}
-			this.buffer = ""
+			this.buffer = '';
 		}
 
-		this.buffer += chunk
+		this.buffer += chunk;
 
 		// Handle carriage returns
-		if (this.buffer.includes("\r")) {
-			const lines = this.buffer.split("\r")
-			const line = lines[lines.length - 1].trim()
+		if (this.buffer.includes('\r')) {
+			const lines = this.buffer.split('\r');
+			const line = lines[lines.length - 1].trim();
 			if (line) {
-				await this.queueOutput(line, terminalId)
+				await this.queueOutput(line, terminalId);
 			}
-			this.buffer = ""
-			return
+			this.buffer = '';
+			return;
 		}
 
 		// Handle newlines
-		let lineEndIndex: number
-		while ((lineEndIndex = this.buffer.indexOf("\n")) !== -1) {
-			const line = this.buffer.slice(0, lineEndIndex).trim()
+		let lineEndIndex: number;
+		while ((lineEndIndex = this.buffer.indexOf('\n')) !== -1) {
+			const line = this.buffer.slice(0, lineEndIndex).trim();
 			if (line) {
-				await this.queueOutput(line, terminalId)
+				await this.queueOutput(line, terminalId);
 			}
-			this.buffer = this.buffer.slice(lineEndIndex + 1)
+			this.buffer = this.buffer.slice(lineEndIndex + 1);
 		}
 
 		// If we have content in buffer without any line endings,
 		// and it's a complete line, emit it
 		if (this.buffer.trim()) {
-			await this.queueOutput(this.buffer.trim(), terminalId)
-			this.buffer = ""
+			await this.queueOutput(this.buffer.trim(), terminalId);
+			this.buffer = '';
 		}
 	}
 	private async emitRemainingBufferIfListening(terminalId: number) {
 		if (this.buffer && this.isListening) {
-			const remainingBuffer = this.buffer.trim()
+			const remainingBuffer = this.buffer.trim();
 			if (remainingBuffer) {
-				await this.queueOutput(remainingBuffer, terminalId)
+				await this.queueOutput(remainingBuffer, terminalId);
 			}
-			this.buffer = ""
+			this.buffer = '';
 		}
 	}
 }
 
-export type TerminalProcessResultPromise = TerminalProcess & Promise<void>
+export type TerminalProcessResultPromise = TerminalProcess & Promise<void>;
 
 // Merge TerminalProcess and Promise into a single object
-export function mergePromise(process: TerminalProcess, promise: Promise<void>): TerminalProcessResultPromise {
-	const nativePromisePrototype = (async () => {})().constructor.prototype
-	const descriptors = ["then", "catch", "finally"].map(
-		(property) => [property, Reflect.getOwnPropertyDescriptor(nativePromisePrototype, property)] as const
-	)
+export function mergePromise(
+	process: TerminalProcess,
+	promise: Promise<void>
+): TerminalProcessResultPromise {
+	const nativePromisePrototype = (async () => {})().constructor.prototype;
+	const descriptors = ['then', 'catch', 'finally'].map(
+		(property) =>
+			[
+				property,
+				Reflect.getOwnPropertyDescriptor(nativePromisePrototype, property),
+			] as const
+	);
 	for (const [property, descriptor] of descriptors) {
 		if (descriptor) {
-			const value = descriptor.value.bind(promise)
-			Reflect.defineProperty(process, property, { ...descriptor, value })
+			const value = descriptor.value.bind(promise);
+			Reflect.defineProperty(process, property, { ...descriptor, value });
 		}
 	}
-	return process as TerminalProcessResultPromise
+	return process as TerminalProcessResultPromise;
 }

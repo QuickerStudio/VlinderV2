@@ -18,7 +18,7 @@ import {
   Plus,
   Trash2,
   Star,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 
 interface SnippetsPanelProps {
@@ -51,7 +51,7 @@ export const SNIPPET_CATEGORIES = {
       { name: 'Hexagon', code: 'A{{Hexagon}}' },
       { name: 'Parallelogram', code: 'A[/Parallelogram/]' },
       { name: 'Trapezoid', code: 'A[/Trapezoid\\]' },
-    ]
+    ],
   },
   connections: {
     title: 'Connections',
@@ -94,7 +94,7 @@ export const SNIPPET_CATEGORIES = {
       { name: 'Chain Mixed', code: 'A --> B -.-> C' },
       { name: 'Chain Thick', code: 'A ==> B ==> C' },
       { name: 'Multi Chain', code: 'A --> B & C --> D' },
-    ]
+    ],
   },
   arrows: {
     title: 'Arrows',
@@ -107,9 +107,9 @@ export const SNIPPET_CATEGORIES = {
       { name: 'Line', code: '---' },
 
       // Dotted arrows
-      { name: 'Dotted Right', code: '-.->'},
+      { name: 'Dotted Right', code: '-.->' },
       { name: 'Dotted Left', code: '<-.-' },
-      { name: 'Dotted Both', code: '<-.->'},
+      { name: 'Dotted Both', code: '<-.->' },
       { name: 'Dotted Line', code: '-.-' },
 
       // Thick arrows
@@ -125,9 +125,9 @@ export const SNIPPET_CATEGORIES = {
       // Long arrows
       { name: 'Long Right', code: '----->' },
       { name: 'Long Left', code: '<-----' },
-      { name: 'Long Dotted', code: '-....->'},
+      { name: 'Long Dotted', code: '-....->' },
       { name: 'Long Thick', code: '=====>' },
-    ]
+    ],
   },
   styling: {
     title: 'Styling',
@@ -138,8 +138,8 @@ export const SNIPPET_CATEGORIES = {
       { name: 'Apply', code: 'class A,B className' },
       { name: 'Link', code: 'linkStyle 0 stroke:#ff3' },
       { name: 'Subgraph', code: 'subgraph Title\n    A --> B\nend' },
-    ]
-  }
+    ],
+  },
 };
 
 export interface CustomSnippet {
@@ -149,8 +149,18 @@ export interface CustomSnippet {
   timestamp?: number;
 }
 
-export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPanelProps) {
-  const [openSections, setOpenSections] = useState<string[]>(['graphs', 'nodes', 'connections', 'arrows', 'custom']);
+export function SnippetsPanel({
+  onInsertSnippet,
+  className,
+  style,
+}: SnippetsPanelProps) {
+  const [openSections, setOpenSections] = useState<string[]>([
+    'graphs',
+    'nodes',
+    'connections',
+    'arrows',
+    'custom',
+  ]);
   const [customSnippet, setCustomSnippet] = useState('');
   const [customName, setCustomName] = useState('');
   const [customSnippets, setCustomSnippets] = useState<CustomSnippet[]>([]);
@@ -175,9 +185,9 @@ export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPan
   };
 
   const toggleSection = (sectionKey: string) => {
-    setOpenSections(prev =>
+    setOpenSections((prev) =>
       prev.includes(sectionKey)
-        ? prev.filter(key => key !== sectionKey)
+        ? prev.filter((key) => key !== sectionKey)
         : [...prev, sectionKey]
     );
   };
@@ -203,7 +213,7 @@ export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPan
         id: Date.now().toString(),
         name,
         code,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const updatedSnippets = [newSnippet, ...customSnippets];
@@ -215,126 +225,143 @@ export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPan
   };
 
   const handleDeleteCustomSnippet = (id: string) => {
-    const updatedSnippets = customSnippets.filter(snippet => snippet.id !== id);
+    const updatedSnippets = customSnippets.filter(
+      (snippet) => snippet.id !== id
+    );
     saveCustomSnippets(updatedSnippets);
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-background border-l border-border", className)} style={style}>
+    <div
+      className={cn(
+        'flex flex-col h-full bg-background border-l border-border',
+        className
+      )}
+      style={style}
+    >
       {/* Header with Graph Types and Custom Input */}
-      <div className="p-2 border-b border-border bg-background/50">
-        <div className="flex items-center gap-2 mb-2">
-          <Shapes className="w-4 h-4" />
-          <span className="font-medium text-sm">Snippets</span>
+      <div className='p-2 border-b border-border bg-background/50'>
+        <div className='flex items-center gap-2 mb-2'>
+          <Shapes className='w-4 h-4' />
+          <span className='font-medium text-sm'>Snippets</span>
         </div>
 
-
-
         {/* Custom Snippet Input */}
-        <div className="space-y-1">
+        <div className='space-y-1'>
           <Input
-            placeholder="Name..."
+            placeholder='Name...'
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
-            className="h-6 text-xs"
+            className='h-6 text-xs'
           />
-          <div className="flex gap-1">
+          <div className='flex gap-1'>
             <Input
-              placeholder="Code..."
+              placeholder='Code...'
               value={customSnippet}
               onChange={(e) => setCustomSnippet(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && customName.trim() && customSnippet.trim()) {
+                if (
+                  e.key === 'Enter' &&
+                  customName.trim() &&
+                  customSnippet.trim()
+                ) {
                   handleAddCustomSnippet();
                 }
               }}
-              className="h-6 text-xs flex-1"
+              className='h-6 text-xs flex-1'
             />
             <Button
-              variant="outline"
-              size="sm"
-              className="h-6 px-2"
+              variant='outline'
+              size='sm'
+              className='h-6 px-2'
               onClick={handleAddCustomSnippet}
               disabled={!customName.trim() || !customSnippet.trim()}
             >
-              <Plus className="w-3 h-3" />
+              <Plus className='w-3 h-3' />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      <div className='flex-1 overflow-y-auto p-2 space-y-2'>
         {/* Custom Snippets Section */}
-        <Collapsible open={openSections.includes('custom')} onOpenChange={() => toggleSection('custom')}>
+        <Collapsible
+          open={openSections.includes('custom')}
+          onOpenChange={() => toggleSection('custom')}
+        >
           <CollapsibleTrigger asChild>
             <Button
-              variant="ghost"
-              className="w-full justify-start h-6 px-2 hover:bg-accent"
+              variant='ghost'
+              className='w-full justify-start h-6 px-2 hover:bg-accent'
             >
               {openSections.includes('custom') ? (
-                <ChevronDown className="w-3 h-3 mr-1" />
+                <ChevronDown className='w-3 h-3 mr-1' />
               ) : (
-                <ChevronRight className="w-3 h-3 mr-1" />
+                <ChevronRight className='w-3 h-3 mr-1' />
               )}
-              <Star className="w-3 h-3 mr-1" />
-              <span className="text-xs font-medium">Custom ({customSnippets.length})</span>
+              <Star className='w-3 h-3 mr-1' />
+              <span className='text-xs font-medium'>
+                Custom ({customSnippets.length})
+              </span>
             </Button>
           </CollapsibleTrigger>
 
-          <CollapsibleContent className="space-y-1 ml-1">
+          <CollapsibleContent className='space-y-1 ml-1'>
             {customSnippets.length === 0 ? (
-              <div className="text-xs text-muted-foreground px-2 py-1">
+              <div className='text-xs text-muted-foreground px-2 py-1'>
                 No custom snippets yet
               </div>
             ) : (
               customSnippets.map((snippet) => (
                 <div
                   key={snippet.id}
-                  className="group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors"
+                  className='group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors'
                 >
-                  <span className="text-xs text-muted-foreground w-16 flex-shrink-0">
+                  <span className='text-xs text-muted-foreground w-16 flex-shrink-0'>
                     {snippet.name}
                   </span>
-                  <div className="flex-1 overflow-hidden">
+                  <div className='flex-1 overflow-hidden'>
                     <button
                       onClick={() => handleSnippetClick(snippet.code)}
-                      className="w-full text-left font-mono text-xs hover:text-primary transition-colors relative"
+                      className='w-full text-left font-mono text-xs hover:text-primary transition-colors relative'
                       title={snippet.code}
                     >
-                      <div className="snippet-scroll-container">
-                        <span className={cn(
-                          "snippet-text",
-                          snippet.code.length > 25 && "long-text"
-                        )}>
+                      <div className='snippet-scroll-container'>
+                        <span
+                          className={cn(
+                            'snippet-text',
+                            snippet.code.length > 25 && 'long-text'
+                          )}
+                        >
                           {snippet.code}
                         </span>
                       </div>
                     </button>
                   </div>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    variant='ghost'
+                    size='sm'
+                    className='h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0'
                     onClick={(e) => {
                       e.stopPropagation();
                       copyToClipboard(snippet.code);
                     }}
-                    title="Copy to clipboard"
+                    title='Copy to clipboard'
                   >
-                    <Copy className="w-3 h-3" />
+                    <Copy className='w-3 h-3' />
                   </Button>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    variant='ghost'
+                    size='sm'
+                    className='h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0'
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteCustomSnippet(snippet.id);
                     }}
-                    title="Delete snippet"
+                    title='Delete snippet'
                   >
-                    <Trash2 className="w-3 h-3 text-destructive" />
+                    <Trash2 className='w-3 h-3 text-destructive' />
                   </Button>
                 </div>
               ))
@@ -343,58 +370,63 @@ export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPan
         </Collapsible>
 
         {/* Graph Types Section */}
-        <Collapsible open={openSections.includes('graphs')} onOpenChange={() => toggleSection('graphs')}>
+        <Collapsible
+          open={openSections.includes('graphs')}
+          onOpenChange={() => toggleSection('graphs')}
+        >
           <CollapsibleTrigger asChild>
             <Button
-              variant="ghost"
-              className="w-full justify-start h-6 px-2 hover:bg-accent"
+              variant='ghost'
+              className='w-full justify-start h-6 px-2 hover:bg-accent'
             >
               {openSections.includes('graphs') ? (
-                <ChevronDown className="w-3 h-3 mr-1" />
+                <ChevronDown className='w-3 h-3 mr-1' />
               ) : (
-                <ChevronRight className="w-3 h-3 mr-1" />
+                <ChevronRight className='w-3 h-3 mr-1' />
               )}
-              <Code className="w-3 h-3 mr-1" />
-              <span className="text-xs font-medium">Graph Types</span>
+              <Code className='w-3 h-3 mr-1' />
+              <span className='text-xs font-medium'>Graph Types</span>
             </Button>
           </CollapsibleTrigger>
 
-          <CollapsibleContent className="space-y-1 ml-1">
+          <CollapsibleContent className='space-y-1 ml-1'>
             {GRAPH_TYPES.map((type, index) => (
               <div
                 key={index}
-                className="group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors"
+                className='group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors'
               >
-                <span className="text-xs text-muted-foreground w-16 flex-shrink-0">
+                <span className='text-xs text-muted-foreground w-16 flex-shrink-0'>
                   {type.name}
                 </span>
-                <div className="flex-1 overflow-hidden">
+                <div className='flex-1 overflow-hidden'>
                   <button
                     onClick={() => handleSnippetClick(type.code)}
-                    className="w-full text-left font-mono text-xs hover:text-primary transition-colors relative"
+                    className='w-full text-left font-mono text-xs hover:text-primary transition-colors relative'
                     title={type.code}
                   >
-                    <div className="snippet-scroll-container">
-                      <span className={cn(
-                        "snippet-text",
-                        type.code.length > 25 && "long-text"
-                      )}>
+                    <div className='snippet-scroll-container'>
+                      <span
+                        className={cn(
+                          'snippet-text',
+                          type.code.length > 25 && 'long-text'
+                        )}
+                      >
                         {type.code}
                       </span>
                     </div>
                   </button>
                 </div>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  variant='ghost'
+                  size='sm'
+                  className='h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0'
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(type.code);
                   }}
-                  title="Copy to clipboard"
+                  title='Copy to clipboard'
                 >
-                  <Copy className="w-3 h-3" />
+                  <Copy className='w-3 h-3' />
                 </Button>
               </div>
             ))}
@@ -407,58 +439,64 @@ export function SnippetsPanel({ onInsertSnippet, className, style }: SnippetsPan
           const isOpen = openSections.includes(key);
 
           return (
-            <Collapsible key={key} open={isOpen} onOpenChange={() => toggleSection(key)}>
+            <Collapsible
+              key={key}
+              open={isOpen}
+              onOpenChange={() => toggleSection(key)}
+            >
               <CollapsibleTrigger asChild>
                 <Button
-                  variant="ghost"
-                  className="w-full justify-start h-6 px-2 hover:bg-accent"
+                  variant='ghost'
+                  className='w-full justify-start h-6 px-2 hover:bg-accent'
                 >
                   {isOpen ? (
-                    <ChevronDown className="w-3 h-3 mr-1" />
+                    <ChevronDown className='w-3 h-3 mr-1' />
                   ) : (
-                    <ChevronRight className="w-3 h-3 mr-1" />
+                    <ChevronRight className='w-3 h-3 mr-1' />
                   )}
-                  <IconComponent className="w-3 h-3 mr-1" />
-                  <span className="text-xs font-medium">{category.title}</span>
+                  <IconComponent className='w-3 h-3 mr-1' />
+                  <span className='text-xs font-medium'>{category.title}</span>
                 </Button>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="space-y-1 ml-1">
+              <CollapsibleContent className='space-y-1 ml-1'>
                 {category.items.map((item, index) => (
                   <div
                     key={index}
-                    className="group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors"
+                    className='group flex items-center gap-2 py-1 px-2 rounded hover:bg-accent/50 transition-colors'
                   >
-                    <span className="text-xs text-muted-foreground w-16 flex-shrink-0">
+                    <span className='text-xs text-muted-foreground w-16 flex-shrink-0'>
                       {item.name}
                     </span>
-                    <div className="flex-1 overflow-hidden">
+                    <div className='flex-1 overflow-hidden'>
                       <button
                         onClick={() => handleSnippetClick(item.code)}
-                        className="w-full text-left font-mono text-xs hover:text-primary transition-colors relative"
+                        className='w-full text-left font-mono text-xs hover:text-primary transition-colors relative'
                         title={item.code}
                       >
-                        <div className="snippet-scroll-container">
-                          <span className={cn(
-                            "snippet-text",
-                            item.code.length > 25 && "long-text"
-                          )}>
+                        <div className='snippet-scroll-container'>
+                          <span
+                            className={cn(
+                              'snippet-text',
+                              item.code.length > 25 && 'long-text'
+                            )}
+                          >
                             {item.code}
                           </span>
                         </div>
                       </button>
                     </div>
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      variant='ghost'
+                      size='sm'
+                      className='h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0'
                       onClick={(e) => {
                         e.stopPropagation();
                         copyToClipboard(item.code);
                       }}
-                      title="Copy to clipboard"
+                      title='Copy to clipboard'
                     >
-                      <Copy className="w-3 h-3" />
+                      <Copy className='w-3 h-3' />
                     </Button>
                   </div>
                 ))}

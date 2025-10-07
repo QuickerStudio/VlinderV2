@@ -1,24 +1,24 @@
-import * as path from "path"
-import { serializeError } from "serialize-error"
-import { parseSourceCodeForDefinitionsTopLevel } from "../../../../parse-source-code"
-import { BaseAgentTool } from "../base-agent.tool"
-import { ExploreRepoFolderToolParams } from "../schema/explore-repo-folder.schema"
-import { getReadablePath } from "../../utils"
-import { exploreRepoFolderPrompt } from "../../prompts/tools/explore-repo-folder"
+import * as path from 'path';
+import { serializeError } from 'serialize-error';
+import { parseSourceCodeForDefinitionsTopLevel } from '../../../../parse-source-code';
+import { BaseAgentTool } from '../base-agent.tool';
+import { ExploreRepoFolderToolParams } from '../schema/explore-repo-folder.schema';
+import { getReadablePath } from '../../utils';
+import { exploreRepoFolderPrompt } from '../../prompts/tools/explore-repo-folder';
 
 export class ExploreRepoFolderTool extends BaseAgentTool<ExploreRepoFolderToolParams> {
 	async execute() {
-		const { input, ask, say } = this.params
-		const relDirPath = input.path
+		const { input, ask, say } = this.params;
+		const relDirPath = input.path;
 
 		if (relDirPath === undefined) {
 			await say(
-				"error",
+				'error',
 				"Vlinder tried to use explore_repo_folder without value for required parameter 'path'. Retrying..."
-			)
+			);
 
 			return this.toolResponse(
-				"error",
+				'error',
 				`
 				<code_definitions_response>
 					<status>
@@ -37,67 +37,71 @@ export class ExploreRepoFolderTool extends BaseAgentTool<ExploreRepoFolderToolPa
 						</help>
 					</error_details>
 				</code_definitions_response>`
-			)
+			);
 		}
 
 		try {
-			const absolutePath = path.resolve(this.cwd, relDirPath)
-			const result = await parseSourceCodeForDefinitionsTopLevel(absolutePath)
+			const absolutePath = path.resolve(this.cwd, relDirPath);
+			const result = await parseSourceCodeForDefinitionsTopLevel(absolutePath);
 
 			const { response, text, images } = await ask(
-				"tool",
+				'tool',
 				{
 					tool: {
-						tool: "explore_repo_folder",
+						tool: 'explore_repo_folder',
 						path: getReadablePath(relDirPath, this.cwd),
-						approvalState: "pending",
+						approvalState: 'pending',
 						content: result,
 						ts: this.ts,
 					},
 				},
 				this.ts
-			)
+			);
 
-			if (response !== "yesButtonTapped") {
+			if (response !== 'yesButtonTapped') {
 				await this.params.updateAsk(
-					"tool",
+					'tool',
 					{
 						tool: {
-							tool: "explore_repo_folder",
+							tool: 'explore_repo_folder',
 							path: getReadablePath(relDirPath, this.cwd),
-							approvalState: "rejected",
+							approvalState: 'rejected',
 							content: result,
 							userFeedback: text,
 							ts: this.ts,
 						},
 					},
 					this.ts
-				)
+				);
 
-				if (response === "messageResponse") {
-					await say("user_feedback", text ?? "The user denied this operation.", images)
-					return this.toolResponse("feedback", text, images)
+				if (response === 'messageResponse') {
+					await say(
+						'user_feedback',
+						text ?? 'The user denied this operation.',
+						images
+					);
+					return this.toolResponse('feedback', text, images);
 				}
 
-				return this.toolResponse("error", "Operation cancelled by user.")
+				return this.toolResponse('error', 'Operation cancelled by user.');
 			}
 
 			await this.params.updateAsk(
-				"tool",
+				'tool',
 				{
 					tool: {
-						tool: "explore_repo_folder",
+						tool: 'explore_repo_folder',
 						path: getReadablePath(relDirPath, this.cwd),
-						approvalState: "approved",
+						approvalState: 'approved',
 						content: result,
 						ts: this.ts,
 					},
 				},
 				this.ts
-			)
+			);
 
 			return this.toolResponse(
-				"success",
+				'success',
 				`<code_definitions_response>
 					<status>
 						<result>success</result>
@@ -112,17 +116,18 @@ export class ExploreRepoFolderTool extends BaseAgentTool<ExploreRepoFolderToolPa
 						${result}
 					</definitions>
 				</code_definitions_response>`
-			)
+			);
 		} catch (error) {
 			await say(
-				"error",
+				'error',
 				`Error parsing code definitions: ${
-					(error as Error).message ?? JSON.stringify(serializeError(error), null, 2)
+					(error as Error).message ??
+					JSON.stringify(serializeError(error), null, 2)
 				}`
-			)
+			);
 
 			return this.toolResponse(
-				"error",
+				'error',
 				`<code_definitions_response>
 					<status>
 						<result>error</result>
@@ -138,7 +143,7 @@ export class ExploreRepoFolderTool extends BaseAgentTool<ExploreRepoFolderToolPa
 						</context>
 					</error_details>
 				</code_definitions_response>`
-			)
+			);
 		}
 	}
 }

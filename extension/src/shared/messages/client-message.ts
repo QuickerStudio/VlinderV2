@@ -1,135 +1,146 @@
-import { ToolName } from "../../agent/v1/tools/types"
-import { GlobalState } from "../../providers/state/global-state-manager"
-import { BaseExtensionState } from "./extension-message"
+import { ToolName } from '../../agent/v1/tools/types';
+import { GlobalState } from '../../providers/state/global-state-manager';
+import { BaseExtensionState } from './extension-message';
 
 export type Resource =
-	| { id: string; type: "file" | "folder"; name: string }
-	| { id: string; type: "url"; description: string; name: string }
+	| { id: string; type: 'file' | 'folder'; name: string }
+	| { id: string; type: 'url'; description: string; name: string };
 
 export type AmplitudeWebviewMessage = {
-	type: "amplitude"
-	event_type:
-		| "AuthStart"
-		| "ReferralProgram"
-	key?: string
-}
+	type: 'amplitude';
+	event_type: 'AuthStart' | 'ReferralProgram';
+	key?: string;
+};
 
 type RenameTask =
 	| {
-			type: "renameTask"
-			taskId: string
-			isCurentTask?: undefined
+			type: 'renameTask';
+			taskId: string;
+			isCurentTask?: undefined;
 	  }
 	| {
-			type: "renameTask"
-			taskId?: undefined
-			isCurentTask: boolean
-	  }
+			type: 'renameTask';
+			taskId?: undefined;
+			isCurentTask: boolean;
+	  };
 
 type OpenExternalLink = {
-	type: "openExternalLink"
-	url: string
-}
+	type: 'openExternalLink';
+	url: string;
+};
 
 type DebugMessage = {
-	type: "debug"
-}
+	type: 'debug';
+};
 
 export type updateGlobalStateMessage = {
-	type: "updateGlobalState"
-	state: Partial<GlobalState>
-}
+	type: 'updateGlobalState';
+	state: Partial<GlobalState>;
+};
 
 export type autoCloseTerminalMessage = {
-	type: "autoCloseTerminal"
-	bool: boolean
-}
+	type: 'autoCloseTerminal';
+	bool: boolean;
+};
 
 export type customInstructionsMessage = {
-	type: "customInstructions"
-	text: string
-}
+	type: 'customInstructions';
+	text: string;
+};
 
 export type autoSummarizeMessage = {
-	type: "autoSummarize"
-	bool: boolean
-}
+	type: 'autoSummarize';
+	bool: boolean;
+};
+
+export type soundEnabledMessage = {
+	type: 'soundEnabled';
+	bool: boolean;
+};
+
+export type alertsEnabledMessage = {
+	type: 'alertsEnabled';
+	bool: boolean;
+};
+
+export type timerSoundEnabledMessage = {
+	type: 'timerSoundEnabled';
+	bool: boolean;
+};
 
 export type pauseNextMessage = {
-	type: "pauseNext"
-}
+	type: 'pauseNext';
+};
 
 export type setApiKeyDialogMessage = {
-	type: "setApiKeyDialog"
-}
+	type: 'setApiKeyDialog';
+};
 
 export type terminalCompressionThresholdMessage = {
-	type: "terminalCompressionThreshold"
-	value?: number
-}
-
-
+	type: 'terminalCompressionThreshold';
+	value?: number;
+};
 
 export type setInlineEditModeMessage = {
-	type: "setInlineEditMode"
-	inlineEditOutputType?: "full" | "diff"
-}
+	type: 'setInlineEditMode';
+	inlineEditOutputType?: 'full' | 'diff';
+};
 
 export type setCommandTimeoutMessage = {
-	type: "commandTimeout"
-	commandTimeout: number
-}
+	type: 'commandTimeout';
+	commandTimeout: number;
+};
 
 export type savePromptTemplateMessage = {
-	type: "savePromptTemplate"
-	templateName: string
-	content: string
-}
+	type: 'savePromptTemplate';
+	templateName: string;
+	content: string;
+};
 
 export type loadPromptTemplateMessage = {
-	type: "loadPromptTemplate"
-	templateName: string
-}
+	type: 'loadPromptTemplate';
+	templateName: string;
+};
 
 export type setActivePromptMessage = {
-	type: "setActivePrompt"
-	templateName: string | null
-}
+	type: 'setActivePrompt';
+	templateName: string | null;
+};
 
 export type listPromptTemplatesMessage = {
-	type: "listPromptTemplates"
-}
+	type: 'listPromptTemplates';
+};
 
 export type deletePromptTemplateMessage = {
-	type: "deletePromptTemplate"
-	templateName: string
-}
+	type: 'deletePromptTemplate';
+	templateName: string;
+};
 
 export type ClosePromptEditorMessage = {
-	type: "closePromptEditor"
-}
+	type: 'closePromptEditor';
+};
 
 export type OpenPromptEditorMessage = {
-	type: "openPromptEditor"
-}
+	type: 'openPromptEditor';
+};
 
 export type PreviewPromptMessage = {
-	type: "previewPrompt"
-	content: string
-	visible: boolean
-}
+	type: 'previewPrompt';
+	content: string;
+	visible: boolean;
+};
 
 export type EnableObserverHookMessage = {
-	type: "enableObserverHook"
-	triggerEvery?: number
-}
+	type: 'enableObserverHook';
+	triggerEvery?: number;
+};
 
 export type DisableToolMessage = {
-	type: "disableTool"
-	toolName: ToolName
-	boolean: boolean
-	content?: string
-}
+	type: 'disableTool';
+	toolName: ToolName;
+	boolean: boolean;
+	content?: string;
+};
 
 export type PromptActions =
 	| PreviewPromptMessage
@@ -140,61 +151,64 @@ export type PromptActions =
 	| loadPromptTemplateMessage
 	| setActivePromptMessage
 	| deletePromptTemplateMessage
-	| ClosePromptEditorMessage
+	| ClosePromptEditorMessage;
 
 export type ActionMessage = {
-	type: "action"
-	action: "didBecomeVisible"
-	text?: string
-	state?: BaseExtensionState
-}
+	type: 'action';
+	action: 'didBecomeVisible';
+	text?: string;
+	state?: BaseExtensionState;
+};
 
 export type TemplatesListMessage = {
-	type: "templates_list"
-	templates: string[]
-	activeTemplate: string | null
-}
+	type: 'templates_list';
+	templates: string[];
+	activeTemplate: string | null;
+};
 
 export type toggleGitHandlerMessage = {
-	type: "toggleGitHandler"
-	enabled: boolean
-}
+	type: 'toggleGitHandler';
+	enabled: boolean;
+};
 
 export type viewFileMessage = {
-	type: "viewFile"
-	path: string
-	version: string
-}
+	type: 'viewFile';
+	path: string;
+	version: string;
+};
 
 export type rollbackToCheckpointMessage = {
-	type: "rollbackToCheckpoint"
-	version: string
-	path: string
-	ts: number
-}
+	type: 'rollbackToCheckpoint';
+	version: string;
+	path: string;
+	ts: number;
+};
 
 export type clearHistoryMessage = {
-	type: "clearHistory"
-}
+	type: 'clearHistory';
+};
 
 export type saveFileMessage = {
-	type: "saveFile"
-	filename: string
-	content: string
-	format: "json" | "md" | "svg"
-}
+	type: 'saveFile';
+	filename: string;
+	content: string;
+	format: 'json' | 'md' | 'svg';
+};
 
 export type compressContextMessage = {
-	type: "compressContext"
-	messages: any[]
-	currentTask?: any
-}
+	type: 'compressContext';
+	messages: any[];
+	currentTask?: any;
+};
 
 export type showContextCompressionDetailsMessage = {
-	type: "showContextCompressionDetails"
-}
+	type: 'showContextCompressionDetails';
+};
 
-
+export type stopTimerMessage = {
+	type: 'stopTimer';
+	timerId: string;
+};
 
 export type WebviewMessage =
 	| EnableObserverHookMessage
@@ -213,6 +227,9 @@ export type WebviewMessage =
 	| setApiKeyDialogMessage
 	| pauseNextMessage
 	| autoSummarizeMessage
+	| soundEnabledMessage
+	| alertsEnabledMessage
+	| timerSoundEnabledMessage
 	| updateGlobalStateMessage
 	| AmplitudeWebviewMessage
 	| OpenExternalLink
@@ -220,35 +237,48 @@ export type WebviewMessage =
 	| RenameTask
 	| DebugMessage
 	| customInstructionsMessage
+	| stopTimerMessage
 	| {
 			type:
-				| "skipWriteAnimation"
-				| "cancelCurrentRequest"
-						| "cancelLightning"
+				| 'skipWriteAnimation'
+				| 'cancelCurrentRequest'
+				| 'cancelLightning'
+				| 'maxRequestsPerTask'
+				| 'alwaysAllowReadOnly'
+				| 'webviewDidLaunch'
+				| 'newTask'
+				| 'askResponse'
+				| 'retryTask'
+				| 'alwaysAllowWriteOnly'
+				| 'clearTask'
+				| 'didCloseAnnouncement'
+				| 'selectImages'
+				| 'openKnowledgeBase'
+				| 'exportCurrentTask'
+				| 'showTaskWithId'
+				| 'deleteTaskWithId'
+				| 'exportTaskWithId'
+				| 'togglePinTask'
+				| 'promptEditorLoaded'
+				| 'resetState'
+				| 'fileTree'
+				| 'getSoundUris'
+				| 'getWorkspaceInfo'
+				| 'selectWorkspaceFolder'
+				| 'getOpenFiles'
+				| 'closeFile'
+				| 'togglePinFile'
+				| 'openFile';
+			text?: string;
+			askResponse?: ClaudeAskResponse;
+			images?: string[];
+			attachements?: Resource[];
+			bool?: boolean;
+			folderIndex?: number;
+			fileUri?: string;
+	  };
 
-				| "maxRequestsPerTask"
-				| "alwaysAllowReadOnly"
-				| "webviewDidLaunch"
-				| "newTask"
-				| "askResponse"
-				| "retryTask"
-				| "alwaysAllowWriteOnly"
-				| "clearTask"
-				| "didCloseAnnouncement"
-				| "selectImages"
-				| "openKnowledgeBase"
-				| "exportCurrentTask"
-				| "showTaskWithId"
-				| "deleteTaskWithId"
-				| "exportTaskWithId"
-				| "promptEditorLoaded"
-				| "resetState"
-				| "fileTree"
-			text?: string
-			askResponse?: ClaudeAskResponse
-			images?: string[]
-			attachements?: Resource[]
-			bool?: boolean
-	  }
-
-export type ClaudeAskResponse = "yesButtonTapped" | "noButtonTapped" | "messageResponse"
+export type ClaudeAskResponse =
+	| 'yesButtonTapped'
+	| 'noButtonTapped'
+	| 'messageResponse';

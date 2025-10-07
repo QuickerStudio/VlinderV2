@@ -1,6 +1,6 @@
 // providers/anthropic.ts
-import { ProviderConfig } from "../types"
-import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from "../constants"
+import { ProviderConfig } from '../types';
+import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from '../constants';
 
 export const anthropicConfig: ProviderConfig = {
 	id: PROVIDER_IDS.ANTHROPIC,
@@ -8,21 +8,21 @@ export const anthropicConfig: ProviderConfig = {
 	baseUrl: DEFAULT_BASE_URLS[PROVIDER_IDS.ANTHROPIC],
 	models: [
 		{
-            id: "claude-sonnet-4-5-preview-20250930",
-            maxTokens: 64000,
-            contextWindow: 200_000,
-            supportsImages: true,
-            supportsPromptCache: true,
-            inputPrice: 3.5,
-            outputPrice: 17.5,
-            cacheWritesPrice: 4.0,
-            cacheReadsPrice: 0.35,
-            name: "Claude Sonnet 4.5(Preview)",
-            provider: PROVIDER_IDS.ANTHROPIC,
-            isThinkingModel: true,
-        },
+			id: 'claude-sonnet-4-5-preview-20250930',
+			maxTokens: 64000,
+			contextWindow: 200_000,
+			supportsImages: true,
+			supportsPromptCache: true,
+			inputPrice: 3.5,
+			outputPrice: 17.5,
+			cacheWritesPrice: 4.0,
+			cacheReadsPrice: 0.35,
+			name: 'Claude Sonnet 4.5(Preview)',
+			provider: PROVIDER_IDS.ANTHROPIC,
+			isThinkingModel: true,
+		},
 		{
-			id: "claude-opus-4-1-20250805",
+			id: 'claude-opus-4-1-20250805',
 			maxTokens: 32000,
 			contextWindow: 200_000,
 			supportsImages: true,
@@ -31,12 +31,12 @@ export const anthropicConfig: ProviderConfig = {
 			outputPrice: 75.0,
 			cacheWritesPrice: 18.75,
 			cacheReadsPrice: 1.5,
-			name: "Claude Opus 4.1",
+			name: 'Claude Opus 4.1',
 			provider: PROVIDER_IDS.ANTHROPIC,
 			isThinkingModel: true,
 		},
 		{
-			id: "claude-sonnet-4-20250514",
+			id: 'claude-sonnet-4-20250514',
 			maxTokens: 64000,
 			contextWindow: 200_000,
 			supportsImages: true,
@@ -45,12 +45,12 @@ export const anthropicConfig: ProviderConfig = {
 			outputPrice: 15.0,
 			cacheWritesPrice: 3.75,
 			cacheReadsPrice: 0.3,
-			name: "Claude Sonnet 4",
+			name: 'Claude Sonnet 4',
 			provider: PROVIDER_IDS.ANTHROPIC,
 			isThinkingModel: true,
 		},
 		{
-			id: "claude-3-7-sonnet-20250219",
+			id: 'claude-3-7-sonnet-20250219',
 			maxTokens: 8192,
 			contextWindow: 200_000,
 			supportsImages: true,
@@ -60,11 +60,11 @@ export const anthropicConfig: ProviderConfig = {
 			outputPrice: 15.0,
 			cacheWritesPrice: 3.75,
 			cacheReadsPrice: 0.3,
-			name: "Claude 3.7 Sonnet - Anthropic Direct",
+			name: 'Claude 3.7 Sonnet - Anthropic Direct',
 			provider: PROVIDER_IDS.ANTHROPIC,
 		},
 		{
-			id: "claude-3-5-sonnet-20241022",
+			id: 'claude-3-5-sonnet-20241022',
 			maxTokens: 8192,
 			contextWindow: 200_000,
 			supportsImages: true,
@@ -73,9 +73,9 @@ export const anthropicConfig: ProviderConfig = {
 			outputPrice: 15.0,
 			cacheWritesPrice: 3.75,
 			cacheReadsPrice: 0.3,
-			name: "Claude 3.5 Sonnet (New)",
+			name: 'Claude 3.5 Sonnet (New)',
 			provider: PROVIDER_IDS.ANTHROPIC,
 		},
 	],
-	requiredFields: ["apiKey"],
-}
+	requiredFields: ['apiKey'],
+};

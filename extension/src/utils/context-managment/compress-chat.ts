@@ -5,25 +5,25 @@ import type {
 	ImageBlockParam,
 	ToolUseBlockParam,
 	ToolResultBlockParam,
-} from "@anthropic-ai/sdk/resources/messages.mjs"
+} from '@anthropic-ai/sdk/resources/messages.mjs';
 // import { ToolName } from "@/shared/new-tools"
 // import { parseToolResponse } from "@/shared/format-tools"
-import { isToolResponseV2, parseToolResponse } from "../../shared/format-tools"
-import { ApiHandler } from "../../api"
-import { ToolName } from "../../agent/v1/tools/types"
+import { isToolResponseV2, parseToolResponse } from '../../shared/format-tools';
+import { ApiHandler } from '../../api';
+import { ToolName } from '../../agent/v1/tools/types';
 
-const DIFF = "diff" as const
-const CONTENT = "content" as const
+const DIFF = 'diff' as const;
+const CONTENT = 'content' as const;
 
-const logger = (msg: string, level: "info" | "warn" | "error" | "debug") => {
-	console[level](`[CompressToolFromMsg] ${msg}`)
-}
+const logger = (msg: string, level: 'info' | 'warn' | 'error' | 'debug') => {
+	console[level](`[CompressToolFromMsg] ${msg}`);
+};
 
 type CommandListItem = {
-	id: string
-	command: string
-	output: string
-}
+	id: string;
+	command: string;
+	output: string;
+};
 
 /**
  * Compresses a long string to a maximum length of 200,000 characters by keeping parts
@@ -42,59 +42,76 @@ type CommandListItem = {
 function compressLongString(input: string, maxLength: number = 200000): string {
 	// If the string is already under the limit, return it unchanged
 	if (input.length <= maxLength) {
-		return input
+		return input;
 	}
 
 	// Calculate the lengths for each section
-	const startLength = Math.floor(maxLength * 0.4)
-	const middleLength = Math.floor(maxLength * 0.2)
-	const endLength = maxLength - startLength - middleLength
+	const startLength = Math.floor(maxLength * 0.4);
+	const middleLength = Math.floor(maxLength * 0.2);
+	const endLength = maxLength - startLength - middleLength;
 
 	// Extract the start section
-	const startSection = input.slice(0, startLength)
+	const startSection = input.slice(0, startLength);
 
 	// Calculate middle section position
-	const middleStartPos = Math.floor((input.length - middleLength) / 2)
-	const middleSection = input.slice(middleStartPos, middleStartPos + middleLength)
+	const middleStartPos = Math.floor((input.length - middleLength) / 2);
+	const middleSection = input.slice(
+		middleStartPos,
+		middleStartPos + middleLength
+	);
 
 	// Extract the end section
-	const endSection = input.slice(-endLength)
+	const endSection = input.slice(-endLength);
 
 	// Create compression markers
-	const startCompressionMarker = `[...Compressed ${startLength} to ${middleStartPos}...]`
-	const endCompressionMarker = `[...Compressed ${middleStartPos + middleLength} to ${input.length - endLength}...]`
+	const startCompressionMarker = `[...Compressed ${startLength} to ${middleStartPos}...]`;
+	const endCompressionMarker = `[...Compressed ${middleStartPos + middleLength} to ${input.length - endLength}...]`;
 
 	// Combine all sections with compression markers
-	return `${startSection}${startCompressionMarker}${middleSection}${endCompressionMarker}${endSection}`
+	return `${startSection}${startCompressionMarker}${middleSection}${endCompressionMarker}${endSection}`;
 }
 
 export class CompressToolExecution {
-	private threshold: number | undefined
-	private apiHandler: ApiHandler
-	private commandList: CommandListItem[] = []
+	private threshold: number | undefined;
+	private apiHandler: ApiHandler;
+	private commandList: CommandListItem[] = [];
 	constructor(apiHandler: ApiHandler, threshold?: number) {
-		this.threshold = threshold ?? 30_000
-		this.apiHandler = apiHandler
+		this.threshold = threshold ?? 30_000;
+		this.apiHandler = apiHandler;
 	}
 
 	public addCommand = (id: string, command: string, output: string) => {
-		this.commandList.push({ command, output, id })
-	}
+		this.commandList.push({ command, output, id });
+	};
 
 	public compressAll = async (): Promise<CommandListItem[]> => {
 		// run it in parallel
 		const promises = this.commandList.map(async (commandItem) => {
-			const compressedOutput = await this.compressExecution(commandItem.command, commandItem.output)
-			return { command: commandItem.command, output: compressedOutput, id: commandItem.id }
-		})
-		return await Promise.all(promises)
-	}
+			const compressedOutput = await this.compressExecution(
+				commandItem.command,
+				commandItem.output
+			);
+			return {
+				command: commandItem.command,
+				output: compressedOutput,
+				id: commandItem.id,
+			};
+		});
+		return await Promise.all(promises);
+	};
 
-	public compress = async (command: string, output: string): Promise<string> => {
-		return await this.compressExecution(command, output)
-	}
+	public compress = async (
+		command: string,
+		output: string
+	): Promise<string> => {
+		return await this.compressExecution(command, output);
+	};
 
-	private compressExecution = async (command: string, output: string, isError = -1): Promise<string> => {
+	private compressExecution = async (
+		command: string,
+		output: string,
+		isError = -1
+	): Promise<string> => {
 		const SYSTEM_PROMPT = `
 		You are an assistant tasked with analyzing and summarizing the output of commands run on a user's computer. Your goals are to:
 		
@@ -203,21 +220,21 @@ export class CompressToolExecution {
 		Your summary should be informative, full of insights, with clear explanations and suggestions where necessary.
 		Don't be afraid to write long summaries if the output is complex or requires detailed analysis.
 		You should focus on quality and quantity of information to provide the best assistance to the user.
-		`
+		`;
 		if (!this.threshold || output.length < this.threshold) {
-			logger(`Output is below threshold, skipping compression`, "info")
-			return output
+			logger(`Output is below threshold, skipping compression`, 'info');
+			return output;
 		}
-		logger(`Compressing output for command: ${command}`, "info")
+		logger(`Compressing output for command: ${command}`, 'info');
 		try {
 			const resultStream = this.apiHandler.createMessageStream({
 				systemPrompt: [SYSTEM_PROMPT],
 				messages: [
 					{
-						role: "user",
+						role: 'user',
 						content: [
 							{
-								type: "text",
+								type: 'text',
 								text: `The output for the "${command}" command was:\n\n${output}`,
 							},
 						],
@@ -225,39 +242,50 @@ export class CompressToolExecution {
 				],
 				abortSignal: null,
 				modelId: this.apiHandler.getModel().id,
-			})
+			});
 			for await (const message of resultStream) {
-				if (message.code === 1 && isTextBlock(message.body.anthropic.content[0])) {
-					return message.body.anthropic.content[0].text
+				if (
+					message.code === 1 &&
+					isTextBlock(message.body.anthropic.content[0])
+				) {
+					return message.body.anthropic.content[0].text;
 				}
 				if (message.code === -1) {
-					throw new Error("Failed to compress output")
+					throw new Error('Failed to compress output');
 				}
 			}
-			return output
+			return output;
 		} catch (err) {
-			logger(`Error compressing output for command: ${command}`, "error")
+			logger(`Error compressing output for command: ${command}`, 'error');
 			if (isError === 3) {
 				// try to compress the output again but with a compressed version of the output
-				return this.compressExecution(command, compressLongString(output), isError + 1)
+				return this.compressExecution(
+					command,
+					compressLongString(output),
+					isError + 1
+				);
 			}
 			// if the error is not resolved after 3 tries, return the output (should be already compressed using compressLongString)
 			if (isError > 3) {
-				return output
+				return output;
 			}
-			return this.compressExecution(command, output, isError + 1)
+			return this.compressExecution(command, output, isError + 1);
 		}
-	}
+	};
 }
 
 // Define our content block types for better type safety
-type ContentBlockType = TextBlockParam | ImageBlockParam | ToolUseBlockParam | ToolResultBlockParam
-type MessageContent = string | ContentBlockType[]
+type ContentBlockType =
+	| TextBlockParam
+	| ImageBlockParam
+	| ToolUseBlockParam
+	| ToolResultBlockParam;
+type MessageContent = string | ContentBlockType[];
 
 // Type guard for content blocks
 const isTextBlock = (block: ContentBlockType): block is TextBlockParam => {
-	return block?.type === "text"
-}
+	return block?.type === 'text';
+};
 
 /**
  * Processes a message's content blocks and compresses tool outputs where appropriate
@@ -270,169 +298,224 @@ const processContentBlock = async (
 	setCurrentCommandString: (command: string) => void
 ): Promise<ContentBlockType | undefined> => {
 	if (!isTextBlock(content)) {
-		return content
+		return content;
 	}
 	const shouldNotBeCompressed = compressedTools.every(
 		(tool) => !content.text.includes(`<toolName>${tool}</toolName>`)
-	)
-	const isToolResponse = content.text.includes("<toolResponse>") && content.text.includes("</toolResponse>")
+	);
+	const isToolResponse =
+		content.text.includes('<toolResponse>') &&
+		content.text.includes('</toolResponse>');
 
 	// Handle execute_command blocks
-	if (!isToolResponse && content.text.includes("<command>") && content.text.includes("</command>")) {
-		const indexOfStartTag = content.text.indexOf("<command>")
-		const indexOfEndTag = content.text.indexOf("</command>")
+	if (
+		!isToolResponse &&
+		content.text.includes('<command>') &&
+		content.text.includes('</command>')
+	) {
+		const indexOfStartTag = content.text.indexOf('<command>');
+		const indexOfEndTag = content.text.indexOf('</command>');
 		if (indexOfStartTag !== -1 && indexOfEndTag !== -1) {
-			const command = content.text.slice(indexOfStartTag + "<command>".length, indexOfEndTag)
-			setCurrentCommandString(command)
-			logger(`Found command block (${command})`, "info")
+			const command = content.text.slice(
+				indexOfStartTag + '<command>'.length,
+				indexOfEndTag
+			);
+			setCurrentCommandString(command);
+			logger(`Found command block (${command})`, 'info');
 		}
 	}
 
 	// Skip specific context blocks
 	const includedTextToRemove = [
-		"</most_important_context>",
-		"</environment_details>",
-		"</automatic_reminders>",
-		"</compression_additional_context>",
-	]
+		'</most_important_context>',
+		'</environment_details>',
+		'</automatic_reminders>',
+		'</compression_additional_context>',
+	];
 	if (includedTextToRemove.some((text) => content.text.includes(text))) {
 		if (
-			content.text.includes("<most_important_context>") ||
-			content.text.includes("<environment_details>") ||
-			content.text.includes("<automatic_reminders>")
+			content.text.includes('<most_important_context>') ||
+			content.text.includes('<environment_details>') ||
+			content.text.includes('<automatic_reminders>')
 		) {
-			logger(`Found and Removing either most_important_context or environment_details block`, "info")
-			return undefined
+			logger(
+				`Found and Removing either most_important_context or environment_details block`,
+				'info'
+			);
+			return undefined;
 		}
 	}
 
 	// Handle write_to_file compression
-	if ((content.text.includes("</write_to_file>") || content.text.includes(`</${CONTENT}>`)) && !isToolResponse) {
-		const VlinderContentType = content.text.includes(`</${CONTENT}>`) ? CONTENT : "content"
-		const contentStart = content.text.indexOf(`<${VlinderContentType}>`)
-		const contentEnd = content.text.indexOf(`</${VlinderContentType}>`)
+	if (
+		(content.text.includes('</write_to_file>') ||
+			content.text.includes(`</${CONTENT}>`)) &&
+		!isToolResponse
+	) {
+		const VlinderContentType = content.text.includes(`</${CONTENT}>`)
+			? CONTENT
+			: 'content';
+		const contentStart = content.text.indexOf(`<${VlinderContentType}>`);
+		const contentEnd = content.text.indexOf(`</${VlinderContentType}>`);
 
 		if (contentStart !== -1 && contentEnd !== -1) {
-			const textBeforeContent = content.text.slice(0, contentStart)
-			const textAfterContent = content.text.slice(contentEnd + `</${VlinderContentType}>`.length)
-			const fullContent = content.text.slice(contentStart + `<${VlinderContentType}>`.length, contentEnd)
+			const textBeforeContent = content.text.slice(0, contentStart);
+			const textAfterContent = content.text.slice(
+				contentEnd + `</${VlinderContentType}>`.length
+			);
+			const fullContent = content.text.slice(
+				contentStart + `<${VlinderContentType}>`.length,
+				contentEnd
+			);
 
 			// Ensure extracted content is logged for verification
-			logger(`Extracted content: "${fullContent}"`, "debug")
+			logger(`Extracted content: "${fullContent}"`, 'debug');
 
 			// Get first 3 lines
-			const lines = fullContent.split("\n")
-			const firstThreeLines = lines.slice(0, 3).join("\n")
-			const truncatedContent = firstThreeLines + (lines.length > 3 ? "\n..." : "")
-			const truncatedContentReplace = `<${VlinderContentType}>${truncatedContent}\n(Original length: ${fullContent.length}, lines: ${lines.length})</${VlinderContentType}>`
+			const lines = fullContent.split('\n');
+			const firstThreeLines = lines.slice(0, 3).join('\n');
+			const truncatedContent =
+				firstThreeLines + (lines.length > 3 ? '\n...' : '');
+			const truncatedContentReplace = `<${VlinderContentType}>${truncatedContent}\n(Original length: ${fullContent.length}, lines: ${lines.length})</${VlinderContentType}>`;
 
 			logger(
 				`Compressed content for ${VlinderContentType}: original length: ${fullContent.length}, new length: ${truncatedContentReplace.length}`,
-				"info"
-			)
+				'info'
+			);
 
 			return {
-				type: "text",
+				type: 'text',
 				text: textBeforeContent + truncatedContentReplace + textAfterContent,
-			}
+			};
 		} else {
-			logger(`Failed to detect ${VlinderContentType} block boundaries, skipping compression`, "warn")
+			logger(
+				`Failed to detect ${VlinderContentType} block boundaries, skipping compression`,
+				'warn'
+			);
 		}
 	}
 
 	// Handle edit_file_blocks compression
-	if (content.text.includes(`<${DIFF}>`) && content.text.includes(`</${DIFF}>`) && !isToolResponse) {
-		const VlinderDiffStart = content.text.indexOf(`<${DIFF}>`)
-		const VlinderDiffEnd = content.text.indexOf(`</${DIFF}>`)
+	if (
+		content.text.includes(`<${DIFF}>`) &&
+		content.text.includes(`</${DIFF}>`) &&
+		!isToolResponse
+	) {
+		const VlinderDiffStart = content.text.indexOf(`<${DIFF}>`);
+		const VlinderDiffEnd = content.text.indexOf(`</${DIFF}>`);
 
 		if (VlinderDiffStart !== -1 && VlinderDiffEnd !== -1) {
-			const textBeforeContent = content.text.slice(0, VlinderDiffStart)
-			const textAfterContent = content.text.slice(VlinderDiffEnd + `</${DIFF}>`.length)
-			const fullContent = content.text.slice(VlinderDiffStart + `<${DIFF}>`.length, VlinderDiffEnd)
+			const textBeforeContent = content.text.slice(0, VlinderDiffStart);
+			const textAfterContent = content.text.slice(
+				VlinderDiffEnd + `</${DIFF}>`.length
+			);
+			const fullContent = content.text.slice(
+				VlinderDiffStart + `<${DIFF}>`.length,
+				VlinderDiffEnd
+			);
 
 			// Log extracted content for debugging
-			logger(`Extracted ${DIFF} content: "${fullContent}"`, "debug")
+			logger(`Extracted ${DIFF} content: "${fullContent}"`, 'debug');
 
 			// Count SEARCH and REPLACE blocks
-			const searchCount = (fullContent.match(/SEARCH/g) || []).length
-			const replaceCount = (fullContent.match(/REPLACE/g) || []).length
+			const searchCount = (fullContent.match(/SEARCH/g) || []).length;
+			const replaceCount = (fullContent.match(/REPLACE/g) || []).length;
 
-			const truncatedContent = `<${DIFF}>Compressed diff with ${searchCount} SEARCH/REPLACE blocks</${DIFF}>`
+			const truncatedContent = `<${DIFF}>Compressed diff with ${searchCount} SEARCH/REPLACE blocks</${DIFF}>`;
 			logger(
 				`Compressed ${DIFF}: original length: ${fullContent.length}, SEARCH: ${searchCount}, REPLACE: ${replaceCount}`,
-				"info"
-			)
+				'info'
+			);
 
 			return {
-				type: "text",
+				type: 'text',
 				text: textBeforeContent + truncatedContent + textAfterContent,
-			}
+			};
 		} else {
-			logger(`Failed to detect ${DIFF} boundaries, skipping compression`, "warn")
+			logger(
+				`Failed to detect ${DIFF} boundaries, skipping compression`,
+				'warn'
+			);
 		}
 	}
 
 	// Handle tool response compression
 	if (isToolResponse) {
 		try {
-			const toolResponse = parseToolResponse(content.text)
-			if (!compressedTools.includes(toolResponse.toolName as ToolName) && shouldNotBeCompressed) {
-				return content
+			const toolResponse = parseToolResponse(content.text);
+			if (
+				!compressedTools.includes(toolResponse.toolName as ToolName) &&
+				shouldNotBeCompressed
+			) {
+				return content;
 			}
 
-			if (toolResponse.toolName === "execute_command") {
-				if (toolResponse.toolResult.includes("<compressedToolResult>")) {
-					logger(`Skipping compression for already compressed execute_command`, "info")
-					return content
+			if (toolResponse.toolName === 'execute_command') {
+				if (toolResponse.toolResult.includes('<compressedToolResult>')) {
+					logger(
+						`Skipping compression for already compressed execute_command`,
+						'info'
+					);
+					return content;
 				}
 				if (
-					(isToolResponseV2(toolResponse) && toolResponse.status === "success") ||
-					toolResponse.toolStatus === "success"
+					(isToolResponseV2(toolResponse) &&
+						toolResponse.status === 'success') ||
+					toolResponse.toolStatus === 'success'
 				) {
-					const output = await executionCompressor.compress(currentCommandString, toolResponse.toolResult)
-					logger(`Compressed execute_command output ${currentCommandString}`, "info")
+					const output = await executionCompressor.compress(
+						currentCommandString,
+						toolResponse.toolResult
+					);
+					logger(
+						`Compressed execute_command output ${currentCommandString}`,
+						'info'
+					);
 					return {
-						type: "text",
+						type: 'text',
 						text: `<toolResponse><toolName>${toolResponse.toolName}</toolName><toolStatus>${toolResponse.toolStatus}</toolStatus>
 						<<toolResult>
 						<compressedToolResult>
 						${output}
 						</compressedToolResult>
 						</toolResult></toolResponse>`,
-					}
+					};
 				} else {
-					logger(`Skipping compression for rejected/pending execute_command`, "info")
-					return content
+					logger(
+						`Skipping compression for rejected/pending execute_command`,
+						'info'
+					);
+					return content;
 				}
 			}
 
-			const textLength = toolResponse.toolResult.length
-			toolResponse.toolResult = `The output for tool "${toolResponse.toolName}" was compressed for readability if the context was needed please re read the file.`
-			logger(`Compressed tool ${toolResponse.toolName} output`, "info")
+			const textLength = toolResponse.toolResult.length;
+			toolResponse.toolResult = `The output for tool "${toolResponse.toolName}" was compressed for readability if the context was needed please re read the file.`;
+			logger(`Compressed tool ${toolResponse.toolName} output`, 'info');
 
 			return {
-				type: "text",
+				type: 'text',
 				text: `<toolResponse><toolName>${toolResponse.toolName}</toolName><toolStatus>${toolResponse.toolStatus}</toolStatus><toolResult>${toolResponse.toolResult}</toolResult></toolResponse>`,
-			}
+			};
 		} catch (error) {
-			logger(`Error compressing tool response: ${error}`, "error")
+			logger(`Error compressing tool response: ${error}`, 'error');
 			return {
-				type: "text",
-				text: "[Compressed] Tool response errored",
-			}
+				type: 'text',
+				text: '[Compressed] Tool response errored',
+			};
 		}
 	}
 
-	return content
-}
+	return content;
+};
 
 export const compressedTools: ToolName[] = [
-	"read_file",
-	"execute_command",
-	"write_to_file",
-	"edit_file_blocks",
-	"file_editor",
-]
+	'read_file',
+	'execute_command',
+	'write_to_file',
+	'edit_file_blocks',
+	'file_editor',
+];
 
 /**
  * Main function to compress tool outputs in a message array
@@ -442,26 +525,29 @@ export const compressToolFromMsg = async (
 	apiHandler: ApiHandler,
 	executeCommandThreshold?: number
 ): Promise<MessageParam[]> => {
-	const executionCompressor = new CompressToolExecution(apiHandler, executeCommandThreshold)
-	let currentCommandString = ""
+	const executionCompressor = new CompressToolExecution(
+		apiHandler,
+		executeCommandThreshold
+	);
+	let currentCommandString = '';
 	const setCurrentCommandString = (command: string) => {
-		currentCommandString = command
-	}
+		currentCommandString = command;
+	};
 
 	const processMessage = async (msg: MessageParam): Promise<MessageParam> => {
-		if (typeof msg.content === "string") {
+		if (typeof msg.content === 'string') {
 			return {
 				...msg,
 				content: [
 					{
-						type: "text",
+						type: 'text',
 						text: msg.content,
 					},
 				] as ContentBlockType[],
-			}
+			};
 		}
 
-		const processedContent: (ContentBlockType | null)[] = []
+		const processedContent: (ContentBlockType | null)[] = [];
 
 		for (const block of msg.content) {
 			const processedBlock = await processContentBlock(
@@ -470,23 +556,25 @@ export const compressToolFromMsg = async (
 				executionCompressor,
 				compressedTools,
 				setCurrentCommandString
-			)
-			processedContent.push(processedBlock ?? null)
+			);
+			processedContent.push(processedBlock ?? null);
 		}
-		const content = processedContent.filter((block) => block !== null) as ContentBlockType[]
+		const content = processedContent.filter(
+			(block) => block !== null
+		) as ContentBlockType[];
 		if (content.length === 0) {
 			// put the original content back
-			return msg
+			return msg;
 		}
 		return {
 			...msg,
 			content,
-		}
-	}
+		};
+	};
 	// const processedMsgs: MessageParam[] = []
 	// for (const msg of msgs) {
 	// 	processedMsgs.push(await processMessage(msg))
 	// }
-	const processedMsgs = await Promise.all(msgs.map(processMessage))
-	return processedMsgs
-}
+	const processedMsgs = await Promise.all(msgs.map(processMessage));
+	return processedMsgs;
+};

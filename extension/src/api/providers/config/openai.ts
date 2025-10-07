@@ -1,15 +1,15 @@
 // providers/openai.ts
-import { ProviderConfig } from "../types"
-import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from "../constants"
+import { ProviderConfig } from '../types';
+import { DEFAULT_BASE_URLS, PROVIDER_IDS, PROVIDER_NAMES } from '../constants';
 
 export const openaiConfig: ProviderConfig = {
 	id: PROVIDER_IDS.OPENAI,
 	name: PROVIDER_NAMES[PROVIDER_IDS.OPENAI],
 	baseUrl: DEFAULT_BASE_URLS[PROVIDER_IDS.OPENAI],
 	models: [
-				{
-			id: "gpt-5",
-			name: "GPT-5",
+		{
+			id: 'gpt-5',
+			name: 'GPT-5',
 			contextWindow: 500_000,
 			maxTokens: 32_000,
 			supportsImages: true,
@@ -22,8 +22,8 @@ export const openaiConfig: ProviderConfig = {
 			isThinkingModel: true,
 		},
 		{
-			id: "gpt-4.1-preview",
-			name: "GPT-4.1 (Preview)",
+			id: 'gpt-4.1-preview',
+			name: 'GPT-4.1 (Preview)',
 			contextWindow: 1_000_000,
 			maxTokens: 32_000,
 			supportsImages: true,
@@ -36,8 +36,8 @@ export const openaiConfig: ProviderConfig = {
 			isThinkingModel: true,
 		},
 		{
-			id: "gpt-4o",
-			name: "GPT-4 O",
+			id: 'gpt-4o',
+			name: 'GPT-4 O',
 			contextWindow: 128000,
 			maxTokens: 4096,
 			supportsImages: true,
@@ -49,5 +49,5 @@ export const openaiConfig: ProviderConfig = {
 			cacheWritesPrice: 5.0,
 		},
 	],
-	requiredFields: ["apiKey"],
-}
+	requiredFields: ['apiKey'],
+};

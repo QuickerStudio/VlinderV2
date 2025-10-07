@@ -1,14 +1,19 @@
-import * as path from "path"
-import * as fs from "fs/promises"
-import { serializeError } from "serialize-error"
-import { getReadablePath } from "../../utils"
-import { BaseAgentTool } from "../base-agent.tool"
-import { RemoveToolParams } from "../schema/remove"
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import { serializeError } from 'serialize-error';
+import { getReadablePath } from '../../utils';
+import { BaseAgentTool } from '../base-agent.tool';
+import { RemoveToolParams } from '../schema/remove';
 
 export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 	async execute() {
-		const { input, ask } = this.params
-		let { path: targetPath, type = "auto", recursive = true, force = false } = input
+		const { input, ask } = this.params;
+		let {
+			path: targetPath,
+			type = 'auto',
+			recursive = true,
+			force = false,
+		} = input;
 
 		if (!targetPath?.trim()) {
 			const errorMsg = `
@@ -32,17 +37,17 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 						<note>A valid path is required to remove files or directories</note>
 					</help>
 				</error_details>
-			</remove_response>`
-			return this.toolResponse("error", errorMsg)
+			</remove_response>`;
+			return this.toolResponse('error', errorMsg);
 		}
 
 		try {
-			const absolutePath = path.resolve(this.cwd, targetPath)
+			const absolutePath = path.resolve(this.cwd, targetPath);
 
 			// Check if target exists
-			let targetStats
+			let targetStats;
 			try {
-				targetStats = await fs.stat(absolutePath)
+				targetStats = await fs.stat(absolutePath);
 			} catch (error) {
 				const errorMsg = `
 				<remove_response>
@@ -56,14 +61,14 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 						<message>Target path '${getReadablePath(targetPath, this.cwd)}' does not exist</message>
 						<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 					</error_details>
-				</remove_response>`
-				return this.toolResponse("error", errorMsg)
+				</remove_response>`;
+				return this.toolResponse('error', errorMsg);
 			}
 
 			// Determine actual type
-			const isDirectory = targetStats.isDirectory()
-			const isFile = targetStats.isFile()
-			
+			const isDirectory = targetStats.isDirectory();
+			const isFile = targetStats.isFile();
+
 			if (!isDirectory && !isFile) {
 				const errorMsg = `
 				<remove_response>
@@ -77,17 +82,19 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 						<message>Target path '${getReadablePath(targetPath, this.cwd)}' is neither a file nor a directory</message>
 						<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 					</error_details>
-				</remove_response>`
-				return this.toolResponse("error", errorMsg)
+				</remove_response>`;
+				return this.toolResponse('error', errorMsg);
 			}
 
-			const actualType: "file" | "directory" = isDirectory ? "directory" : "file"
+			const actualType: 'file' | 'directory' = isDirectory
+				? 'directory'
+				: 'file';
 
 			// Handle force_recursive type
-			let effectiveType = type
-			let isForceRecursive = false
+			let effectiveType = type;
+			let isForceRecursive = false;
 
-			if (type === "force_recursive") {
+			if (type === 'force_recursive') {
 				if (!isDirectory) {
 					const errorMsg = `
 					<remove_response>
@@ -102,18 +109,22 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 							<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 							<actual_type>${actualType}</actual_type>
 						</error_details>
-					</remove_response>`
-					return this.toolResponse("error", errorMsg)
+					</remove_response>`;
+					return this.toolResponse('error', errorMsg);
 				}
-				effectiveType = "directory"
-				isForceRecursive = true
+				effectiveType = 'directory';
+				isForceRecursive = true;
 				// Override recursive and force settings for force_recursive
-				recursive = true
-				force = true
+				recursive = true;
+				force = true;
 			}
 
 			// Validate type parameter if specified (excluding force_recursive which is handled above)
-			if (effectiveType !== "auto" && effectiveType !== actualType && type !== "force_recursive") {
+			if (
+				effectiveType !== 'auto' &&
+				effectiveType !== actualType &&
+				type !== 'force_recursive'
+			) {
 				const errorMsg = `
 				<remove_response>
 					<status>
@@ -127,14 +138,14 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 						<specified_type>${type}</specified_type>
 						<actual_type>${actualType}</actual_type>
 					</error_details>
-				</remove_response>`
-				return this.toolResponse("error", errorMsg)
+				</remove_response>`;
+				return this.toolResponse('error', errorMsg);
 			}
 
 			// Check if directory is empty when recursive is false
 			if (isDirectory && !recursive) {
 				try {
-					const entries = await fs.readdir(absolutePath)
+					const entries = await fs.readdir(absolutePath);
 					if (entries.length > 0) {
 						const errorMsg = `
 						<remove_response>
@@ -149,8 +160,8 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 								<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 								<suggestion>Set recursive=true to remove directory with contents</suggestion>
 							</error_details>
-						</remove_response>`
-						return this.toolResponse("error", errorMsg)
+						</remove_response>`;
+						return this.toolResponse('error', errorMsg);
 					}
 				} catch (error) {
 					// If we can't read the directory, we'll let the removal attempt handle it
@@ -160,37 +171,37 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 			// Ask for user approval if not in auto mode
 			if (!this.alwaysAllowWriteOnly) {
 				const { response } = await ask(
-					"tool",
+					'tool',
 					{
 						tool: {
-							tool: "remove",
+							tool: 'remove',
 							path: getReadablePath(targetPath, this.cwd),
 							type: actualType,
 							recursive: isDirectory ? recursive : undefined,
 							force: force ? true : undefined,
-							approvalState: "pending",
+							approvalState: 'pending',
 							ts: this.ts,
 						},
 					},
 					this.ts
-				)
+				);
 
-				if (response !== "yesButtonTapped") {
+				if (response !== 'yesButtonTapped') {
 					await this.params.updateAsk(
-						"tool",
+						'tool',
 						{
 							tool: {
-								tool: "remove",
+								tool: 'remove',
 								path: getReadablePath(targetPath, this.cwd),
 								type: actualType,
 								recursive: isDirectory ? recursive : undefined,
 								force: force ? true : undefined,
-								approvalState: "rejected",
+								approvalState: 'rejected',
 								ts: this.ts,
 							},
 						},
 						this.ts
-					)
+					);
 
 					const errorMsg = `
 					<remove_response>
@@ -204,37 +215,37 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 							<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 							<type>${actualType}</type>
 						</details>
-					</remove_response>`
-					return this.toolResponse("error", errorMsg)
+					</remove_response>`;
+					return this.toolResponse('error', errorMsg);
 				}
 
 				// Update approval state to approved
 				await this.params.updateAsk(
-					"tool",
+					'tool',
 					{
 						tool: {
-							tool: "remove",
+							tool: 'remove',
 							path: getReadablePath(targetPath, this.cwd),
 							type: actualType,
 							recursive: isDirectory ? recursive : undefined,
 							force: force ? true : undefined,
-							approvalState: "approved",
+							approvalState: 'approved',
 							ts: this.ts,
 						},
 					},
 					this.ts
-				)
+				);
 			}
 
 			// Perform the remove operation
 			if (isDirectory) {
 				if (recursive) {
-					await fs.rm(absolutePath, { recursive: true, force: true })
+					await fs.rm(absolutePath, { recursive: true, force: true });
 				} else {
-					await fs.rmdir(absolutePath)
+					await fs.rmdir(absolutePath);
 				}
 			} else {
-				await fs.unlink(absolutePath)
+				await fs.unlink(absolutePath);
 			}
 
 			const successMsg = `
@@ -252,10 +263,9 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 					${force ? '<force>true</force>' : ''}
 					${isForceRecursive ? '<force_recursive>true</force_recursive>' : ''}
 				</details>
-			</remove_response>`
+			</remove_response>`;
 
-			return this.toolResponse("success", successMsg)
-
+			return this.toolResponse('success', successMsg);
 		} catch (error) {
 			const errorMsg = `
 			<remove_response>
@@ -270,8 +280,8 @@ export class RemoveTool extends BaseAgentTool<RemoveToolParams> {
 					<target_path>${getReadablePath(targetPath, this.cwd)}</target_path>
 					<error>${serializeError(error)}</error>
 				</error_details>
-			</remove_response>`
-			return this.toolResponse("error", errorMsg)
+			</remove_response>`;
+			return this.toolResponse('error', errorMsg);
 		}
 	}
 }

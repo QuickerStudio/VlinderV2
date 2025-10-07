@@ -25,4 +25,4 @@ export default `; Minimal and Safe Python Queries
 (call
   (attribute
     (identifier) @name.method_call))
-`
+`;

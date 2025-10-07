@@ -1,26 +1,26 @@
-import { SSEResponse } from "./task-executor/task-executor"
+import { SSEResponse } from './task-executor/task-executor';
 
-type ChunkCallback = (chunk: SSEResponse) => Promise<void>
+type ChunkCallback = (chunk: SSEResponse) => Promise<void>;
 
 interface ChunkProcessorCallbacks {
-	onImmediateEndOfStream: ChunkCallback
-	onChunk: ChunkCallback
-	onFinalEndOfStream: ChunkCallback
+	onImmediateEndOfStream: ChunkCallback;
+	onChunk: ChunkCallback;
+	onFinalEndOfStream: ChunkCallback;
 	/**
 	 * Optional callback invoked before the first chunk is read.
 	 */
-	onStreamStart?: () => Promise<void>
+	onStreamStart?: () => Promise<void>;
 }
 
 export class ChunkProcessor {
-	private callbacks: ChunkProcessorCallbacks
-	private chunkQueue: SSEResponse[] = []
-	private isProcessing = false
-	private endOfStreamReceived = false
-	private isFirstChunkReceived = false
+	private callbacks: ChunkProcessorCallbacks;
+	private chunkQueue: SSEResponse[] = [];
+	private isProcessing = false;
+	private endOfStreamReceived = false;
+	private isFirstChunkReceived = false;
 
 	constructor(callbacks: ChunkProcessorCallbacks) {
-		this.callbacks = callbacks
+		this.callbacks = callbacks;
 	}
 
 	async processStream(stream: AsyncGenerator<SSEResponse, any, unknown>) {
@@ -28,44 +28,44 @@ export class ChunkProcessor {
 
 		for await (const chunk of stream) {
 			if (this.callbacks.onStreamStart && !this.isFirstChunkReceived) {
-				await this.callbacks.onStreamStart()
-				this.isFirstChunkReceived = true
+				await this.callbacks.onStreamStart();
+				this.isFirstChunkReceived = true;
 			}
 			if (chunk.code === 1 || chunk.code === -1) {
-				this.endOfStreamReceived = true
-				await this.callbacks.onImmediateEndOfStream(chunk)
+				this.endOfStreamReceived = true;
+				await this.callbacks.onImmediateEndOfStream(chunk);
 			}
 
-			this.chunkQueue.push(chunk)
-			this.processNextChunk()
+			this.chunkQueue.push(chunk);
+			this.processNextChunk();
 		}
 
 		// Ensure final processing occurs after all chunks have been processed
 		while (this.isProcessing || this.chunkQueue.length > 0) {
-			await new Promise((resolve) => setTimeout(resolve, 5))
+			await new Promise((resolve) => setTimeout(resolve, 5));
 		}
 
 		if (this.endOfStreamReceived) {
-			const lastChunk = this.chunkQueue[this.chunkQueue.length - 1]
-			await this.callbacks.onFinalEndOfStream(lastChunk)
+			const lastChunk = this.chunkQueue[this.chunkQueue.length - 1];
+			await this.callbacks.onFinalEndOfStream(lastChunk);
 		}
 	}
 
 	private async processNextChunk() {
 		if (this.isProcessing || this.chunkQueue.length === 0) {
-			return
+			return;
 		}
 
-		this.isProcessing = true
-		const chunk = this.chunkQueue.shift()!
+		this.isProcessing = true;
+		const chunk = this.chunkQueue.shift()!;
 
 		try {
-			await this.callbacks.onChunk(chunk)
+			await this.callbacks.onChunk(chunk);
 		} catch (error) {
-			console.error("Error processing chunk:", error)
+			console.error('Error processing chunk:', error);
 		} finally {
-			this.isProcessing = false
-			this.processNextChunk()
+			this.isProcessing = false;
+			this.processNextChunk();
 		}
 	}
 }

@@ -1,36 +1,37 @@
-import dedent from "dedent"
-import { BaseAgentTool } from "../../base-agent.tool"
-import { ExitAgentToolParams } from "../../schema/agents/agent-exit"
+import dedent from 'dedent';
+import { BaseAgentTool } from '../../base-agent.tool';
+import { ExitAgentToolParams } from '../../schema/agents/agent-exit';
 
 export class ExitAgentTool extends BaseAgentTool<ExitAgentToolParams> {
 	async execute() {
-		const { input, ask, say } = this.params
-		const { result } = input
+		const { input, ask, say } = this.params;
+		const { result } = input;
 
-		const agentName = this.MainAgent.getStateManager().subAgentManager.state?.name
+		const agentName =
+			this.MainAgent.getStateManager().subAgentManager.state?.name;
 		if (!agentName) {
-			return this.toolResponse("error", "No sub-agent is currently running.")
+			return this.toolResponse('error', 'No sub-agent is currently running.');
 		}
 
 		ask(
-			"tool",
+			'tool',
 			{
 				tool: {
-					tool: "exit_agent",
+					tool: 'exit_agent',
 					agentName,
 					result,
 					ts: this.ts,
-					approvalState: "approved",
+					approvalState: 'approved',
 				},
 			},
 			this.ts
-		)
+		);
 
 		// this will exit the sub-agent and return back to the main agent
-		await this.MainAgent.getStateManager().subAgentManager.exitSubAgent()
+		await this.MainAgent.getStateManager().subAgentManager.exitSubAgent();
 
 		return this.toolResponse(
-			"success",
+			'success',
 			dedent`<completion_tool_response>
                 <status>
                     <result>success</result>
@@ -43,6 +44,6 @@ export class ExitAgentTool extends BaseAgentTool<ExitAgentToolParams> {
                     <output>${result}</output>
                 </result>
             </completion_tool_response>`
-		)
+		);
 	}
 }

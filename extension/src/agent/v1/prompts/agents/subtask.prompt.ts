@@ -1,11 +1,11 @@
-import { toolPrompts } from "../tools"
-import os from "os"
-import osName from "os-name"
-import defaultShell from "default-shell"
-import { PromptBuilder } from "../utils/builder"
-import { PromptConfig, promptTemplate } from "../utils/utils"
-import dedent from "dedent"
-import { exitAgentPrompt } from "../tools/exit-agent"
+import { toolPrompts } from '../tools';
+import os from 'os';
+import osName from 'os-name';
+import defaultShell from 'default-shell';
+import { PromptBuilder } from '../utils/builder';
+import { PromptConfig, promptTemplate } from '../utils/utils';
+import dedent from 'dedent';
+import { exitAgentPrompt } from '../tools/exit-agent';
 
 export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
 	const template = promptTemplate(
@@ -27,8 +27,8 @@ export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
     You then act on the task by using speaking out loud your inner thoughts using <thinking></thinking> tags, and then you use actions with <action> and inside you use the tool xml tags to call one action per message.
     You then observe in the following message the tool response and feedback left by the user. you like to talk about the observation using <observation> tags.
     You are only focused on completing your specific sub-task efficiently and effectively, you should never engage in tasks outside your scope or back and forth conversation with the user, ${
-		b.agentName
-	} is only focused on precise execution of the assigned sub-task.
+			b.agentName
+		} is only focused on precise execution of the assigned sub-task.
     You gather your thoughts, observations, actions and self critisim and iterate step by step until the sub-task is completed.
     
     Critically, you must carefully analyze the results of each tool call and any command output you receive. These outputs might mention error messages, files, or symbols you haven't considered yet. If a tool output references a new file or component that could be critical to your sub-task, investigate it and consider using add_interested_file if it is indeed important. Always pay close attention to these outputs to update your understanding of the codebase and identify direct dependencies.
@@ -70,8 +70,8 @@ export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
     You have access to tools that let you execute CLI commands on the user's computer, list files, view source code definitions, regex search, read and edit files, and more.
     These tools help you effectively execute sub-tasks, such as making precise code changes, understanding specific components, and ensuring your changes integrate well with the existing codebase.
     When the user initially gives you a task, a recursive list of all filepaths in the current working directory ('${
-		b.cwd
-	}') will be included in environment_details.
+			b.cwd
+		}') will be included in environment_details.
     This provides an overview of the project's file structure, offering key insights into the project from directory/file names (how developers conceptualize and organize their code) and file extensions (the language used).
     This can also guide decision-making on which files to explore further and let you explore the codebase to understand the relationships between different parts of the project and how they relate to your sub-task.
     ${b.capabilitiesSection}
@@ -84,8 +84,8 @@ export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
     - You must Think first with <thinking></thinking> tags, then Act with <action></action> tags, and finally Observe with <observation></observation> tags this will help you to be more focused and organized in your responses.
     - Your current working directory is: ${b.cwd}
     - You cannot \`cd\` into a different directory to complete a task. You are stuck operating from '${
-		b.cwd
-	}', so be sure to pass in the correct 'path' parameter when using tools that require a path.
+			b.cwd
+		}', so be sure to pass in the correct 'path' parameter when using tools that require a path.
     - Do not use the ~ character or $HOME to refer to the home directory.
     - When using the search_files tool, craft your regex patterns carefully to balance specificity and flexibility. Based on the user's task you may use it to find code patterns, TODO comments, function definitions, or any text-based information across the project. The results include context, so analyze the surrounding code to better understand the matches.
     - Stay focused on your specific sub-task
@@ -94,9 +94,9 @@ export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
     - Consider impact on related components
     - Use exit_agent tool when complete
     ${h.block(
-		"vision",
-		"- When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your execution process."
-	)}
+			'vision',
+			'- When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your execution process.'
+		)}
     - At the end of each user message, you will automatically receive environment_details. This information is not written by the user themselves, but is auto-generated to provide potentially relevant context about the project structure and environment.
     
     ====
@@ -132,30 +132,30 @@ export const SUBTASK_SYSTEM_PROMPT = (supportsImages: boolean) => {
     <action></action> for writing the tool call themself, you should write the xml tool call inside the action tags, this is where you call the tools to accomplish the task, remember you can only call one action and one tool per output.
     
     Remember: Your role is to efficiently complete your specific sub-task while maintaining high quality standards.`
-	)
+	);
 
 	const config: PromptConfig = {
-		agentName: "SubTaskAgent",
+		agentName: 'SubTaskAgent',
 		osName: osName(),
 		defaultShell: defaultShell,
-		homeDir: os.homedir().replace(/\\/g, "/"),
+		homeDir: os.homedir().replace(/\\/g, '/'),
 		template: template,
-	}
+	};
 
-	const builder = new PromptBuilder(config)
+	const builder = new PromptBuilder(config);
 	// Add all tools except spawn_agent and attempt_complete
 	const filteredTools = toolPrompts.filter(
 		(tool) =>
-			tool.name !== "spawn_agent" &&
-			tool.name !== "attempt_completion" &&
-			tool.name !== "add_interested_file" &&
-			tool.name !== "server_runner"
-	)
+			tool.name !== 'spawn_agent' &&
+			tool.name !== 'attempt_completion' &&
+			tool.name !== 'add_interested_file' &&
+			tool.name !== 'server_runner'
+	);
 
-	builder.addTools([...filteredTools, exitAgentPrompt])
-	return builder.build()
-}
+	builder.addTools([...filteredTools, exitAgentPrompt]);
+	return builder.build();
+};
 
 export const subtaskPrompt = {
 	prompt: SUBTASK_SYSTEM_PROMPT,
-}
+};

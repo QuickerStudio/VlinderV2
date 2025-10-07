@@ -1,5 +1,5 @@
 // schema/remove.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool remove
@@ -57,26 +57,30 @@ import { z } from "zod"
 const schema = z.object({
 	path: z
 		.string()
-		.describe("The path of the file or directory to remove (relative to the current working directory)."),
+		.describe(
+			'The path of the file or directory to remove (relative to the current working directory).'
+		),
 	type: z
-		.enum(["file", "directory", "auto", "force_recursive"])
+		.enum(['file', 'directory', 'auto', 'force_recursive'])
 		.optional()
-		.default("auto")
-		.describe("Specify what type of item to remove. 'auto' will automatically detect the type, 'force_recursive' will forcefully remove non-empty directories. Default is 'auto'."),
+		.default('auto')
+		.describe(
+			"Specify what type of item to remove. 'auto' will automatically detect the type, 'force_recursive' will forcefully remove non-empty directories. Default is 'auto'."
+		),
 	recursive: z
 		.boolean()
 		.optional()
 		.default(true)
 		.describe(
-			"Whether to remove directories recursively with all contents (applies to directories only). Default is true."
+			'Whether to remove directories recursively with all contents (applies to directories only). Default is true.'
 		),
 	force: z
 		.boolean()
 		.optional()
 		.describe(
-			"Whether to use force flag for filesystem operations. Default is false."
+			'Whether to use force flag for filesystem operations. Default is false.'
 		),
-})
+});
 
 const examples = [
 	`<tool name="remove">
@@ -109,17 +113,17 @@ const examples = [
   <path>./non_empty_folder</path>
   <type>force_recursive</type>
 </tool>`,
-]
+];
 
 export const removeTool = {
 	schema: {
-		name: "remove",
+		name: 'remove',
 		schema,
 	},
 	examples,
-}
+};
 
 export type RemoveToolParams = {
-	name: "remove"
-	input: z.infer<typeof schema>
-}
+	name: 'remove';
+	input: z.infer<typeof schema>;
+};

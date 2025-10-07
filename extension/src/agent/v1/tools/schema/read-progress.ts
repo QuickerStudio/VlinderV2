@@ -1,5 +1,5 @@
 // schema/read-progress.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 /**
  * @tool read_progress
@@ -24,21 +24,35 @@ import { z } from "zod"
  * </tool>
  * ```
  */
-const schema = z.object({
-	terminalId: z
-		.number()
-		.optional()
-		.describe("The unique ID of the terminal to check. Either terminalId or terminalName must be provided."),
-	terminalName: z
-		.string()
-		.optional()
-		.describe("The name of the terminal to check. Either terminalId or terminalName must be provided."),
-	includeFullOutput: z
-		.boolean()
-		.optional()
-		.default(false)
-		.describe("Whether to include full output history. Default is false (only recent output)."),
-})
+const schema = z
+	.object({
+		terminalId: z
+			.number()
+			.int()
+			.positive()
+			.optional()
+			.describe(
+				'The unique ID of the terminal to check. Must be a positive integer.'
+			),
+		terminalName: z
+			.string()
+			.min(1, 'Terminal name cannot be empty.')
+			.optional()
+			.describe('The name of the terminal to check.'),
+		includeFullOutput: z
+			.boolean()
+			.optional()
+			.default(false)
+			.describe(
+				'Whether to include full output history. Default is false (only recent output).'
+			),
+	})
+	.refine(
+		(data) => data.terminalId !== undefined || data.terminalName !== undefined,
+		{
+			message: 'Either terminalId or terminalName must be provided.',
+		}
+	);
 
 const examples = [
 	`<tool name="read_progress">
@@ -54,18 +68,17 @@ const examples = [
   <terminalId>2</terminalId>
   <includeFullOutput>false</includeFullOutput>
 </tool>`,
-]
+];
 
 export const readProgressTool = {
 	schema: {
-		name: "read_progress",
+		name: 'read_progress',
 		schema,
 	},
 	examples,
-}
+};
 
 export type ReadProgressToolParams = {
-	name: "read_progress"
-	input: z.infer<typeof schema>
-}
-
+	name: 'read_progress';
+	input: z.infer<typeof schema>;
+};

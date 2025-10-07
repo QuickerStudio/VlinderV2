@@ -1,14 +1,14 @@
-import { ToolPromptSchema } from "../utils/utils"
+import { ToolPromptSchema } from '../utils/utils';
 
 export const urlScreenshotPrompt: ToolPromptSchema = {
-	name: "url_screenshot",
+	name: 'url_screenshot',
 	description:
-		"Request to capture a screenshot and console logs of the initial state of a website. This tool navigates to the specified URL, takes a screenshot of the entire page as it appears immediately after loading, and collects any console logs or errors that occur during page load. It does not interact with the page or capture any state changes after the initial load.",
+		'Request to capture a screenshot and console logs of the initial state of a website. This tool navigates to the specified URL, takes a screenshot of the entire page as it appears immediately after loading, and collects any console logs or errors that occur during page load. It does not interact with the page or capture any state changes after the initial load.',
 	parameters: {
 		url: {
-			type: "string",
+			type: 'string',
 			description:
-				"The URL of the site to inspect. This should be a valid URL including the protocol (e.g. http://localhost:3000/page, file:///path/to/file.html, etc.)",
+				'The URL of the site to inspect. This should be a valid URL including the protocol (e.g. http://localhost:3000/page, file:///path/to/file.html, etc.)',
 			required: true,
 		},
 	},
@@ -17,11 +17,11 @@ export const urlScreenshotPrompt: ToolPromptSchema = {
 	],
 	examples: [
 		{
-			description: "Take a screenshot of a website",
+			description: 'Take a screenshot of a website',
 			output: `<url_screenshot>
 <url>URL of the site to inspect</url>
 </url_screenshot>`,
 		},
 	],
-	requiresFeatures: ["vision"],
-}
+	requiresFeatures: ['vision'],
+};

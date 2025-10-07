@@ -1,21 +1,21 @@
-import * as path from "path"
-import { serializeError } from "serialize-error"
-import { getReadablePath } from "../../utils"
-import { regexSearchFiles } from "../../../../utils/ripgrep"
-import { BaseAgentTool } from "../base-agent.tool"
-import { SearchFilesToolParams } from "../schema/search_files"
-import { searchFilesPrompt } from "../../prompts/tools/search-files"
+import * as path from 'path';
+import { serializeError } from 'serialize-error';
+import { getReadablePath } from '../../utils';
+import { regexSearchFiles } from '../../../../utils/ripgrep';
+import { BaseAgentTool } from '../base-agent.tool';
+import { SearchFilesToolParams } from '../schema/search_files';
+import { searchFilesPrompt } from '../../prompts/tools/search-files';
 
 export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 	async execute() {
-		const { input, ask, say } = this.params
-		const { path: relDirPath, regex, filePattern } = input
+		const { input, ask, say } = this.params;
+		const { path: relDirPath, regex, filePattern } = input;
 
 		if (relDirPath === undefined) {
 			await say(
-				"error",
+				'error',
 				"Vlinder tried to use search_files without value for required parameter 'path'. Retrying..."
-			)
+			);
 
 			const errorMsg = `
 			<search_files_response>
@@ -34,15 +34,15 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 						<note>Both path and regex parameters are required for file searching</note>
 					</help>
 				</error_details>
-			</search_files_response>`
-			return this.toolResponse("error", errorMsg)
+			</search_files_response>`;
+			return this.toolResponse('error', errorMsg);
 		}
 
 		if (regex === undefined) {
 			await say(
-				"error",
+				'error',
 				"Vlinder tried to use search_files without value for required parameter 'regex'. Retrying..."
-			)
+			);
 
 			const errorMsg = `
 			<search_files_response>
@@ -66,55 +66,60 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 						<note>A valid regex pattern is required for searching files</note>
 					</help>
 				</error_details>
-			</search_files_response>`
-			return this.toolResponse("error", errorMsg)
+			</search_files_response>`;
+			return this.toolResponse('error', errorMsg);
 		}
 
 		try {
-			const absolutePath = path.resolve(this.cwd, relDirPath)
-			const results = await regexSearchFiles(this.cwd, absolutePath, regex, filePattern)
+			const absolutePath = path.resolve(this.cwd, relDirPath);
+			const results = await regexSearchFiles(
+				this.cwd,
+				absolutePath,
+				regex,
+				filePattern
+			);
 
 			const { response, text, images } = await ask(
-				"tool",
+				'tool',
 				{
 					tool: {
-						tool: "search_files",
+						tool: 'search_files',
 						path: getReadablePath(relDirPath, this.cwd),
 						regex: regex,
 						filePattern: filePattern,
-						approvalState: "pending",
+						approvalState: 'pending',
 						content: results,
 						ts: this.ts,
 					},
 				},
 				this.ts
-			)
+			);
 
-			if (response !== "yesButtonTapped") {
+			if (response !== 'yesButtonTapped') {
 				await this.params.updateAsk(
-					"tool",
+					'tool',
 					{
 						tool: {
-							tool: "search_files",
+							tool: 'search_files',
 							path: getReadablePath(relDirPath, this.cwd),
 							regex: regex,
 							filePattern: filePattern,
-							approvalState: "rejected",
+							approvalState: 'rejected',
 							content: results,
 							ts: this.ts,
 						},
 					},
 					this.ts
-				)
-				if (response === "messageResponse") {
+				);
+				if (response === 'messageResponse') {
 					// await say("user_feedback", text, images)
 					await this.params.updateAsk(
-						"tool",
+						'tool',
 						{
 							tool: {
-								tool: "search_files",
+								tool: 'search_files',
 								userFeedback: text,
-								approvalState: "rejected",
+								approvalState: 'rejected',
 								ts: this.ts,
 								path: getReadablePath(relDirPath, this.cwd),
 								regex: regex,
@@ -122,10 +127,14 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 							},
 						},
 						this.ts
-					)
-					await this.params.say("user_feedback", text ?? "The user denied this operation.", images)
+					);
+					await this.params.say(
+						'user_feedback',
+						text ?? 'The user denied this operation.',
+						images
+					);
 					return this.toolResponse(
-						"feedback",
+						'feedback',
 						`<search_files_response>
 							<status>
 								<result>feedback</result>
@@ -135,17 +144,17 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 							<feedback_details>
 								<directory>${getReadablePath(relDirPath, this.cwd)}</directory>
 								<pattern>${regex}</pattern>
-								${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ""}
-								<user_feedback>${text || "No feedback provided"}</user_feedback>
-								${images ? `<has_images>true</has_images>` : "<has_images>false</has_images>"}
+								${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ''}
+								<user_feedback>${text || 'No feedback provided'}</user_feedback>
+								${images ? `<has_images>true</has_images>` : '<has_images>false</has_images>'}
 							</feedback_details>
 						</search_files_response>`,
 						images
-					)
+					);
 				}
 
 				return this.toolResponse(
-					"rejected",
+					'rejected',
 					`<search_files_response>
 						<status>
 							<result>rejected</result>
@@ -155,31 +164,31 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 						<rejection_details>
 							<directory>${getReadablePath(relDirPath, this.cwd)}</directory>
 							<pattern>${regex}</pattern>
-							${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ""}
+							${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ''}
 							<message>Search operation was rejected by the user</message>
 						</rejection_details>
 					</search_files_response>`
-				)
+				);
 			}
 
 			await this.params.updateAsk(
-				"tool",
+				'tool',
 				{
 					tool: {
-						tool: "search_files",
+						tool: 'search_files',
 						path: getReadablePath(relDirPath, this.cwd),
 						regex: regex,
 						filePattern: filePattern,
-						approvalState: "approved",
+						approvalState: 'approved',
 						content: results,
 						ts: this.ts,
 					},
 				},
 				this.ts
-			)
+			);
 
 			return this.toolResponse(
-				"success",
+				'success',
 				`<search_files_response>
 					<status>
 						<result>success</result>
@@ -189,13 +198,13 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 					<search_info>
 						<directory>${getReadablePath(relDirPath, this.cwd)}</directory>
 						<pattern>${regex}</pattern>
-						${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ""}
+						${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ''}
 					</search_info>
 					<results>
 						${results}
 					</results>
 				</search_files_response>`
-			)
+			);
 		} catch (error) {
 			const errorString = `
 			<search_files_response>
@@ -210,7 +219,7 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 					<context>
 						<directory>${getReadablePath(relDirPath, this.cwd)}</directory>
 						<pattern>${regex}</pattern>
-						${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ""}
+						${filePattern ? `<file_pattern>${filePattern}</file_pattern>` : ''}
 						<error_data>${JSON.stringify(serializeError(error))}</error_data>
 					</context>
 					<help>
@@ -224,13 +233,13 @@ export class SearchFilesTool extends BaseAgentTool<SearchFilesToolParams> {
 						</example_usage>
 					</help>
 				</error_details>
-			</search_files_response>`
+			</search_files_response>`;
 			await say(
-				"error",
+				'error',
 				`Error searching files:\n${(error as Error).message ?? JSON.stringify(serializeError(error), null, 2)}`
-			)
+			);
 
-			return this.toolResponse("error", errorString)
+			return this.toolResponse('error', errorString);
 		}
 	}
 }

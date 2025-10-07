@@ -1,28 +1,39 @@
 // schema/index.ts
-import { executeCommandTool } from "./execute_command"
-import { listFilesTool } from "./list_files"
-import { ExploreRepoFolderTool } from "./explore-repo-folder.schema"
-import { searchFilesTool } from "./search_files"
-import { readFileTool } from "./read_file"
-import { writeToFileTool } from "./write_to_file"
-import { askFollowupQuestionTool } from "./ask_followup_question"
-import { attemptCompletionTool } from "./attempt_completion"
-import { webSearchTool } from "./web_search"
-import { webFetchTool } from "./web_fetch"
-import { urlScreenshotTool } from "./url_screenshot"
-import { devServerTool } from "./dev_server"
-import { searchSymbolTool } from "./search_symbols"
-import { addInterestedFileTool } from "./add_interested_file"
-import { fileEditorTool } from "./file_editor_tool"
-import { spawnAgentTool } from "./agents/agent-spawner"
-import { exitAgentTool } from "./agents/agent-exit"
-import { moveTool } from "./move"
-import { removeTool } from "./remove"
-import { renameTool } from "./rename"
-import { gitBashTool } from "./git-bash"
-import { killBashTool } from "./kill-bash"
-import { readProgressTool } from "./read-progress"
-import { terminalTool } from "./terminal"
+import { executeCommandTool } from './execute_command';
+import { listFilesTool } from './list_files';
+import { ExploreRepoFolderTool } from './explore-repo-folder.schema';
+import { searchFilesTool } from './search_files';
+import { readFileTool } from './read_file';
+import { writeToFileTool } from './write_to_file';
+import { askFollowupQuestionTool } from './ask_followup_question';
+import { attemptCompletionTool } from './attempt_completion';
+import { webSearchTool } from './web_search';
+import { urlScreenshotTool } from './url_screenshot';
+import { devServerTool } from './dev_server';
+import { searchSymbolTool } from './search_symbols';
+import { addInterestedFileTool } from './add_interested_file';
+import { fileEditorTool } from './file_editor_tool';
+import { spawnAgentTool } from './agents/agent-spawner';
+import { exitAgentTool } from './agents/agent-exit';
+import { moveTool } from './move';
+import { removeTool } from './remove';
+import { renameTool } from './rename';
+import { gitBashTool } from './git-bash';
+import { killBashTool } from './kill-bash';
+import { readProgressTool } from './read-progress';
+import { terminalTool } from './terminal';
+import { getErrorsTool } from './get-errors';
+import { replaceStringTool } from './replace-string';
+import { multiReplaceStringTool } from './multi-replace-string';
+import { insertEditTool } from './insert-edit';
+import { fetchWebpageTool } from './fetch-webpage';
+import { vscodeApiTool } from './vscode-api';
+import { grepSearchTool } from './grep-search';
+import { getTerminalOutputTool } from './get-terminal-output';
+import { thinkTool } from './think';
+import { fastEditorTool } from './fast-editor';
+import { timerTool } from './timer';
+import { patternSearchTool } from './pattern-search';
 
 export const tools = [
 	executeCommandTool,
@@ -33,7 +44,6 @@ export const tools = [
 	askFollowupQuestionTool,
 	attemptCompletionTool,
 	webSearchTool,
-	webFetchTool,
 	urlScreenshotTool,
 	devServerTool,
 	searchSymbolTool,
@@ -48,9 +58,21 @@ export const tools = [
 	killBashTool,
 	readProgressTool,
 	terminalTool,
-] as const
+	getErrorsTool,
+	replaceStringTool,
+	multiReplaceStringTool,
+	insertEditTool,
+	fetchWebpageTool,
+	vscodeApiTool,
+	grepSearchTool,
+	getTerminalOutputTool,
+	thinkTool,
+	fastEditorTool,
+	timerTool,
+	patternSearchTool,
+] as const;
 
-export type Tool = (typeof tools)[number]
+export type Tool = (typeof tools)[number];
 export {
 	executeCommandTool,
 	listFilesTool,
@@ -61,7 +83,6 @@ export {
 	askFollowupQuestionTool,
 	attemptCompletionTool,
 	webSearchTool,
-	webFetchTool,
 	urlScreenshotTool,
 	searchSymbolTool as searchSymbolsTool,
 	addInterestedFileTool,
@@ -75,7 +96,19 @@ export {
 	killBashTool,
 	readProgressTool,
 	terminalTool,
-}
+	getErrorsTool,
+	replaceStringTool,
+	multiReplaceStringTool,
+	insertEditTool,
+	fetchWebpageTool,
+	vscodeApiTool,
+	grepSearchTool,
+	getTerminalOutputTool,
+	thinkTool,
+	fastEditorTool,
+	timerTool,
+	patternSearchTool,
+};
 
 /**
  * 🔧 COMPLETE TOOL REGISTRATION GUIDE (Updated 2024)
@@ -221,4 +254,3 @@ export {
  *
  * 🎯 Completion Criteria: Successful build with no TypeScript/ESLint errors, tool displays and works properly in UI
  */
-
