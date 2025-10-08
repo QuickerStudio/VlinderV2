@@ -27,4 +27,6 @@ export * from './runners/think.tool';
 export { FastEditorTool } from './runners/fast-editor.tool';
 export * from './runners/timer.tool';
 export * from './runners/pattern-search.tool';
+export * from './runners/read-image/read-image.tool';
+export * from './runners/context7.tool';
 

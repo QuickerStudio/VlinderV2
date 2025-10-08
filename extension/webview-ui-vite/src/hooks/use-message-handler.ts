@@ -436,6 +436,16 @@ export const useChatMessageHandling = (
             secondaryButtonText: undefined,
             enableButtons: false,
           },
+          read_image: {
+            ...baseState,
+            primaryButtonText: 'Read Image',
+            secondaryButtonText: 'Cancel',
+          },
+          context7: {
+            ...baseState,
+            primaryButtonText: 'Fetch Documentation',
+            secondaryButtonText: 'Cancel',
+          },
         };
 
         const updates = toolButtonMap[tool.tool] || {

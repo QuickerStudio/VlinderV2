@@ -1,0 +1,283 @@
+name: Release with Copilot (Smart)
+
+on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      version_bump:
+        description: '版本更新类型'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch   # 3.7.21 -> 3.7.22 (Bug 修复)
+          - minor   # 3.7.21 -> 3.8.0  (新功能)
+          - major   # 3.7.21 -> 4.0.0  (重大更新)
+          - custom  # 自定义版本号
+      custom_version:
+        description: '自定义版本号 (仅当选择 custom 时使用，例如: 3.7.22)'
+        required: false
+        type: string
+      use_copilot:
+        description: '使用 GitHub Copilot 生成 Release Notes'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Calculate new version
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./extension/package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          if [ "${{ github.event.inputs.version_bump }}" = "custom" ]; then
+            NEW_VERSION="${{ github.event.inputs.custom_version }}"
+          else
+            # 使用 npm version 命令自动计算新版本号
+            cd extension
+            npm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            cd ..
+          fi
+          
+          echo "New version: $NEW_VERSION"
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get commit messages since last release
+        id: commits
+        run: |
+          # 获取最后一个标签
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            # 如果没有标签，获取所有提交
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # 获取自上次标签以来的提交
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          # 保存到文件以便后续使用
+          echo "$COMMITS" > commits.txt
+          echo "Found $(echo "$COMMITS" | wc -l) commits since last release"
+
+      - name: Generate Release Notes with Copilot
+        if: github.event.inputs.use_copilot == 'true'
+        id: copilot_notes
+        run: |
+          # 创建一个提示文件给 Copilot
+          cat > release_prompt.txt << 'EOF'
+          Based on the following commits, generate professional release notes in Chinese and English:
+          
+          Version: ${{ steps.version.outputs.VERSION }}
+          Previous Version: ${{ steps.version.outputs.CURRENT_VERSION }}
+          
+          Commits:
+          $(cat commits.txt)
+          
+          Please format the release notes with:
+          1. A brief summary of changes
+          2. New features (if any)
+          3. Bug fixes (if any)
+          4. Breaking changes (if any)
+          5. Thank contributors
+          
+          Use emoji and make it engaging!
+          EOF
+          
+          echo "Release notes prompt created"
+          echo "COPILOT_PROMPT_CREATED=true" >> $GITHUB_OUTPUT
+
+      - name: Update version in package.json
+        run: |
+          cd extension
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${{ steps.version.outputs.VERSION }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+          "
+          echo "✅ Updated package.json to version ${{ steps.version.outputs.VERSION }}"
+
+      - name: Generate default release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## 🦋 Vlinder v${{ steps.version.outputs.VERSION }}
+          
+          **Version Bump**: ${{ steps.version.outputs.CURRENT_VERSION }} → ${{ steps.version.outputs.VERSION }}
+          
+          ### 📝 Changes
+          
+          $(cat commits.txt)
+          
+          ### 📦 Installation
+          
+          Download the `.vsix` file below and install it in VS Code:
+          1. Open VS Code
+          2. Go to Extensions (Ctrl+Shift+X)
+          3. Click the "..." menu → Install from VSIX
+          4. Select the downloaded file
+          
+          Or install directly from:
+          - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
+          - [Open VSX Registry](https://open-vsx.org/extension/QuickerStudio/vlinder)
+          
+          ### 📚 Documentation
+          
+          See [CHANGELOG.md](https://github.com/QuickerStudio/Vlinder/blob/main/CHANGELOG.md) for details.
+          
+          ---
+          
+          **🌐 Visit [Vlinders.org](https://vlinders.org) for more information**
+          
+          **💝 Thank you for using Vlinder!**
+          EOF
+          
+          echo "Release notes generated"
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add extension/package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.VERSION }} [skip ci]"
+          git tag "v${{ steps.version.outputs.VERSION }}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+
+      - name: Install dependencies
+        working-directory: ./extension
+        run: pnpm run install:all
+
+      - name: Build webview
+        working-directory: ./extension
+        run: pnpm run build:webview
+
+      - name: Package extension
+        working-directory: ./extension
+        run: pnpm run build
+
+      - name: Get package filename
+        id: package_file
+        run: |
+          PACKAGE_FILE=$(ls extension/*.vsix | head -n 1)
+          echo "PACKAGE_FILE=$PACKAGE_FILE" >> $GITHUB_OUTPUT
+          echo "Package file: $PACKAGE_FILE"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          release_name: Vlinder v${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.package_file.outputs.PACKAGE_FILE }}
+          asset_name: vlinder-${{ steps.version.outputs.VERSION }}.vsix
+          asset_content_type: application/octet-stream
+
+      - name: Publish to VS Code Marketplace
+        working-directory: ./extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          pnpm vsce publish --packagePath ../${{ steps.package_file.outputs.PACKAGE_FILE }} --pat $VSCE_PAT
+
+      - name: Publish to Open VSX Registry
+        working-directory: ./extension
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_TOKEN }}
+        run: |
+          npx ovsx publish ../${{ steps.package_file.outputs.PACKAGE_FILE }} --pat $OVSX_PAT
+
+      - name: Create summary
+        if: success()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          # 🎉 Release Successful!
+          
+          ## Version Information
+          - **Previous Version**: ${{ steps.version.outputs.CURRENT_VERSION }}
+          - **New Version**: ${{ steps.version.outputs.VERSION }}
+          - **Version Bump Type**: ${{ github.event.inputs.version_bump }}
+          
+          ## Release Links
+          - 📦 [GitHub Release](https://github.com/QuickerStudio/Vlinder/releases/tag/v${{ steps.version.outputs.VERSION }})
+          - 🛒 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
+          - 🌐 [Open VSX Registry](https://open-vsx.org/extension/QuickerStudio/vlinder)
+          
+          ## Next Steps
+          1. ✅ Verify the release on all platforms
+          2. ✅ Test installation from VS Code Marketplace
+          3. ✅ Update documentation if needed
+          4. ✅ Announce the release to users
+          
+          ---
+          
+          **🦋 Vlinder is now live at v${{ steps.version.outputs.VERSION }}!**
+          EOF
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          # ❌ Release Failed
+          
+          ## Error Information
+          - **Target Version**: ${{ steps.version.outputs.VERSION }}
+          - **Version Bump Type**: ${{ github.event.inputs.version_bump }}
+          
+          ## Troubleshooting
+          1. Check the logs above for specific error messages
+          2. Verify that all secrets are correctly set
+          3. Ensure the version number is valid
+          4. Check if the tag already exists
+          
+          ## Common Issues
+          - **Token expired**: Regenerate VSCE_TOKEN or OVSX_TOKEN
+          - **Version conflict**: Version already exists on marketplace
+          - **Build failure**: Check build logs for compilation errors
+          
+          Please review the logs and try again.
+          EOF
+

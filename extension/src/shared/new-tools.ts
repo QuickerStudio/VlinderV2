@@ -404,6 +404,29 @@ export type PatternSearchTool = {
 	error?: string;
 };
 
+export type ReadImageTool = {
+	tool: 'read_image';
+	path: string;
+	imageData?: string;
+	metadata?: {
+		width?: number;
+		height?: number;
+		size: number;
+		format: string;
+		mimeType: string;
+		fileName: string;
+		filePath: string;
+	};
+};
+
+export type Context7Tool = {
+	tool: 'context7';
+	libraryName: string;
+	topic?: string;
+	tokens?: number;
+	content?: string;
+};
+
 export type ChatTool = (
 	| ExitAgentTool
 	| SpawnAgentTool
@@ -443,6 +466,8 @@ export type ChatTool = (
 	| TimerTool
 	| LocalTimeTool
 	| PatternSearchTool
+	| ReadImageTool
+	| Context7Tool
 ) & {
 	ts: number;
 	approvalState?: ToolStatus;
@@ -470,6 +495,7 @@ export const readOnlyTools: ChatTool['tool'][] = [
 	'grep_search',
 	'get_terminal_output',
 	'pattern_search',
+	'read_image',
 ] as const;
 
 export const mustRequestApprovalTypes: (ChatTool['tool'] | string)[] = [

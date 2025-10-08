@@ -67,6 +67,8 @@ import {
   TimerTool,
   LocalTimeTool,
   PatternSearchTool,
+  Context7Tool,
+  ReadImageTool,
 } from 'extension/shared/new-tools';
 import {
   Collapsible,
@@ -80,6 +82,8 @@ import { FileEditorTool } from './tools/file-editor-tool';
 import { SpawnAgentBlock, ExitAgentBlock } from './tools/agent-tools';
 import { ThinkToolBlock } from './tools/think-tool';
 import { FastEditorToolBlock } from './tools/fast-editor-tool';
+import { Context7ToolBlock } from './tools/context7-tool';
+import { ReadImageToolBlock } from './tools/read-image-tool';
 import MarkdownRenderer from './markdown-renderer';
 import { CodeBlock } from './code-block';
 import { getLanguageFromPath } from '@/utils/get-language-from-path';
@@ -4177,6 +4181,10 @@ export const ToolRenderer: React.FC<{
     case 'timer':
       // Clean tool type - directly render TimerToolBlock
       return <TimerToolBlock {...tool} />;
+    case 'context7':
+      return <Context7ToolBlock {...tool} />;
+    case 'read_image':
+      return <ReadImageToolBlock {...tool} />;
     default:
       return null;
   }

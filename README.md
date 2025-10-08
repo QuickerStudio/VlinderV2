@@ -1,6 +1,33 @@
-# 🦋 Vlinder - A Dream for Everyone
+# 🦋 Vlinder - A Dream for Everyone | [CHANGELOG](CHANGELOG.md)
 
-<p align="center"> <img src="extension/assets/banner.png" alt="Vlinder Banner" width="150" height="150"> </p>
+<p align="center">
+  <img src="extension/assets/banner.png" alt="Vlinder Banner" width="150" height="150">
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/QuickerStudio.vlinder?label=VS%20Code%20Marketplace&logo=visual-studio-code&color=blue" alt="VS Code Marketplace">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/d/QuickerStudio.vlinder?label=Downloads&logo=visual-studio-code&color=green" alt="Downloads">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/QuickerStudio.vlinder?label=Rating&logo=visual-studio-code&color=yellow" alt="Rating">
+  </a>
+  <a href="https://github.com/QuickerStudio/Vlinder">
+    <img src="https://img.shields.io/github/stars/QuickerStudio/Vlinder?style=social" alt="GitHub Stars">
+  </a>
+  <a href="https://github.com/QuickerStudio/Vlinder/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/QuickerStudio/Vlinder?color=purple" alt="License">
+  </a>
+  <a href="https://vlinders.org/">
+    <img src="https://img.shields.io/badge/Website-vlinders.org-orange" alt="Website">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://vlinders.org" target="_blank"><strong><span style="font-size: 24px;">🌐 Visit Vlinders.org</span></strong></a>
+</p>
 
 ---
 
@@ -135,6 +162,81 @@ I am deeply grateful to all participants who contribute together. You are also w
 *"In the butterfly effect of our world, your first line of code might change everything."*
 
 **Let's code. Let's dream. Let's change the world together.** 🦋
+
+---
+
+## 📦 Installation
+
+### From VS Code Marketplace
+
+1. Open VS Code
+2. Press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS)
+3. Search for "Vlinder"
+4. Click Install
+
+### From VSIX File
+
+Download the latest `.vsix` file from [Releases](https://github.com/QuickerStudio/Vlinder/releases) and install manually.
+
+## 🚀 Quick Start
+
+1. **Open Vlinder**: Click the Vlinder icon in the sidebar
+2. **Start a conversation**: Ask anything about coding
+3. **Let Vlinder help**: Watch as it understands and assists you
+4. **Create magic**: Build your dreams, one line at a time
+
+## 🎯 Key Features
+
+### 🤖 Intelligent Code Assistant
+- Context-aware code suggestions
+- Multi-language support
+- Real-time error detection and fixes
+
+### 🔧 Advanced Toolset
+- Comprehensive code manipulation
+- Intelligent refactoring
+- Precise modifications across complex projects
+
+### ⚡ Little Lightning
+- Innovative assistant prototype
+- Creative command interface
+- Fun and interactive coding companion
+
+### 🧬 DNA Context Protocol
+- Revolutionary architecture fusion
+- Precise code transcription
+- Eliminates black box effects
+
+## 🌐 Links
+
+- **Website**: [vlinders.org](https://vlinders.org/)
+- **GitHub**: [QuickerStudio/Vlinder](https://github.com/QuickerStudio/Vlinder)
+- **Marketplace**: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+- **Issues**: [Report a Bug](https://github.com/QuickerStudio/Vlinder/issues)
+- **Discussions**: [Join the Community](https://github.com/QuickerStudio/Vlinder/discussions)
+
+## 🤝 Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- All contributors who have helped shape Vlinder
+- The open-source community for inspiration and support
+- Every user who believes in the dream of accessible programming
 
 ---
 

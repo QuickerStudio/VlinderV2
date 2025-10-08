@@ -1,0 +1,302 @@
+name: 🚀 一键发布
+
+on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      bump_type:
+        description: '选择版本更新类型'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch   # Bug 修复: 3.7.21 -> 3.7.22
+          - minor   # 新功能: 3.7.21 -> 3.8.0
+          - major   # 重大更新: 3.7.21 -> 4.0.0
+
+jobs:
+  auto-release:
+    name: 自动发布 Vlinder
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 设置 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: 🔢 自动计算新版本号
+        id: version
+        run: |
+          echo "📊 当前版本信息："
+          CURRENT=$(node -p "require('./extension/package.json').version")
+          echo "当前版本: $CURRENT"
+          
+          # 自动计算新版本号
+          cd extension
+          npm version ${{ github.event.inputs.bump_type }} --no-git-tag-version
+          NEW=$(node -p "require('./package.json').version")
+          cd ..
+          
+          echo "新版本: $NEW"
+          echo "VERSION=$NEW" >> $GITHUB_OUTPUT
+          echo "CURRENT=$CURRENT" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "✅ 版本号已自动更新: $CURRENT → $NEW"
+
+      - name: 📝 生成更新日志
+        id: changelog
+        run: |
+          echo "📋 收集提交信息..."
+          
+          # 获取最后一个标签
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            echo "这是第一个发布版本"
+            COMMITS=$(git log --pretty=format:"- %s" --no-merges | head -20)
+          else
+            echo "上一个版本: $LAST_TAG"
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          fi
+          
+          # 生成 Release Notes
+          cat > release_notes.md << EOF
+          ## 🦋 Vlinder v${{ steps.version.outputs.VERSION }}
+          
+          ### 📊 版本信息
+          - **更新类型**: ${{ github.event.inputs.bump_type }}
+          - **版本变化**: ${{ steps.version.outputs.CURRENT }} → ${{ steps.version.outputs.VERSION }}
+          - **发布时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')
+          
+          ### 📝 更新内容
+          
+          $COMMITS
+          
+          ### 📦 安装方式
+          
+          **方式 1: VS Code 插件市场（推荐）**
+          1. 打开 VS Code
+          2. 按 \`Ctrl+Shift+X\` 打开扩展面板
+          3. 搜索 "Vlinder"
+          4. 点击安装
+          
+          **方式 2: 下载 VSIX 文件**
+          1. 下载下方的 \`.vsix\` 文件
+          2. 在 VS Code 中按 \`Ctrl+Shift+P\`
+          3. 输入 "Install from VSIX"
+          4. 选择下载的文件
+          
+          ### 🔗 快速链接
+          
+          - 🛒 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
+          - 🌐 [Open VSX Registry](https://open-vsx.org/extension/QuickerStudio/vlinder)
+          - 📚 [完整文档](https://github.com/QuickerStudio/Vlinder/blob/main/README.md)
+          - 📋 [更新日志](https://github.com/QuickerStudio/Vlinder/blob/main/CHANGELOG.md)
+          - 🌐 [官方网站](https://vlinders.org)
+          
+          ### 💝 感谢
+          
+          感谢所有使用 Vlinder 的朋友们！你们的支持是我们前进的动力。
+          
+          如果你喜欢 Vlinder，请给我们一个 ⭐ Star！
+          
+          ---
+          
+          **🦋 让 Vlinder 属于世界，属于你我！**
+          EOF
+          
+          echo "✅ Release Notes 已生成"
+
+      - name: 💾 提交版本更新
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add extension/package.json
+          git commit -m "chore: 🔖 bump version to ${{ steps.version.outputs.VERSION }} [skip ci]"
+          echo "✅ 版本更新已提交"
+
+      - name: 🏷️ 创建 Git 标签
+        run: |
+          git tag "v${{ steps.version.outputs.VERSION }}"
+          echo "✅ 标签 v${{ steps.version.outputs.VERSION }} 已创建"
+
+      - name: ⬆️ 推送到 GitHub
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+
+      - name: 📦 安装依赖
+        working-directory: ./extension
+        run: |
+          echo "📦 安装项目依赖..."
+          pnpm run install:all
+          echo "✅ 依赖安装完成"
+
+      - name: 🔨 构建 Webview
+        working-directory: ./extension
+        run: |
+          echo "🔨 构建 Webview..."
+          pnpm run build:webview
+          echo "✅ Webview 构建完成"
+
+      - name: 📦 打包扩展
+        working-directory: ./extension
+        run: |
+          echo "📦 打包扩展..."
+          pnpm run build
+          echo "✅ 扩展打包完成"
+
+      - name: 📋 获取包文件信息
+        id: package
+        run: |
+          PACKAGE_FILE=$(ls extension/*.vsix | head -n 1)
+          PACKAGE_SIZE=$(du -h "$PACKAGE_FILE" | cut -f1)
+          echo "PACKAGE_FILE=$PACKAGE_FILE" >> $GITHUB_OUTPUT
+          echo "PACKAGE_SIZE=$PACKAGE_SIZE" >> $GITHUB_OUTPUT
+          echo "✅ 包文件: $PACKAGE_FILE (大小: $PACKAGE_SIZE)"
+
+      - name: 🎉 创建 GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          release_name: 🦋 Vlinder v${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+
+      - name: ⬆️ 上传 VSIX 文件
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.PACKAGE_FILE }}
+          asset_name: vlinder-${{ steps.version.outputs.VERSION }}.vsix
+          asset_content_type: application/octet-stream
+
+      - name: 🛒 发布到 VS Code Marketplace
+        working-directory: ./extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          echo "🛒 发布到 VS Code Marketplace..."
+          pnpm vsce publish --packagePath ../${{ steps.package.outputs.PACKAGE_FILE }} --pat $VSCE_PAT
+          echo "✅ VS Code Marketplace 发布成功"
+
+      - name: 🌐 发布到 Open VSX Registry
+        working-directory: ./extension
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_TOKEN }}
+        run: |
+          echo "🌐 发布到 Open VSX Registry..."
+          npx ovsx publish ../${{ steps.package.outputs.PACKAGE_FILE }} --pat $OVSX_PAT
+          echo "✅ Open VSX Registry 发布成功"
+
+      - name: 📊 生成发布摘要
+        if: success()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          # 🎉 发布成功！
+          
+          ## 📊 版本信息
+          
+          | 项目 | 信息 |
+          |------|------|
+          | 🔖 版本号 | **v${{ steps.version.outputs.VERSION }}** |
+          | 📈 更新类型 | **${{ github.event.inputs.bump_type }}** |
+          | 📦 包大小 | **${{ steps.package.outputs.PACKAGE_SIZE }}** |
+          | ⏰ 发布时间 | **$(date '+%Y-%m-%d %H:%M:%S UTC')** |
+          
+          ## 🔗 发布链接
+          
+          - 📦 [GitHub Release](https://github.com/QuickerStudio/Vlinder/releases/tag/v${{ steps.version.outputs.VERSION }})
+          - 🛒 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
+          - 🌐 [Open VSX Registry](https://open-vsx.org/extension/QuickerStudio/vlinder)
+          - 🌐 [官方网站](https://vlinders.org)
+          
+          ## ✅ 下一步
+          
+          1. ✅ 在 VS Code Marketplace 验证新版本
+          2. ✅ 在 Open VSX Registry 验证新版本
+          3. ✅ 测试从市场安装新版本
+          4. ✅ 向用户宣布新版本发布
+          5. ✅ 更新相关文档（如需要）
+          
+          ## 🎊 恭喜！
+          
+          **Vlinder v${{ steps.version.outputs.VERSION }} 已成功发布到所有平台！** 🦋
+          
+          ---
+          
+          *自动生成于 $(date '+%Y-%m-%d %H:%M:%S UTC')*
+          EOF
+
+      - name: ❌ 发布失败处理
+        if: failure()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          # ❌ 发布失败
+          
+          ## 错误信息
+          
+          - **目标版本**: v${{ steps.version.outputs.VERSION }}
+          - **更新类型**: ${{ github.event.inputs.bump_type }}
+          - **失败时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')
+          
+          ## 🔍 故障排查
+          
+          ### 常见问题
+          
+          1. **Token 过期**
+             - 检查 `VSCE_TOKEN` 是否过期
+             - 检查 `OVSX_TOKEN` 是否过期
+             - 重新生成 token 并更新 GitHub Secrets
+          
+          2. **版本冲突**
+             - 版本号可能已存在于市场
+             - 检查是否已发布相同版本
+          
+          3. **构建失败**
+             - 检查构建日志中的错误信息
+             - 验证依赖是否正确安装
+          
+          4. **网络问题**
+             - 检查与 VS Code Marketplace 的连接
+             - 检查与 Open VSX 的连接
+          
+          ## 📝 解决步骤
+          
+          1. 查看上方的详细日志
+          2. 根据错误信息修复问题
+          3. 重新运行工作流
+          
+          ## 📞 获取帮助
+          
+          - 查看 [发布指南](.github/docs/RELEASE_GUIDE.md)
+          - 查看 [故障排除](.github/docs/QUICK_START_CN.md)
+          - 提交 [Issue](https://github.com/QuickerStudio/Vlinder/issues)
+          
+          ---
+          
+          *请修复问题后重试*
+          EOF
+

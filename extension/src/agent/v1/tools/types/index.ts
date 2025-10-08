@@ -50,6 +50,8 @@ import { ThinkToolParams } from '../schema/think';
 import { FastEditorToolParams } from '../schema/fast-editor';
 import { TimerToolParams } from '../schema/timer';
 import { PatternSearchToolParams } from '../schema/pattern-search';
+import { ReadImageToolParams } from '../schema/read-image';
+import { Context7ToolParams } from '../schema/context7';
 
 export type UpsertMemoryInput = {
 	milestoneName: string;
@@ -96,7 +98,9 @@ export type ToolParams =
 	| ThinkToolParams
 	| FastEditorToolParams
 	| TimerToolParams
-	| PatternSearchToolParams;
+	| PatternSearchToolParams
+	| ReadImageToolParams
+	| Context7ToolParams;
 
 export type ToolName = ToolParams['name'];
 

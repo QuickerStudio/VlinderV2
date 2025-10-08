@@ -36,6 +36,8 @@ import {
 	FastEditorTool,
 	TimerTool,
 	PatternSearchTool,
+	ReadImageTool,
+	Context7Tool,
 } from '.';
 import { SearchSymbolsTool } from './runners/search-symbols.tool';
 import { BaseAgentTool, FullToolParams } from './base-agent.tool';
@@ -169,6 +171,8 @@ export class ToolExecutor {
 			fast_editor: FastEditorTool,
 			timer: TimerTool,
 			pattern_search: PatternSearchTool,
+			read_image: ReadImageTool,
+			context7: Context7Tool,
 		} as const;
 
 		const ToolClass = toolMap[params.name as keyof typeof toolMap];

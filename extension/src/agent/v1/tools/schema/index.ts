@@ -34,6 +34,8 @@ import { thinkTool } from './think';
 import { fastEditorTool } from './fast-editor';
 import { timerTool } from './timer';
 import { patternSearchTool } from './pattern-search';
+import { readImageTool } from './read-image';
+import { context7Tool } from './context7';
 
 export const tools = [
 	executeCommandTool,
@@ -70,6 +72,8 @@ export const tools = [
 	fastEditorTool,
 	timerTool,
 	patternSearchTool,
+	readImageTool,
+	context7Tool,
 ] as const;
 
 export type Tool = (typeof tools)[number];
@@ -108,6 +112,8 @@ export {
 	fastEditorTool,
 	timerTool,
 	patternSearchTool,
+	readImageTool,
+	context7Tool,
 };
 
 /**

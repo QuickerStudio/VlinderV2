@@ -29,6 +29,8 @@ import { thinkToolPrompt } from './think';
 import { fastEditorToolPrompt } from './fast-editor';
 import { timerPrompt } from './timer';
 import { patternSearchPrompt } from './pattern-search';
+import { readImagePrompt } from './read-image';
+import { context7Prompt } from './context7';
 
 export const toolPrompts = [
 	fileEditorPrompt,
@@ -62,5 +64,7 @@ export const toolPrompts = [
 	fastEditorToolPrompt,
 	timerPrompt,
 	patternSearchPrompt,
+	readImagePrompt,
+	context7Prompt,
 	// submitReviewPrompt,
 ];

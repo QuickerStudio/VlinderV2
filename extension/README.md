@@ -1,12 +1,34 @@
 # 🦋 Vlinder - A Dream for Everyone
 
 <p align="center">
-  <img src="assets/banner.png" alt="Vlinder Banner" width="100%">
+  <img src="assets/banner.png" alt="Vlinder Banner" width="600">
+</p>
+
+<p align="center">
+  <strong>🌐 <a href="https://vlinders.org/">vlinders.org</a></strong>
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/QuickerStudio.vlinder?label=VS%20Code%20Marketplace&logo=visual-studio-code&color=blue" alt="VS Code Marketplace">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/d/QuickerStudio.vlinder?label=Downloads&logo=visual-studio-code&color=green" alt="Downloads">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/QuickerStudio.vlinder?label=Rating&logo=visual-studio-code&color=yellow" alt="Rating">
+  </a>
+  <a href="https://github.com/QuickerStudio/Vlinder">
+    <img src="https://img.shields.io/github/stars/QuickerStudio/Vlinder?style=social" alt="GitHub Stars">
+  </a>
+  <a href="https://github.com/QuickerStudio/Vlinder/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/QuickerStudio/Vlinder?color=purple" alt="License">
+  </a>
 </p>
 
 ---
 
-## � A Dream Born from 5 Months of Journey
+## 💎 A Dream Born from 5 Months of Journey
 
 This is not just another coding tool. This is a dream that has been nurtured for over 5 months, working 22 hours every single day, through more than 10,000 iterations, with the unwavering belief that **every person in the world deserves to have their own programming assistant**.
 
@@ -24,7 +46,7 @@ In a world where technology often divides, we choose to unite. In a world where 
 
 **Every person - regardless of their background, location, or experience - should have access to the magic of programming.**
 
-## �️ Our Simple Promise
+## 🤝 Our Simple Promise
 
 - **No barriers** - Whether you're 8 or 80, in Silicon Valley or a remote village
 - **No judgment** - Ask any question, make any mistake, learn at your own pace
@@ -70,7 +92,7 @@ The adapter details are still under development, with initial concepts already f
 
 **Beyond Traditional Software**: In the future, we won't need to extract software from large models. Instead, we'll provide genetic information under the DNA protocol to precisely activate relevant parameters that constitute software. The internal computational efficiency of large models will far exceed any traditional software. In the future, we'll only need to plug in small storage systems to receive personalized memories from large models.
 
-## � For Everyone, Everywhere
+## 🌏 For Everyone, Everywhere
 
 ### The Curious Child
 Who wonders "How do apps work?" and wants to create their first game
