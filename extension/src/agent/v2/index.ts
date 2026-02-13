@@ -6,11 +6,14 @@
  * - AgentSwarm: Orchestrates multiple Bee agents
  * - Bee: Worker agents that execute specific tasks
  * - Engines: Complete engine system (Memory, Thinking, Tools, Context, Apply)
+ * - Tools: Complete tool system (Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch)
+ * - Prompts: Prompt management system
  * 
  * Design based on:
  * - OpenAI Swarm (https://github.com/openai/swarm)
  * - Goose (https://github.com/block/goose)
  * - Claude Agent SDK (https://github.com/anthropics/claude-agent-sdk-typescript)
+ * - OpenCode (https://github.com/anomalyco/opencode)
  * 
  * @version 2.0.0
  * @author Vlinder Team
@@ -30,6 +33,21 @@ export { Bee, BeeFactory } from './AgentSwarm/bee';
 
 // Engines - Complete Engine System
 export * from './Engines';
+
+// Tools - Complete Tool System (基于OpenCode)
+export * from './tools';
+export { 
+  registerDefaultTools, 
+  getToolList,
+  globalToolRegistry 
+} from './tools';
+
+// Prompts - Prompt Management System (基于OpenCode)
+export * from './prompts';
+export { 
+  PromptManager, 
+  globalPromptManager 
+} from './prompts';
 
 // V1 Compatibility Adapter
 export * from './adapter';
@@ -107,6 +125,10 @@ export async function createV2System(config: {
   const { MainAgent } = await import('./main-agent');
   const { AgentSwarm } = await import('./AgentSwarm/swarm');
   const { initializeEngines } = await import('./Engines');
+  const { registerDefaultTools } = await import('./tools');
+  
+  // Register default tools
+  registerDefaultTools();
   
   // Create MainAgent
   const mainAgent = new MainAgent(config.mainAgent);
@@ -135,6 +157,10 @@ export async function quickStart(options: {
 } = {}): Promise<import('./main-agent').MainAgent> {
   const { MainAgent } = await import('./main-agent');
   const { ModelProvider } = await import('./types');
+  const { registerDefaultTools } = await import('./tools');
+  
+  // Register default tools
+  registerDefaultTools();
   
   const config: import('./types').MainAgentConfig = {
     id: 'main_' + Date.now(),
