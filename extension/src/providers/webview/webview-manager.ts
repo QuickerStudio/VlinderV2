@@ -3,7 +3,7 @@ import path from 'path';
 import * as vscode from 'vscode';
 import { promises as fs } from 'fs';
 import { extensionName } from '../../shared/constants';
-import { GitHandler } from '../../agent/v1/handlers/git-handler';
+import { GitHandler } from '../../agent/v2/handlers/git-handler';
 import {
 	BaseExtensionState,
 	ClaudeMessage,
@@ -21,7 +21,7 @@ import { GlobalStateManager } from '../state/global-state-manager';
 import { PromptStateManager } from '../state/prompt-state-manager';
 import { PromptManager } from './prompt-manager';
 import { ExtensionContext } from '../../router/utils/context';
-import { abortLightning } from '../../agent/v1/hooks/lightning';
+import { abortLightning } from '../../agent/v2/hooks/lightning';
 import { ExtensionServer } from '../../router/utils/extension-server';
 
 /**
@@ -453,7 +453,7 @@ export class WebviewManager {
 					case 'stopTimer':
 						// Stop the timer using the timestamp
 						const { stopTimerByTimestamp } = await import(
-							'../../agent/v1/tools/runners/timer.tool'
+							'../../agent/v2/tools/timer'
 						);
 						const timerId = message.timerId;
 						const timerTs = parseInt(timerId, 10);

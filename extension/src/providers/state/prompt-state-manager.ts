@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { mainPrompts } from '../../agent/v1/prompts/main.prompt';
+import { mainPrompts } from '../../agent/v2/prompts/main.prompt';
 import { GlobalStateManager } from './global-state-manager';
 import { writeFile } from 'atomically';
 

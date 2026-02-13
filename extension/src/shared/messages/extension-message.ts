@@ -1,5 +1,5 @@
-import { SpawnAgentOptions } from '../../agent/v1/tools/schema/agents/agent-spawner';
-import { ToolName } from '../../agent/v1/tools/types';
+import { SpawnAgentOptions } from '../../agent/v2/tools/schema/agents/agent-spawner';
+import { ToolName } from '../../agent/v2';
 import { ApiConfiguration } from '../../api';
 import { ProviderId } from '../../api/providers/constants';
 import type { GlobalState } from '../../providers/state/global-state-manager';

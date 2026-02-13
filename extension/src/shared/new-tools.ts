@@ -1,4 +1,4 @@
-import { SpawnAgentOptions } from '../agent/v1/tools/schema/agents/agent-spawner';
+import { SpawnAgentOptions } from '../agent/v2/tools/schema/agents/agent-spawner';
 import { ToolStatus } from './messages/extension-message';
 
 export type { ToolStatus };

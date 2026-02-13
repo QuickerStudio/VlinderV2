@@ -7,7 +7,7 @@ import {
   ActionMessage,
 } from 'extension/shared/messages/client-message';
 import { ExtensionMessage } from 'extension/shared/messages/extension-message';
-import { ToolName } from 'extension/agent/v1/tools/types';
+import { ToolName } from 'extension/agent/v2/tools/types';
 
 interface MessageCallbacks {
   onTemplateSaved?: (templateName: string) => void;

@@ -1,4 +1,4 @@
-import { ApiHistoryItem } from '../agent/v1/main-agent';
+import { ApiHistoryItem } from '../agent/v2';
 import {
 	ClaudeMessage,
 	isV1ClaudeMessage,

@@ -8,9 +8,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ToolName } from 'extension/agent/v1/tools/types';
-import { ToolPromptSchema } from 'extension/agent/v1/prompts/utils/utils';
-import { toolPrompts } from 'extension/agent/v1/prompts/tools';
+import { ToolName } from 'extension/agent/v2/tools/types';
+import { ToolPromptSchema } from 'extension/agent/v2/prompts/utils/utils';
+import { toolPrompts } from 'extension/agent/v2/prompts/tools';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEvent } from 'react-use';
 import { ExtensionMessage } from 'extension/shared/messages/extension-message';

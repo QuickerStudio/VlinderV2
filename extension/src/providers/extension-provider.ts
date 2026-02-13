@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { MainAgent } from '../agent/v1/main-agent';
+import { MainAgent } from '../agent/v2';
 import { ExtensionStateManager } from './state/extension-state-manager';
 import { WebviewManager } from './webview/webview-manager';
 import { TaskManager } from './state/task-manager';

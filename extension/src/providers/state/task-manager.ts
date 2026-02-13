@@ -2,13 +2,13 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { formatAttachementsIntoBlocks } from '../../agent/v1/tools/format-content';
+import { formatAttachementsIntoBlocks } from '../../agent/v2/tools/format-content';
 import { HistoryItem } from '../../shared/history-item';
 import { Resource } from '../../shared/messages/client-message';
 // import { compressImages, downloadTask, selectImages } from "../../../utils"
 import { ExtensionProvider } from '../extension-provider';
 import { compressImages, selectImages, downloadTask } from '../../utils';
-import { IOManager } from '../../agent/v1/state-manager/io-manager';
+import { IOManager } from '../../agent/v2/state-manager/io-manager';
 import { GlobalStateManager } from './global-state-manager';
 import { ChatTool } from '../../shared/new-tools';
 

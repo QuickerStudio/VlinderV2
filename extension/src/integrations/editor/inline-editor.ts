@@ -11,9 +11,9 @@ import {
 	INLINE_DIFF_VIEW_URI_SCHEME as DIFF_VIEW_URI_SCHEME,
 } from './decoration-controller';
 import { createPatch } from 'diff';
-import { formatFileToLines } from '../../agent/v1/tools/runners/read-file/utils';
+import { formatFileToLines } from '../../agent/v2/tools/runners/read-file/utils';
 import { BlockResult, EditBlock, findAndReplace } from './utils';
-import { readFile } from '../../agent/v1/tools/format-content';
+import { readFile } from '../../agent/v2/tools/format-content';
 
 interface DocumentState {
 	uri: vscode.Uri;

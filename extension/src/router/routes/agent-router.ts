@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { procedure } from '../utils';
 import { router } from '../utils/router';
 // Vlinder config import removed
-import { observerHookDefaultPrompt } from '../../agent/v1/hooks/observer-hook';
-import { scholarHookDefaultPrompt } from '../../agent/v1/hooks/scholar-hook';
-import { createEnhancePromptHook } from '../../agent/v1/hooks/enhance-prompt';
+import { observerHookDefaultPrompt } from '../../agent/v2/hooks/observer-hook';
+import { scholarHookDefaultPrompt } from '../../agent/v2/hooks/scholar-hook';
+import { createEnhancePromptHook } from '../../agent/v2/hooks/enhance-prompt';
 import { ApiManager } from '../../api/api-handler';
 import { serverRPC } from '../utils/extension-server';
-import { abortLightning, askLightning } from '../../agent/v1/hooks/lightning';
+import { abortLightning, askLightning } from '../../agent/v2/hooks/lightning';
 
 import * as vscode from 'vscode';
 import * as fs from 'fs/promises';

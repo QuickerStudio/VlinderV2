@@ -4,7 +4,7 @@ import { router } from '../utils/router';
 import { GlobalStateManager } from '../../providers/state/global-state-manager';
 import path from 'path';
 import fs from 'fs/promises';
-import { ClaudeMessage } from '../../agent/v1/main-agent';
+import { ClaudeMessage } from '../../agent/v2';
 import { HistoryItem } from '../../shared/history-item';
 import {
 	isV1ClaudeMessage,

@@ -10,7 +10,7 @@ import type {
 // import { parseToolResponse } from "@/shared/format-tools"
 import { isToolResponseV2, parseToolResponse } from '../../shared/format-tools';
 import { ApiHandler } from '../../api';
-import { ToolName } from '../../agent/v1/tools/types';
+import { ToolName } from '../../agent/v2';
 
 const DIFF = 'diff' as const;
 const CONTENT = 'content' as const;

@@ -8,9 +8,9 @@ import axios from 'axios';
 import { ApiConstructorOptions, ApiHandler, buildApiHandler } from '.';
 import { ExtensionProvider } from '../providers/extension-provider';
 import { amplitudeTracker } from '../utils/amplitude';
-import { ApiHistoryItem } from '../agent/v1/types';
-import { isTextBlock } from '../agent/v1/utils';
-import { SSEResponse } from '../agent/v1/task-executor/task-executor';
+import { ApiHistoryItem } from '../agent/v2';
+import { isTextBlock } from '../agent/v2/utils';
+import { SSEResponse } from '../agent/v2/task-executor/task-executor';
 
 // Simple error class to replace VlinderError
 export class ApiError extends Error {
@@ -27,10 +27,10 @@ import {
 	processConversationHistory,
 	manageContextWindow,
 } from './conversation-utils';
-import { mainPrompts } from '../agent/v1/prompts/main.prompt';
+import { mainPrompts } from '../agent/v2/prompts/main.prompt';
 import dedent from 'dedent';
 import { PromptStateManager } from '../providers/state/prompt-state-manager';
-import { buildPromptFromTemplate } from '../agent/v1/prompts/utils/utils';
+import { buildPromptFromTemplate } from '../agent/v2/prompts/utils/utils';
 import { CustomProviderError } from './providers/custom-provider';
 import { getCurrentApiSettings } from '../router/routes/provider-router';
 import { GlobalStateManager } from '../providers/state/global-state-manager';

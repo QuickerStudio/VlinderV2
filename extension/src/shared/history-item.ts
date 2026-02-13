@@ -1,4 +1,4 @@
-import { InterestedFile } from '../agent/v1/main-agent';
+import { InterestedFile } from '../agent/v2';
 
 export type HistoryItem = {
 	id: string;

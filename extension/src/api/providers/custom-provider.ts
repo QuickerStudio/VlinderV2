@@ -1,5 +1,5 @@
 import { ApiConstructorOptions, ApiHandler, ApiHandlerOptions } from '..';
-import { SSEResponse } from '../../agent/v1/task-executor/task-executor';
+import { SSEResponse } from '../../agent/v2/task-executor/task-executor';
 import {
 	CoreMessage,
 	LanguageModel,

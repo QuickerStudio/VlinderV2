@@ -1,7 +1,7 @@
 import type { Anthropic } from '@anthropic-ai/sdk';
 import { WebSearchResponseDto } from './interfaces';
-import { SSEResponse } from '../agent/v1/task-executor/task-executor';
-import { ApiHistoryItem } from '../agent/v1/main-agent';
+import { SSEResponse } from '../agent/v2/task-executor/task-executor';
+import { ApiHistoryItem } from '../agent/v2';
 import { CustomApiHandler } from './providers/custom-provider';
 import { PROVIDER_IDS, ProviderId } from './providers/constants';
 import {

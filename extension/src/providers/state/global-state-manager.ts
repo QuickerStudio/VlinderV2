@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { HistoryItem } from '../../shared/history-item';
-import { ToolName } from '../../agent/v1/tools/types';
+import { ToolName } from '../../agent/v2';
 import { ProviderId } from '../../api/providers/constants';
 import { ApiConfiguration } from '../../api';
 import { merge } from 'lodash';

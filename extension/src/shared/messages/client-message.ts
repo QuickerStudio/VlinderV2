@@ -1,4 +1,4 @@
-import { ToolName } from '../../agent/v1/tools/types';
+import { ToolName } from '../../agent/v2';
 import { GlobalState } from '../../providers/state/global-state-manager';
 import { BaseExtensionState } from './extension-message';
 

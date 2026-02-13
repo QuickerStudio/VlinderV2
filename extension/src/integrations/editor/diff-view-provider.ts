@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { createDirectoriesForFile } from '../../utils/fs';
 import * as diff from 'diff';
-import { MainAgent } from '../../agent/v1/main-agent';
+import { MainAgent } from '../../agent/v2';
 import delay from 'delay';
 import pWaitFor from 'p-wait-for';
 import PQueue from 'p-queue';
@@ -17,7 +17,7 @@ import {
 	MODIFIED_URI_SCHEME,
 	DIFF_VIEW_URI_SCHEME,
 } from './decoration-controller';
-import { readFile } from '../../agent/v1/tools/format-content';
+import { readFile } from '../../agent/v2/tools/format-content';
 
 export class DiffViewProvider {
 	private updateQueue = new PQueue({ concurrency: 1 });

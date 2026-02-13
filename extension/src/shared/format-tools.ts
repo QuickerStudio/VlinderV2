@@ -3,7 +3,7 @@ import {
 	TextBlock,
 	TextBlockParam,
 } from '@anthropic-ai/sdk/resources/messages.mjs';
-import type { ToolResponseV2 } from '../agent/v1/types';
+import type { ToolResponseV2 } from '../agent/v2';
 import { base64StringToImageBlock } from './format-images';
 import dedent from 'dedent';
 

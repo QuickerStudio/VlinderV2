@@ -4,8 +4,8 @@ import { sqliteTable, integer, text, index } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { ClaudeAsk } from '../shared/messages/extension-message';
-import { SpawnAgentOptions } from '../agent/v1/tools/schema/agents/agent-spawner';
-import { ApiHistoryItem } from '../agent/v1/main-agent';
+import { SpawnAgentOptions } from '../agent/v2/tools/schema/agents/agent-spawner';
+import { ApiHistoryItem } from '../agent/v2';
 
 /* ------------------------------------------------------------------
 	 1) tasks
