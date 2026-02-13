@@ -5,6 +5,7 @@
  * - MainAgent: Supreme global leader of the autonomous programming system
  * - AgentSwarm: Orchestrates multiple Bee agents
  * - Bee: Worker agents that execute specific tasks
+ * - Engines: Complete engine system (Memory, Thinking, Tools, Context, Apply)
  * 
  * Design based on:
  * - OpenAI Swarm (https://github.com/openai/swarm)
@@ -26,6 +27,9 @@ export { AgentSwarm, SwarmConfig } from './AgentSwarm/swarm';
 
 // Bee - Worker Agent
 export { Bee, BeeFactory } from './AgentSwarm/bee';
+
+// Engines - Complete Engine System
+export * from './Engines';
 
 // Version info
 export const V2_VERSION = '2.0.0';
@@ -77,20 +81,35 @@ export const V2_BUILD_DATE = new Date().toISOString();
  */
 export async function createV2System(config: {
   mainAgent: import('./core/types').MainAgentConfig;
+  engines?: {
+    memory?: Partial<import('./Engines/MemoryEngine/types').MemoryEngineConfig>;
+    thinking?: Partial<import('./Engines/ThinkingEngine/types').ThinkingEngineConfig>;
+    tools?: Partial<import('./Engines/ToolsEngine/types').ToolsEngineConfig>;
+    context?: Partial<import('./Engines/ContextEngine/types').ContextManagerConfig>;
+    apply?: Partial<import('./Engines/ApplyEngine/types').ApplyEngineConfig>;
+  };
 }): Promise<{
   mainAgent: import('./core/main-agent').MainAgent;
   swarm: import('./AgentSwarm/swarm').AgentSwarm;
+  engines: {
+    memory: import('./Engines/MemoryEngine/memory-engine').MemoryEngine;
+    thinking: import('./Engines/ThinkingEngine/thinking-engine').ThinkingEngine;
+    tools: import('./Engines/ToolsEngine/tools-engine').ToolsEngine;
+    context: import('./Engines/ContextEngine/context-engine').ContextEngine;
+    apply: import('./Engines/ApplyEngine/apply-engine').ApplyEngine;
+  };
 }> {
   // Import modules
   const { MainAgent } = await import('./core/main-agent');
   const { AgentSwarm } = await import('./AgentSwarm/swarm');
+  const { initializeEngines } = await import('./Engines');
   
   // Create MainAgent
   const mainAgent = new MainAgent(config.mainAgent);
   await mainAgent.initialize();
   
-  // Get swarm from MainAgent
-  // Note: The swarm is created internally by MainAgent
+  // Initialize engines
+  const engines = await initializeEngines(config.engines);
   
   return {
     mainAgent,
@@ -98,6 +117,7 @@ export async function createV2System(config: {
       mainAgentId: config.mainAgent.id,
       bees: config.mainAgent.bees,
     }),
+    engines,
   };
 }
 
