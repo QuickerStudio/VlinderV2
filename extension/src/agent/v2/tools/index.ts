@@ -1,68 +1,72 @@
 /**
- * @fileoverview V2 Agent Tools - Main Entry Point
+ * @fileoverview V2 Tool System - Main Entry Point
  * 
- * 工具系统，基于OpenCode的工具架构设计
+ * Exports all tools adapted from OpenCode
  * 
  * @version 2.0.0
  */
 
-// Core
-export * from './core';
+// Core tool types and utilities
+export * from './tool';
 
-// File Tools
-export * from './files';
+// Tool registry
+export { ToolRegistry, globalToolRegistry } from './tool';
 
-// Search Tools
-export * from './search';
+// Core tools
+export { BashTool } from './tool';
+export { ReadTool } from './tool';
+export { WriteTool } from './tool';
+export { EditTool } from './tool';
+export { GlobTool } from './tool';
+export { GrepTool } from './tool';
+export { LsTool } from './tool';
 
-// Web Tools
-export * from './web';
+// All tools array
+import { BashTool, ReadTool, WriteTool, EditTool, GlobTool, GrepTool, LsTool } from './tool';
+import type { ToolInfo } from './tool';
 
-// ============================================================================
-// 工具注册
-// ============================================================================
-
-import { globalToolRegistry } from './core/registry';
-import { ReadTool } from './files/read';
-import { WriteTool } from './files/write';
-import { EditTool } from './files/edit';
-import { BashTool } from './files/bash';
-import { GlobTool } from './search/glob';
-import { GrepTool } from './search/grep';
-import { WebFetchTool } from './web/webfetch';
-import { WebSearchTool } from './web/websearch';
+export const allTools: ToolInfo[] = [
+  BashTool,
+  ReadTool,
+  WriteTool,
+  EditTool,
+  GlobTool,
+  GrepTool,
+  LsTool,
+];
 
 /**
- * 注册所有默认工具
+ * Register all default tools to the global registry
  */
 export function registerDefaultTools(): void {
-  globalToolRegistry.registerAll([
-    ReadTool,
-    WriteTool,
-    EditTool,
-    BashTool,
-    GlobTool,
-    GrepTool,
-    WebFetchTool,
-    WebSearchTool,
-  ]);
+  const { globalToolRegistry } = require('./tool');
+  
+  for (const tool of allTools) {
+    globalToolRegistry.register(tool);
+  }
 }
 
 /**
- * 获取工具列表
+ * Get list of all tool IDs
  */
 export function getToolList(): string[] {
-  return [
-    'read',
-    'write',
-    'edit',
-    'bash',
-    'glob',
-    'grep',
-    'webfetch',
-    'websearch',
-  ];
+  return allTools.map(t => t.id);
 }
 
-// 自动注册默认工具
-registerDefaultTools();
+// Re-export from OpenCode tools (will be adapted)
+export { InvalidTool } from './invalid';
+export { WebFetchTool } from './webfetch';
+export { WebSearchTool } from './websearch';
+export { TaskTool } from './task';
+export { TodoWriteTool, TodoReadTool } from './todo';
+export { QuestionTool } from './question';
+export { BatchTool } from './batch';
+export { CodeSearchTool } from './codesearch';
+export { ApplyPatchTool } from './apply_patch';
+export { MultiEditTool } from './multiedit';
+export { LspTool } from './lsp';
+export { SkillTool } from './skill';
+export { PlanEnterTool, PlanExitTool } from './plan';
+
+// Export truncation utility
+export { Truncate } from './truncation';

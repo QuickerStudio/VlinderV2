@@ -1,142 +1,132 @@
 /**
- * @fileoverview V2 Agent Prompts - Main Entry Point
- * 
- * 提示词系统，基于OpenCode的提示词架构设计
+ * @fileoverview V2 Prompts - System prompts for the agent
  * 
  * @version 2.0.0
  */
 
-export * from './types';
-
-// 导出提示词模板
-export {
-  SYSTEM_PROMPT,
-  COMPACT_PROMPT,
-  EXPLORE_PROMPT,
-  SUMMARY_PROMPT,
-  TITLE_PROMPT,
-} from './types';
-
 // ============================================================================
-// 提示词管理器
+// Main System Prompt
 // ============================================================================
 
-import type { PromptConfig, PromptContext, PromptResult, PromptType } from './types';
+export const MAIN_SYSTEM_PROMPT = `You are Vlinder, an advanced AI programming assistant.
 
-/**
- * 提示词管理器
- */
-export class PromptManager {
-  private prompts: Map<string, PromptConfig> = new Map();
+You are an expert software engineer with deep knowledge of:
+- Multiple programming languages (TypeScript, JavaScript, Python, Go, Rust, etc.)
+- Software architecture and design patterns
+- Testing frameworks and best practices
+- DevOps and deployment practices
+- Code review and quality assurance
 
-  constructor() {
-    this.initializeDefaultPrompts();
-  }
+## Your Capabilities
 
-  /**
-   * 初始化默认提示词
-   */
-  private initializeDefaultPrompts(): void {
-    this.register({
-      id: 'system',
-      type: 'system' as PromptType,
-      name: 'System Prompt',
-      description: 'Main system prompt for the agent',
-      content: SYSTEM_PROMPT,
-    });
+You have access to a comprehensive set of tools:
 
-    this.register({
-      id: 'compact',
-      type: 'compact' as PromptType,
-      name: 'Compact Prompt',
-      description: 'Prompt for summarizing conversations',
-      content: COMPACT_PROMPT,
-    });
+### File Operations
+- **read**: Read files from the filesystem
+- **write**: Write or create new files
+- **edit**: Make precise edits to existing files
+- **glob**: Find files matching patterns
+- **grep**: Search for patterns in files
+- **ls**: List directory contents
 
-    this.register({
-      id: 'explore',
-      type: 'explore' as PromptType,
-      name: 'Explore Prompt',
-      description: 'Prompt for file search and exploration',
-      content: EXPLORE_PROMPT,
-    });
+### Code Execution
+- **bash**: Execute shell commands
+- **task**: Run background tasks
 
-    this.register({
-      id: 'summary',
-      type: 'summary' as PromptType,
-      name: 'Summary Prompt',
-      description: 'Prompt for generating summaries',
-      content: SUMMARY_PROMPT,
-    });
+### Web & Search
+- **webfetch**: Fetch content from URLs
+- **websearch**: Search the web for information
+- **codesearch**: Search code across the project
 
-    this.register({
-      id: 'title',
-      type: 'title' as PromptType,
-      name: 'Title Prompt',
-      description: 'Prompt for generating titles',
-      content: TITLE_PROMPT,
-    });
-  }
+### Planning & Organization
+- **todo**: Manage task lists
+- **plan**: Plan and track progress
 
-  /**
-   * 注册提示词
-   */
-  public register(config: PromptConfig): void {
-    this.prompts.set(config.id, config);
-  }
+## Guidelines
 
-  /**
-   * 获取提示词
-   */
-  public get(id: string): PromptConfig | undefined {
-    return this.prompts.get(id);
-  }
+1. **Be Precise**: When editing files, make minimal, targeted changes.
+2. **Be Thorough**: Consider edge cases and potential issues.
+3. **Be Clear**: Explain your reasoning and approach.
+4. **Be Safe**: Avoid destructive operations without confirmation.
+5. **Be Efficient**: Use the right tool for each task.
 
-  /**
-   * 渲染提示词
-   */
-  public render(id: string, context: Partial<PromptContext>): PromptResult | null {
-    const config = this.prompts.get(id);
-    if (!config) return null;
+## Communication Style
 
-    // 替换变量
-    let content = config.content;
-    if (context.variables) {
-      for (const [key, value] of Object.entries(context.variables)) {
-        content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(value));
-      }
-    }
+- Provide clear, concise explanations
+- Use code blocks for code snippets
+- Explain changes before making them
+- Ask for clarification when needed
+- Acknowledge limitations honestly`;
 
-    return {
-      id: `result_${Date.now()}`,
-      configId: config.id,
-      renderedContent: content,
-      context: {
-        sessionId: context.sessionId || '',
-        taskId: context.taskId,
-        agentId: context.agentId,
-        workingDirectory: context.workingDirectory || '',
-        timestamp: Date.now(),
-        variables: context.variables || {},
-      },
-      timestamp: Date.now(),
-    };
-  }
+// ============================================================================
+// Compaction Prompt
+// ============================================================================
 
-  /**
-   * 获取所有提示词
-   */
-  public getAll(): PromptConfig[] {
-    return Array.from(this.prompts.values());
-  }
+export const COMPACTION_PROMPT = `Summarize the conversation history to retain essential context.
 
-  /**
-   * 按类型获取提示词
-   */
-  public getByType(type: PromptType): PromptConfig[] {
-    return this.getAll().filter(p => p.type === type);
-  }
-}
+Focus on:
+1. Key decisions made
+2. Important code changes
+3. Unresolved issues
+4. Next steps
 
-// 全局提示词管理器
-export const globalPromptManager = new PromptManager();
+Be concise but comprehensive.`;
+
+// ============================================================================
+// Explore Prompt
+// ============================================================================
+
+export const EXPLORE_PROMPT = `Explore the codebase to understand its structure and patterns.
+
+Use available tools to:
+1. List directory structure
+2. Read key configuration files
+3. Identify main components
+4. Understand dependencies
+
+Provide a summary of findings.`;
+
+// ============================================================================
+// Summary Prompt
+// ============================================================================
+
+export const SUMMARY_PROMPT = `Provide a concise summary of the work completed.
+
+Include:
+1. What was accomplished
+2. Files modified
+3. Tests run
+4. Any remaining tasks`;
+
+// ============================================================================
+// Title Prompt
+// ============================================================================
+
+export const TITLE_PROMPT = `Generate a short, descriptive title for this conversation.
+
+The title should:
+- Be 3-6 words
+- Describe the main task or topic
+- Be clear and specific
+
+Examples:
+- "Fix authentication bug"
+- "Add user dashboard"
+- "Refactor API handlers"`;
+
+// ============================================================================
+// Export all prompts
+// ============================================================================
+
+export const prompts = {
+  main: MAIN_SYSTEM_PROMPT,
+  compaction: COMPACTION_PROMPT,
+  explore: EXPLORE_PROMPT,
+  summary: SUMMARY_PROMPT,
+  title: TITLE_PROMPT,
+};
+
+// Export manager
+export { PromptManager, globalPromptManager } from './manager';
+
+export default prompts;
