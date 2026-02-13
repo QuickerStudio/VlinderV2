@@ -17,10 +17,10 @@
  */
 
 // Core types
-export * from './core/types';
+export * from './types';
 
 // MainAgent - Supreme Global Leader
-export { MainAgent } from './core/main-agent';
+export { MainAgent } from './main-agent';
 
 // AgentSwarm - Bee Orchestration
 export { AgentSwarm, SwarmConfig } from './AgentSwarm/swarm';
@@ -80,7 +80,7 @@ export const V2_BUILD_DATE = new Date().toISOString();
  * ```
  */
 export async function createV2System(config: {
-  mainAgent: import('./core/types').MainAgentConfig;
+  mainAgent: import('./types').MainAgentConfig;
   engines?: {
     memory?: Partial<import('./Engines/MemoryEngine/types').MemoryEngineConfig>;
     thinking?: Partial<import('./Engines/ThinkingEngine/types').ThinkingEngineConfig>;
@@ -89,7 +89,7 @@ export async function createV2System(config: {
     apply?: Partial<import('./Engines/ApplyEngine/types').ApplyEngineConfig>;
   };
 }): Promise<{
-  mainAgent: import('./core/main-agent').MainAgent;
+  mainAgent: import('./main-agent').MainAgent;
   swarm: import('./AgentSwarm/swarm').AgentSwarm;
   engines: {
     memory: import('./Engines/MemoryEngine/memory-engine').MemoryEngine;
@@ -100,7 +100,7 @@ export async function createV2System(config: {
   };
 }> {
   // Import modules
-  const { MainAgent } = await import('./core/main-agent');
+  const { MainAgent } = await import('./main-agent');
   const { AgentSwarm } = await import('./AgentSwarm/swarm');
   const { initializeEngines } = await import('./Engines');
   
@@ -126,13 +126,13 @@ export async function createV2System(config: {
  */
 export async function quickStart(options: {
   name?: string;
-  provider?: import('./core/types').ModelProvider;
+  provider?: import('./types').ModelProvider;
   modelId?: string;
-} = {}): Promise<import('./core/main-agent').MainAgent> {
-  const { MainAgent } = await import('./core/main-agent');
-  const { ModelProvider } = await import('./core/types');
+} = {}): Promise<import('./main-agent').MainAgent> {
+  const { MainAgent } = await import('./main-agent');
+  const { ModelProvider } = await import('./types');
   
-  const config: import('./core/types').MainAgentConfig = {
+  const config: import('./types').MainAgentConfig = {
     id: 'main_' + Date.now(),
     name: options.name || 'Vlinder Agent',
     version: '2.0.0',
