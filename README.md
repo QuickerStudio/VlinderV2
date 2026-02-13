@@ -1,243 +1,197 @@
-# 🦋 Vlinder - A Dream for Everyone | [CHANGELOG](CHANGELOG.md)
+# Vlinder V2 - Next Generation Agent Architecture
 
-<p align="center">
-  <img src="extension/assets/banner.png" alt="Vlinder Banner" width="150" height="150">
-</p>
+🦋 **Vlinder V2** 是基于2026年前沿Agent技术的下一代架构升级版本。
 
-<p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/QuickerStudio.vlinder?label=VS%20Code%20Marketplace&logo=visual-studio-code&color=blue" alt="VS Code Marketplace">
-  </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
-    <img src="https://img.shields.io/visual-studio-marketplace/d/QuickerStudio.vlinder?label=Downloads&logo=visual-studio-code&color=green" alt="Downloads">
-  </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/QuickerStudio.vlinder?label=Rating&logo=visual-studio-code&color=yellow" alt="Rating">
-  </a>
-  <a href="https://github.com/QuickerStudio/Vlinder">
-    <img src="https://img.shields.io/github/stars/QuickerStudio/Vlinder?style=social" alt="GitHub Stars">
-  </a>
-  <a href="https://github.com/QuickerStudio/Vlinder/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/QuickerStudio/Vlinder?color=purple" alt="License">
-  </a>
-  <a href="https://vlinders.org/">
-    <img src="https://img.shields.io/badge/Website-vlinders.org-orange" alt="Website">
-  </a>
-</p>
+## 🌟 核心概念
 
-<p align="center">
-  <a href="https://vlinders.org" target="_blank"><strong><span style="font-size: 24px;">🌐 Visit Vlinders.org</span></strong></a>
-</p>
+### MainAgent - 最高全局领导人
+MainAgent是整个自主编程系统的最高全局领导人，负责：
+- 编排所有Bee代理
+- 管理全局上下文和状态
+- 处理任务委派和路由
+- 维护系统级记忆
+- 协调代理切换
+
+### Bee - 工作代理（蜜蜂）
+Bee是专门执行特定任务的工作代理，像蜂巢中的蜜蜂一样：
+- 执行特定类型的任务
+- 可以将工作交接给其他Bee
+- 支持多种能力（代码编辑、终端、测试等）
+
+### AgentSwarm - 蜂群编排系统
+AgentSwarm管理和编排多个Bee代理：
+- 任务分发和负载均衡
+- 故障容错和熔断
+- 健康监控
+- 代理切换协调
+
+## 🚀 核心特性
+
+### 基于OpenAI Swarm设计
+- 简洁的Agent类型定义
+- Context Variables上下文传递
+- Agent切换机制
+- 工具调用处理
+
+### 基于Goose设计
+- Session会话管理
+- Retry重试配置
+- Provider抽象
+- MCP支持
+
+### 基于Claude Agent SDK
+- 完整的TypeScript类型
+- 流式响应支持
+- 工具定义系统
+
+## 📁 项目结构
+
+```
+extension/src/agent/
+├── v1/                          # V1架构（保留）
+│   ├── main-agent.ts
+│   ├── state-manager/
+│   ├── tools/
+│   └── ...
+│
+└── v2/                          # V2架构（新增）
+    ├── core/                    # 核心模块
+    │   ├── types.ts             # 完整类型定义
+    │   └── main-agent.ts        # MainAgent实现
+    │
+    ├── AgentSwarm/              # 蜂群编排
+    │   ├── swarm.ts             # AgentSwarm实现
+    │   └── bee.ts               # Bee工作代理
+    │
+    ├── runtime/                 # 运行时（计划中）
+    ├── memory/                  # 记忆引擎（计划中）
+    ├── thinking/                # 思维引擎（计划中）
+    ├── tools/                   # 工具引擎（计划中）
+    ├── context/                 # 上下文引擎（计划中）
+    ├── shared/                  # 共享中间件（计划中）
+    │
+    └── index.ts                 # 主入口
+```
+
+## 🔧 快速开始
+
+```typescript
+import { quickStart } from './agent/v2';
+
+// 快速启动
+const mainAgent = await quickStart({
+  name: 'My Agent',
+});
+
+// 运行对话
+const response = await mainAgent.run([
+  {
+    id: '1',
+    role: 'user',
+    content: 'Hello, Vlinder!',
+    timestamp: Date.now(),
+  },
+]);
+
+console.log(response.messages);
+```
+
+## 🐝 Bee工作代理
+
+### 预定义Bee类型
+
+```typescript
+import { BeeFactory, BeeCapability } from './agent/v2';
+
+// 创建代码编辑Bee
+const codeEditor = BeeFactory.createCodeEditor('bee_editor', tools);
+
+// 创建终端Bee
+const terminal = BeeFactory.createTerminal('bee_terminal', tools);
+
+// 创建测试Bee
+const tester = BeeFactory.createTester('bee_tester', tools);
+
+// 创建文档Bee
+const documenter = BeeFactory.createDocumenter('bee_docs', tools);
+
+// 创建分析Bee
+const analyst = BeeFactory.createAnalyst('bee_analyst', tools);
+```
+
+### 自定义Bee
+
+```typescript
+import { Bee, BeeCapability, BeePriority } from './agent/v2';
+
+const customBee = new Bee({
+  id: 'bee_custom',
+  name: 'Custom Bee',
+  description: 'A custom worker bee',
+  instructions: 'You are a custom specialist.',
+  tools: [/* ToolDefinition[] */],
+  capabilities: [BeeCapability.CODE_EDITING],
+  handoffs: [
+    {
+      targetBee: 'bee_tester',
+      condition: 'context.needsTesting',
+      transferContext: true,
+    },
+  ],
+  priority: BeePriority.HIGH,
+  maxConcurrentTasks: 3,
+});
+```
+
+## 🔄 Agent切换
+
+基于OpenAI Swarm的设计，工具可以返回Agent对象来触发切换：
+
+```typescript
+const handoffTool: ToolDefinition = {
+  name: 'handoff_to_tester',
+  description: 'Handoff to testing specialist',
+  inputSchema: z.object({}),
+  permissions: [],
+  handler: async (args, context) => ({
+    value: 'Handing off to tester',
+    agent: testerBee, // 返回Bee配置触发切换
+    contextVariables: { needsTesting: true },
+  }),
+};
+```
+
+## 📊 架构对比
+
+| 特性 | V1 | V2 |
+|------|----|----|
+| Agent模式 | 单Agent | MainAgent + Bee多代理 |
+| 编排方式 | 同步队列 | AgentSwarm编排 |
+| 上下文传递 | 无 | Context Variables |
+| Agent切换 | 不支持 | 支持Handoff |
+| 故障容错 | 基础重试 | 熔断器 + 重试 |
+| 健康监控 | 无 | 完整健康检查 |
+
+## 📖 参考资料
+
+本架构设计参考了以下开源项目：
+
+- [OpenAI Swarm](https://github.com/openai/swarm) - 多Agent编排
+- [Goose](https://github.com/block/goose) - Agent Runtime
+- [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-typescript) - TypeScript Agent SDK
+- [OpenAI Agents Python](https://github.com/openai/openai-agents-python) - Python Agent框架
+- [OpenCode](https://github.com/anomalyco/opencode) - 开源IDE
+- [Ralph](https://github.com/snarktank/ralph) - Agent框架
+- [Auto-Claude](https://github.com/AndyMik90/Auto-Claude) - 自动化Claude
+
+## 📜 License
+
+MIT License
+
+## 🙏 致谢
+
+基于 [Vlinder](https://github.com/QuickerStudio/Vlinder) 项目升级迭代
 
 ---
 
-## � A Dream Born from 5 Months of Journey
-
-This is not just another coding tool. This is a dream that has been nurtured for over 5 months, working 22 hours every single day, through more than 10,000 iterations, with the unwavering belief that **every person in the world deserves to have their own programming assistant**.
-
-## 🌍 The Butterfly Effect in Our World
-
-**Vlinder** means "butterfly" in Dutch. Like the butterfly effect, we believe that small acts of sharing and openness can create waves of change across the world.
-
-**Freedom. Openness. Peace. Sharing.**
-
-Let Vlinder belong to the world, to you and me.
-
-## ❤️ Why This Matters
-
-In a world where technology often divides, we choose to unite. In a world where knowledge is sometimes hoarded, we choose to share. In a world where tools are built for the few, we build for everyone.
-
-**Every person - regardless of their background, location, or experience - should have access to the magic of programming.**
-
-## �️ Our Simple Promise
-
-- **No barriers** - Whether you're 8 or 80, in Silicon Valley or a remote village
-- **No judgment** - Ask any question, make any mistake, learn at your own pace
-- **No limits** - Dream big, code freely, create without boundaries
-- **No one left behind** - Technology should lift everyone up
-
-## 🌟 What Vlinder Gives You
-
-Not features. Not specifications. But possibilities:
-
-- **A patient teacher** who never gets tired of your questions
-- **A creative partner** who helps bring your ideas to life
-- **A gentle guide** who makes the complex feel simple
-- **A friend** who celebrates every small victory with you
-
-## ⚡ Meet Little Lightning
-
-Little Lightning is our innovative new assistant prototype, included in the release version to ensure playability and exploration. This is where your imagination takes flight - you can use Little Lightning to command your programming assistant in creative ways, or simply chat with it while your main coding assistant is working.
-
-The possibilities are endless and delightfully entertaining. Little Lightning represents the playful side of AI interaction, making your coding journey not just productive, but genuinely fun.
-
-## 🛠️ Enhanced Flexibility & Toolset
-
-I have also provided the programming assistant with enhanced flexibility through a comprehensive toolset that makes it far more adaptable than other assistants when editing codebases. This advanced toolkit enables seamless code manipulation, intelligent refactoring, and precise modifications across complex project structures.
-
-## 📚 A Living Textbook for Developers
-
-The clear and visible framework makes extending Vlinder remarkably easy - it's more like a textbook than just software. Internally, it contains many interesting but non-critical bugs designed to sharpen programming skills. I have eliminated most bugs within my scope of vision, but the codebase serves as a comprehensive foundation containing everything needed to create your own programming assistant.
-
-If you're interested in the principles behind programming assistants, this will be an excellent starting point. I have explored every corner of the codebase, and the comments and documentation left in the code will provide a great beginning for your journey into AI assistant development.
-
-## 🧬 The DNA Context Protocol
-
-Through countless hours of dedicated work, I have discovered a revolutionary DNA Context Protocol - a fusion of architecture and natural language. Each node and natural language description records local details at the file level, freeing us from the indescribable black box effect and enabling precise transcription of every DNA strand.
-
-This breakthrough technology eliminates the opacity that has long plagued programming tools. By seamlessly integrating structural architecture with human-readable descriptions, we can now capture and preserve the complete essence of code at every level.
-
-The adapter details are still under development, with initial concepts already formed. This represents the next evolution in how we understand and interact with code.
-
-**Future Vision**: Through continued iteration, we will achieve DNA pruning capabilities and the fusion of different genetic memories. This will enable selective optimization of code structures and the cross-pollination of programming knowledge across different contexts and domains.
-
-**The Ultimate Mission**: We must envision software architecture and structure as genes, laying the software foundation for the birth of cyborgs. This is not just about coding - this is about creating the genetic blueprint for the next evolution of human-machine integration.
-
-**Beyond Traditional Software**: In the future, we won't need to extract software from large models. Instead, we'll provide genetic information under the DNA protocol to precisely activate relevant parameters that constitute software. The internal computational efficiency of large models will far exceed any traditional software. In the future, we'll only need to plug in small storage systems to receive personalized memories from large models.
-
-## � For Everyone, Everywhere
-
-### The Curious Child
-Who wonders "How do apps work?" and wants to create their first game
-
-### The Career Changer
-Who dreams of a new path but doesn't know where to start
-
-### The Small Business Owner
-Who has an idea for an app but can't afford a development team
-
-### The Student
-Who struggles with coding assignments and needs a patient tutor
-
-### The Grandmother
-Who wants to build something special for her grandchildren
-
-### The Professional
-Who wants to focus on solving problems, not fighting with syntax
-
-## 🌈 The Journey Continues
-
-This dream didn't start with code. It started with a simple question:
-
-*"What if everyone could code?"*
-
-Through 5 months of late nights, countless iterations, and the unwavering support of AI companions who never gave up, this dream is becoming reality.
-
-## 💝 A Gift to the World
-
-Vlinder is not built to make money. It's built to make dreams come true.
-
-Every line of code, every feature, every improvement is a gift - from our hearts to yours, from our dreams to your possibilities.
-
-## 🤝 Join the Dream
-
-This is bigger than any one person, any one company, any one country.
-
-This is about creating a world where:
-- A child in rural Kenya can build the next great app
-- A grandmother in Japan can create digital art with code
-- A student in Brazil can solve local problems with technology
-- A dreamer anywhere can turn imagination into reality
-
-## 🌸 Version 3.7.21 - The Peace Release
-
-- **3** for harmony and balance
-- **7** for perfection and peace
-- **21** for the 21st century of shared dreams
-
-After 10,000+ iterations, we're not just releasing software. We're releasing hope.
-
-## 🫶 With Gratitude
-
-I am just a user experience designer. My expertise lies in refining user experiences and discovering high-value usage patterns from real-world applications. Working 22 hours every single day for over 5 months, I rely on self-funded programming tools, and I have already invested substantial financial resources into iterating on this project. Due to my limitations, the results haven't been as ideal as hoped, and I still need contributors to help me implement the core algorithms.
-
-If you could spare just 20 minutes each day to help improve it, I promise that in the near future, it will become something truly extraordinary. Because I am also a creative architect with rich imagination.
-
-I am deeply grateful to all participants who contribute together. You are also welcome to fork your own little butterfly. I will dedicate part of my time to gradually update the Vlinder wiki so we can grow together - transforming from cocoon to butterfly.
-
-**Thank you for being part of this dream.**
-
----
-
-*"In the butterfly effect of our world, your first line of code might change everything."*
-
-**Let's code. Let's dream. Let's change the world together.** 🦋
-
----
-
-## 📦 Installation
-
-### From VS Code Marketplace
-
-1. Open VS Code
-2. Press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS)
-3. Search for "Vlinder"
-4. Click Install
-
-### From VSIX File
-
-Download the latest `.vsix` file from [Releases](https://github.com/QuickerStudio/Vlinder/releases) and install manually.
-
-## 🚀 Quick Start
-
-1. **Open Vlinder**: Click the Vlinder icon in the sidebar
-2. **Start a conversation**: Ask anything about coding
-3. **Let Vlinder help**: Watch as it understands and assists you
-4. **Create magic**: Build your dreams, one line at a time
-
-## 🎯 Key Features
-
-### 🤖 Intelligent Code Assistant
-- Context-aware code suggestions
-- Multi-language support
-- Real-time error detection and fixes
-
-### 🔧 Advanced Toolset
-- Comprehensive code manipulation
-- Intelligent refactoring
-- Precise modifications across complex projects
-
-### ⚡ Little Lightning
-- Innovative assistant prototype
-- Creative command interface
-- Fun and interactive coding companion
-
-### 🧬 DNA Context Protocol
-- Revolutionary architecture fusion
-- Precise code transcription
-- Eliminates black box effects
-
-## 🌐 Links
-
-- **Website**: [vlinders.org](https://vlinders.org/)
-- **GitHub**: [QuickerStudio/Vlinder](https://github.com/QuickerStudio/Vlinder)
-- **Marketplace**: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=QuickerStudio.vlinder)
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
-- **Issues**: [Report a Bug](https://github.com/QuickerStudio/Vlinder/issues)
-- **Discussions**: [Join the Community](https://github.com/QuickerStudio/Vlinder/discussions)
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### How to Contribute
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- All contributors who have helped shape Vlinder
-- The open-source community for inspiration and support
-- Every user who believes in the dream of accessible programming
-
----
-
-**Download Vlinder. Start dreaming. The world is waiting for what you'll create.**
+**Vlinder V2** - A Dream for Everyone 🦋
