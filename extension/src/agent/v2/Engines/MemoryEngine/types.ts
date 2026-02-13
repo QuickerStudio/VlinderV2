@@ -1,14 +1,12 @@
 /**
- * @fileoverview MemoryEngine Types - 持久化记忆系统类型定义
+ * @fileoverview Memory Engine Types - 持久化记忆系统类型定义
  * 
  * 基于时间线的重要信息存入向量数据库ChromaDB的检索式记忆系统引擎
  * 
- * Features:
- * - Timeline-based memory storage
- * - ChromaDB vector database integration
- * - Importance-based retention
- * - Semantic search with embeddings
- * - Memory consolidation and pruning
+ * 设计参考:
+ * - ChromaDB向量数据库
+ * - Goose记忆系统
+ * - Mem0记忆架构
  * 
  * @version 2.0.0
  */
@@ -16,7 +14,7 @@
 import { z } from 'zod';
 
 // ============================================================================
-// Memory Identifiers
+// 记忆标识符
 // ============================================================================
 
 export type MemoryId = string;
@@ -24,509 +22,491 @@ export type TimelineId = string;
 export type EmbeddingVector = number[];
 
 // ============================================================================
-// Memory Entry Types
+// 记忆类型枚举
 // ============================================================================
 
 /**
- * Memory importance levels
+ * 记忆类型
  */
-export enum MemoryImportance {
-  CRITICAL = 1.0,   // Never forget
-  HIGH = 0.8,       // Long-term retention
-  MEDIUM = 0.5,     // Standard retention
-  LOW = 0.3,        // Short-term retention
-  EPHEMERAL = 0.1   // Temporary, quick decay
+export enum MemoryType {
+  EPISODIC = 'episodic',       // 情景记忆 - 特定事件和经历
+  SEMANTIC = 'semantic',       // 语义记忆 - 事实和概念
+  PROCEDURAL = 'procedural',   // 程序记忆 - 技能和流程
+  WORKING = 'working',         // 工作记忆 - 当前任务上下文
+  META = 'meta',               // 元记忆 - 关于记忆的记忆
 }
 
 /**
- * Memory source types
+ * 记忆重要性级别
+ */
+export enum MemoryImportance {
+  CRITICAL = 5,    // 关键信息，永不遗忘
+  HIGH = 4,        // 高重要性
+  MEDIUM = 3,      // 中等重要性
+  LOW = 2,         // 低重要性
+  TRIVIAL = 1,     // 琐碎信息
+}
+
+/**
+ * 记忆来源
  */
 export enum MemorySource {
   USER = 'user',
   AGENT = 'agent',
   SYSTEM = 'system',
   TOOL = 'tool',
-  EXTERNAL = 'external'
+  EXTERNAL = 'external',
+  INFERENCE = 'inference',  // 推理得出
 }
 
 /**
- * Memory content types
+ * 记忆状态
  */
-export enum MemoryContentType {
-  CONVERSATION = 'conversation',
-  CODE = 'code',
-  FILE = 'file',
-  ERROR = 'error',
-  DECISION = 'decision',
-  LEARNING = 'learning',
-  PREFERENCE = 'preference',
-  CONTEXT = 'context',
-  INSTRUCTION = 'instruction',
-  FEEDBACK = 'feedback'
+export enum MemoryState {
+  ACTIVE = 'active',
+  ARCHIVED = 'archived',
+  DECAYING = 'decaying',
+  FORGOTTEN = 'forgotten',
+  CONSOLIDATED = 'consolidated',  // 已整合
 }
 
+// ============================================================================
+// 记忆条目
+// ============================================================================
+
 /**
- * Memory entry - Core memory unit
+ * 记忆条目 - 存储在向量数据库中的基本单元
  */
 export interface MemoryEntry {
+  // 基本标识
   id: MemoryId;
+  type: MemoryType;
+  source: MemorySource;
   
-  // Content
+  // 内容
   content: string;
-  contentType: MemoryContentType;
-  
-  // Embedding for semantic search
   embedding?: EmbeddingVector;
-  embeddingModel?: string;
   
-  // Metadata
+  // 元数据
   metadata: MemoryMetadata;
   
-  // Timeline
-  timeline: TimelineInfo;
-  
-  // Importance and retention
-  importance: number;
-  decayRate: number;
+  // 时间信息
+  timestamp: number;
+  lastAccessed: number;
   accessCount: number;
   
-  // Timestamps
-  createdAt: number;
-  updatedAt: number;
-  lastAccessedAt: number;
-  expiresAt?: number;
+  // 重要性
+  importance: MemoryImportance;
   
-  // Relationships
-  parentMemoryId?: MemoryId;
-  relatedMemoryIds?: MemoryId[];
+  // 状态
+  state: MemoryState;
   
-  // Tags for categorization
-  tags: string[];
+  // 关联
+  associations: MemoryAssociation[];
+  
+  // 时间线
+  timelineId?: TimelineId;
 }
 
 /**
- * Memory metadata
+ * 记忆元数据
  */
 export interface MemoryMetadata {
-  source: MemorySource;
+  // 来源信息
+  sourceId?: string;
+  sourceType?: string;
+  
+  // 上下文
+  context?: string;
   sessionId?: string;
   taskId?: string;
   agentId?: string;
-  toolName?: string;
-  filePath?: string;
-  language?: string;
+  
+  // 标签
+  tags: string[];
+  categories: string[];
+  
+  // 置信度
   confidence: number;
-  verified: boolean;
+  
+  // 过期
+  expiresAt?: number;
+  
+  // 自定义属性
   custom?: Record<string, unknown>;
 }
 
 /**
- * Timeline information
+ * 记忆关联
  */
-export interface TimelineInfo {
-  timelineId: TimelineId;
-  timestamp: number;
-  sequence: number;
-  epoch?: string;  // e.g., "session_1", "task_5"
-  phase?: string;  // e.g., "planning", "execution", "review"
+export interface MemoryAssociation {
+  targetId: MemoryId;
+  relationType: MemoryRelationType;
+  strength: number;  // 0-1
+  createdAt: number;
+}
+
+/**
+ * 记忆关系类型
+ */
+export enum MemoryRelationType {
+  CAUSES = 'causes',
+  ENABLES = 'enables',
+  FOLLOWS = 'follows',
+  PRECEDES = 'precedes',
+  SIMILAR_TO = 'similar_to',
+  CONTRADICTS = 'contradicts',
+  SUPPORTS = 'supports',
+  EXTENDS = 'extends',
+  REFERENCES = 'references',
 }
 
 // ============================================================================
-// Timeline Types
+// 时间线
 // ============================================================================
 
 /**
- * Timeline epoch - A significant period in the timeline
+ * 时间线条目
  */
-export interface TimelineEpoch {
+export interface TimelineEntry {
   id: TimelineId;
-  name: string;
-  description?: string;
-  startTime: number;
-  endTime?: number;
-  parentEpochId?: TimelineId;
-  
-  // Statistics
-  memoryCount: number;
-  importantMemoryCount: number;
-  
-  // Metadata
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Timeline event - A significant event in the timeline
- */
-export interface TimelineEvent {
-  id: string;
-  timelineId: TimelineId;
-  type: TimelineEventType;
   timestamp: number;
+  endTime?: number;
+  
+  // 事件信息
+  eventType: TimelineEventType;
+  title: string;
   description: string;
-  relatedMemoryIds: MemoryId[];
-  metadata?: Record<string, unknown>;
+  
+  // 关联记忆
+  memoryIds: MemoryId[];
+  
+  // 上下文
+  context: TimelineContext;
+  
+  // 重要性
+  importance: MemoryImportance;
+  
+  // 标签
+  tags: string[];
 }
 
 /**
- * Timeline event types
+ * 时间线事件类型
  */
 export enum TimelineEventType {
-  SESSION_START = 'session_start',
-  SESSION_END = 'session_end',
   TASK_START = 'task_start',
+  TASK_PROGRESS = 'task_progress',
   TASK_COMPLETE = 'task_complete',
-  TASK_FAIL = 'task_fail',
+  TASK_FAILURE = 'task_failure',
+  
   DECISION = 'decision',
+  ACTION = 'action',
+  OBSERVATION = 'observation',
+  
   ERROR = 'error',
+  RECOVERY = 'recovery',
+  
   LEARNING = 'learning',
-  HANDOFF = 'handoff',
-  MILESTONE = 'milestone'
+  INSIGHT = 'insight',
+  
+  USER_INTERACTION = 'user_interaction',
+  AGENT_HANDOFF = 'agent_handoff',
+  
+  MILESTONE = 'milestone',
+  CHECKPOINT = 'checkpoint',
+}
+
+/**
+ * 时间线上下文
+ */
+export interface TimelineContext {
+  sessionId: string;
+  taskId?: string;
+  agentId?: string;
+  parentTimelineId?: TimelineId;
+  
+  // 环境信息
+  workingDirectory?: string;
+  gitBranch?: string;
+  projectType?: string;
+  
+  // 状态快照
+  stateSnapshot?: Record<string, unknown>;
 }
 
 // ============================================================================
-// Memory Query Types
+// 查询接口
 // ============================================================================
 
 /**
- * Memory query options
+ * 记忆查询
  */
 export interface MemoryQuery {
-  // Query content
+  // 查询内容
   query: string;
   queryEmbedding?: EmbeddingVector;
   
-  // Search parameters
+  // 过滤条件
+  filters?: MemoryFilter;
+  
+  // 检索参数
   topK: number;
   minSimilarity?: number;
-  minImportance?: number;
-  
-  // Filters
-  filter?: MemoryFilter;
-  
-  // Options
   includeEmbeddings?: boolean;
-  includeContent?: boolean;
-  sortBy?: 'relevance' | 'importance' | 'recency';
-}
-
-/**
- * Memory filter for queries
- */
-export interface MemoryFilter {
-  // Content filters
-  contentTypes?: MemoryContentType[];
-  sources?: MemorySource[];
   
-  // Time filters
+  // 时间范围
   timeRange?: {
     start: number;
     end: number;
   };
   
-  // Tag filters
-  tags?: string[];
-  tagMatch?: 'any' | 'all';
-  
-  // Importance filter
-  importanceRange?: {
-    min: number;
-    max: number;
+  // 排序
+  sortBy?: 'relevance' | 'timestamp' | 'importance' | 'accessCount';
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * 记忆过滤器
+ */
+export interface MemoryFilter {
+  types?: MemoryType[];
+  sources?: MemorySource[];
+  states?: MemoryState[];
+  importance?: {
+    min?: MemoryImportance;
+    max?: MemoryImportance;
   };
-  
-  // Timeline filter
-  timelineIds?: TimelineId[];
-  epochs?: string[];
-  
-  // Relationship filters
-  parentMemoryId?: MemoryId;
-  relatedToMemoryId?: MemoryId;
-  
-  // Custom filters
+  tags?: string[];
+  categories?: string[];
+  sessionId?: string;
+  taskId?: string;
+  agentId?: string;
   custom?: Record<string, unknown>;
 }
 
 /**
- * Memory query result
+ * 查询结果
  */
 export interface MemoryQueryResult {
   memories: MemoryEntry[];
   total: number;
   queryTime: number;
-  similarities?: number[];
+  
+  // 相似度分数
+  scores?: number[];
 }
 
 // ============================================================================
-// ChromaDB Integration Types
+// 记忆配置
 // ============================================================================
 
 /**
- * ChromaDB collection configuration
- */
-export interface ChromaDBConfig {
-  host: string;
-  port: number;
-  collectionName: string;
-  embeddingFunction?: string;
-  distanceFunction?: 'cosine' | 'l2' | 'ip';
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * ChromaDB document for storage
- */
-export interface ChromaDocument {
-  id: string;
-  embedding: EmbeddingVector;
-  metadata: Record<string, unknown>;
-  document: string;
-}
-
-/**
- * ChromaDB query result
- */
-export interface ChromaQueryResult {
-  ids: string[][];
-  embeddings?: EmbeddingVector[][];
-  documents: string[][];
-  metadatas: Record<string, unknown>[][];
-  distances: number[][];
-}
-
-// ============================================================================
-// Memory Engine Configuration
-// ============================================================================
-
-/**
- * Memory engine configuration
+ * 记忆引擎配置
  */
 export interface MemoryEngineConfig {
-  // Storage configuration
-  storage: MemoryStorageConfig;
+  // 向量数据库配置
+  vectorDb: VectorDbConfig;
   
-  // ChromaDB configuration
-  chromadb: ChromaDBConfig;
-  
-  // Embedding configuration
+  // 嵌入配置
   embedding: EmbeddingConfig;
   
-  // Retention configuration
-  retention: RetentionConfig;
+  // 存储配置
+  storage: MemoryStorageConfig;
   
-  // Timeline configuration
-  timeline: TimelineConfig;
+  // 检索配置
+  retrieval: RetrievalConfig;
   
-  // Performance configuration
-  performance: MemoryPerformanceConfig;
+  // 整合配置
+  consolidation: ConsolidationConfig;
+  
+  // 遗忘配置
+  forgetting: ForgettingConfig;
 }
 
 /**
- * Memory storage configuration
+ * 向量数据库配置
  */
-export interface MemoryStorageConfig {
-  // Capacity limits
-  maxShortTermMemories: number;
-  maxLongTermMemories: number;
-  maxTotalMemories: number;
+export interface VectorDbConfig {
+  provider: 'chromadb' | 'pinecone' | 'weaviate' | 'milvus' | 'local';
   
-  // Persistence
-  persistenceEnabled: boolean;
-  persistencePath?: string;
-  autoSaveInterval: number;
+  // ChromaDB配置
+  chromadb?: {
+    host: string;
+    port: number;
+    collectionName: string;
+    persistDirectory?: string;
+  };
   
-  // Compression
-  compressionEnabled: boolean;
-  compressionThreshold: number;
+  // 连接配置
+  connectionTimeout?: number;
+  requestTimeout?: number;
 }
 
 /**
- * Embedding configuration
+ * 嵌入配置
  */
 export interface EmbeddingConfig {
   provider: 'openai' | 'anthropic' | 'local' | 'custom';
   model: string;
   dimension: number;
+  
+  // 批处理
   batchSize: number;
+  
+  // 缓存
   cacheEnabled: boolean;
-  cacheSize: number;
+  cacheSize?: number;
 }
 
 /**
- * Retention configuration
+ * 存储配置
  */
-export interface RetentionConfig {
-  // Decay settings
-  defaultDecayRate: number;
-  importanceBoostOnAccess: number;
+export interface MemoryStorageConfig {
+  // 容量限制
+  maxMemories: number;
+  maxWorkingMemory: number;
   
-  // Consolidation
-  consolidationEnabled: boolean;
-  consolidationInterval: number;
-  consolidationThreshold: number;
+  // 持久化
+  persistenceEnabled: boolean;
+  persistencePath?: string;
+  autoSaveInterval?: number;
   
-  // Pruning
-  pruningEnabled: boolean;
-  pruningInterval: number;
-  pruningThreshold: number;
-  
-  // Archive
-  archiveEnabled: boolean;
-  archiveAge: number;
+  // 压缩
+  compressionEnabled: boolean;
+  compressionThreshold?: number;
 }
 
 /**
- * Timeline configuration
+ * 检索配置
  */
-export interface TimelineConfig {
+export interface RetrievalConfig {
+  // 默认参数
+  defaultTopK: number;
+  defaultMinSimilarity: number;
+  
+  // 混合检索
+  hybridSearchEnabled: boolean;
+  keywordWeight?: number;
+  semanticWeight?: number;
+  
+  // 重排序
+  rerankingEnabled: boolean;
+  rerankingModel?: string;
+}
+
+/**
+ * 整合配置
+ */
+export interface ConsolidationConfig {
   enabled: boolean;
-  autoEpochDetection: boolean;
-  maxEpochs: number;
-  eventCaptureEnabled: boolean;
+  interval: number;
+  
+  // 整合策略
+  strategy: 'time_based' | 'importance_based' | 'similarity_based' | 'hybrid';
+  
+  // 聚类参数
+  clusteringThreshold: number;
+  minClusterSize: number;
 }
 
 /**
- * Memory performance configuration
+ * 遗忘配置
  */
-export interface MemoryPerformanceConfig {
-  // Caching
-  queryCacheEnabled: boolean;
-  queryCacheSize: number;
-  queryCacheTTL: number;
+export interface ForgettingConfig {
+  enabled: boolean;
   
-  // Indexing
-  indexEnabled: boolean;
-  indexUpdateInterval: number;
+  // 衰减参数
+  decayRate: number;
+  minImportanceThreshold: number;
   
-  // Parallel processing
-  maxConcurrentQueries: number;
-  maxConcurrentEmbeddings: number;
-}
-
-// ============================================================================
-// Memory Operations
-// ============================================================================
-
-/**
- * Memory store operation
- */
-export interface MemoryStoreOperation {
-  entry: Partial<MemoryEntry>;
-  options?: {
-    generateEmbedding?: boolean;
-    calculateImportance?: boolean;
-    linkToTimeline?: boolean;
-    detectEpoch?: boolean;
-  };
-}
-
-/**
- * Memory consolidation result
- */
-export interface MemoryConsolidationResult {
-  consolidated: number;
-  archived: number;
-  pruned: number;
-  summary?: string;
-}
-
-/**
- * Memory statistics
- */
-export interface MemoryStatistics {
-  totalMemories: number;
-  shortTermMemories: number;
-  longTermMemories: number;
+  // 清理间隔
+  cleanupInterval: number;
   
-  averageImportance: number;
-  averageAccessCount: number;
-  
-  memoriesByType: Record<MemoryContentType, number>;
-  memoriesBySource: Record<MemorySource, number>;
-  
-  oldestMemory: number;
-  newestMemory: number;
-  
-  totalEmbeddings: number;
-  embeddingDimension: number;
-  
-  timelineStats: {
-    totalEpochs: number;
-    totalEvents: number;
-    currentEpoch?: TimelineEpoch;
-  };
-  
-  storageStats: {
-    usedBytes: number;
-    indexSize: number;
-    cacheHitRate: number;
-  };
+  // 保护规则
+  protectedTypes?: MemoryType[];
+  protectedTags?: string[];
 }
 
 // ============================================================================
-// Memory Events
+// 记忆操作接口
 // ============================================================================
 
 /**
- * Memory event types
+ * 记忆操作结果
  */
-export enum MemoryEventType {
-  STORED = 'memory:stored',
-  RETRIEVED = 'memory:retrieved',
-  UPDATED = 'memory:updated',
-  DELETED = 'memory:deleted',
-  CONSOLIDATED = 'memory:consolidated',
-  PRUNED = 'memory:pruned',
-  ARCHIVED = 'memory:archived',
-  EPOCH_STARTED = 'memory:epoch_started',
-  EPOCH_ENDED = 'memory:epoch_end',
-  EVENT_CAPTURED = 'memory:event_captured'
-}
-
-/**
- * Memory event
- */
-export interface MemoryEvent {
-  type: MemoryEventType;
+export interface MemoryOperationResult {
+  success: boolean;
   memoryId?: MemoryId;
-  data?: unknown;
-  timestamp: number;
+  error?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * 批量操作结果
+ */
+export interface BatchOperationResult {
+  total: number;
+  succeeded: number;
+  failed: number;
+  errors: Array<{ index: number; error: string }>;
 }
 
 // ============================================================================
-// Zod Schemas for Validation
+// 记忆统计
 // ============================================================================
 
-export const MemoryEntrySchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  contentType: z.nativeEnum(MemoryContentType),
-  embedding: z.array(z.number()).optional(),
-  metadata: z.object({
-    source: z.nativeEnum(MemorySource),
-    sessionId: z.string().optional(),
-    taskId: z.string().optional(),
-    agentId: z.string().optional(),
-    confidence: z.number().min(0).max(1),
-    verified: z.boolean(),
-  }),
-  importance: z.number().min(0).max(1),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  lastAccessedAt: z.number(),
-  tags: z.array(z.string()),
-});
+/**
+ * 记忆统计信息
+ */
+export interface MemoryStats {
+  // 总量
+  totalMemories: number;
+  memoriesByType: Record<MemoryType, number>;
+  memoriesBySource: Record<MemorySource, number>;
+  memoriesByState: Record<MemoryState, number>;
+  
+  // 时间线
+  timelineEntries: number;
+  
+  // 存储
+  storageSize: number;
+  vectorDbSize: number;
+  
+  // 性能
+  averageQueryTime: number;
+  cacheHitRate: number;
+  
+  // 整合
+  lastConsolidation?: number;
+  consolidatedMemories: number;
+}
 
-export const MemoryQuerySchema = z.object({
-  query: z.string(),
-  topK: z.number().min(1).max(100).default(10),
-  minSimilarity: z.number().min(0).max(1).optional(),
-  minImportance: z.number().min(0).max(1).optional(),
-  filter: z.object({
-    contentTypes: z.array(z.nativeEnum(MemoryContentType)).optional(),
-    sources: z.array(z.nativeEnum(MemorySource)).optional(),
-    timeRange: z.object({
-      start: z.number(),
-      end: z.number(),
-    }).optional(),
-    tags: z.array(z.string()).optional(),
-  }).optional(),
-});
+// ============================================================================
+// 事件类型
+// ============================================================================
+
+/**
+ * 记忆引擎事件类型
+ */
+export type MemoryEngineEventType =
+  | 'memory:stored'
+  | 'memory:retrieved'
+  | 'memory:updated'
+  | 'memory:deleted'
+  | 'memory:consolidated'
+  | 'memory:forgotten'
+  | 'timeline:entry_added'
+  | 'timeline:updated'
+  | 'engine:initialized'
+  | 'engine:error';
+
+/**
+ * 记忆引擎事件
+ */
+export interface MemoryEngineEvent {
+  type: MemoryEngineEventType;
+  timestamp: number;
+  payload: unknown;
+  metadata?: Record<string, unknown>;
+}
