@@ -8,6 +8,7 @@
  * - ContextEngine: Agentic context management
  * - ApplyEngine: Multi-round tool execution
  * - IntegratedAgent: Unified agent system with all engines
+ * - V1ToV2Migrator: Migration tool from V1 to V2
  * 
  * @version 2.0.0
  */
@@ -34,6 +35,9 @@ export { ApplyEngine } from './ApplyEngine';
 
 // Integration
 export { IntegratedAgent, createIntegratedAgent, IntegratedAgentConfig } from './integration';
+
+// Migration
+export { V1ToV2Migrator, v1ToV2Migrator, createDefaultBees } from './migration';
 
 // Version info
 export const ENGINES_VERSION = '2.0.0';

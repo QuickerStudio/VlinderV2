@@ -32,7 +32,7 @@ import {
   CompletionChunk,
   SessionConfig,
 } from './types';
-import { AgentSwarm } from '../AgentSwarm/swarm';
+import { AgentSwarm } from './AgentSwarm/swarm';
 
 /**
  * MainAgent - The Supreme Global Leader
