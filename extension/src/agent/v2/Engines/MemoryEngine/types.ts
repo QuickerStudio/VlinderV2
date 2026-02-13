@@ -510,3 +510,33 @@ export interface MemoryEngineEvent {
   payload: unknown;
   metadata?: Record<string, unknown>;
 }
+
+// ============================================================================
+// Memory Event Types (for MemoryEngine.emit)
+// ============================================================================
+
+/**
+ * Memory event types for internal use
+ */
+export enum MemoryEventType {
+  STORED = 'memory:stored',
+  RETRIEVED = 'memory:retrieved',
+  UPDATED = 'memory:updated',
+  DELETED = 'memory:deleted',
+  CONSOLIDATED = 'memory:consolidated',
+  PRUNED = 'memory:pruned',
+  EPOCH_STARTED = 'timeline:epoch_started',
+  EPOCH_ENDED = 'timeline:epoch_ended',
+  EVENT_CAPTURED = 'timeline:event_captured',
+  ERROR = 'engine:error',
+}
+
+/**
+ * Memory event interface
+ */
+export interface MemoryEvent {
+  type: MemoryEventType;
+  timestamp: number;
+  payload: unknown;
+  metadata?: Record<string, unknown>;
+}

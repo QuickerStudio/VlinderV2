@@ -445,3 +445,18 @@ export const SearchQuerySchema = z.object({
   minScore: z.number().min(0).max(1).default(0.5),
   includeContent: z.boolean().default(true),
 });
+
+// ============================================================================
+// Context Priority Level
+// ============================================================================
+
+/**
+ * Context priority level for ranking
+ */
+export enum ContextPriorityLevel {
+  CRITICAL = 100,
+  HIGH = 75,
+  NORMAL = 50,
+  LOW = 25,
+  BACKGROUND = 10,
+}
