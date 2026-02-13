@@ -7,6 +7,7 @@
  * - ToolsEngine: Tool execution with permission management
  * - ContextEngine: Agentic context management
  * - ApplyEngine: Multi-round tool execution
+ * - IntegratedAgent: Unified agent system with all engines
  * 
  * @version 2.0.0
  */
@@ -30,6 +31,9 @@ export { ContextEngine } from './ContextEngine';
 // Apply Engine
 export * from './ApplyEngine';
 export { ApplyEngine } from './ApplyEngine';
+
+// Integration
+export { IntegratedAgent, createIntegratedAgent, IntegratedAgentConfig } from './integration';
 
 // Version info
 export const ENGINES_VERSION = '2.0.0';
