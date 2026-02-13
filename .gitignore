@@ -1,54 +1,51 @@
-# Node
+# Dependencies
 node_modules/
+.pnpm-store/
 
-# Build output
+# Build outputs
 dist/
+out/
 build/
+*.vsix
 
-# TypeScript
-*.tsbuildinfo
-*.js.map
-*.d.ts
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
+pnpm-debug.log*
 
-# OS
-Thumbs.db
-.DS_Store
+# Environment
+.env
+.env.local
+.env.*.local
 
-# Temporary files
-*.tmp
-*.temp
-~$*
-
-# IDE specific files
-.vscode/
-.idea/
-
-# Coverage and test reports
+# Test
 coverage/
+.nyc_output/
 
-# Test artifacts and temp outputs
-/test-output*
-/test-*.txt
-/test-*.log
-*.test-output
-*.test.js
-*.test.ts
-*.test.md
-*.test.mermaid
-*.test.ps1
-*.test.bat
+# Cache
+.cache/
+.parcel-cache/
 
-# Ignore specific extensions
-*.vsix
+# Temporary
+tmp/
+temp/
+*.tmp
 
-# Ignore lock files
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Database
+*.db
+*.db-journal
 
-# Ignore specific directories
-extension/webview-ui-vite/
-
+# Secrets
+*.pem
+*.key
+secrets/
