@@ -49,10 +49,6 @@ export {
   globalPromptManager 
 } from './prompts';
 
-// V1 Compatibility Adapter
-export * from './adapter';
-export { MainAgent as V1CompatibleMainAgent } from './adapter';
-
 // Version info
 export const V2_VERSION = '2.0.0';
 export const V2_BUILD_DATE = new Date().toISOString();
