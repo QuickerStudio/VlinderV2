@@ -20,7 +20,7 @@ import {
   EmbeddingVector,
   MemoryEntry,
   MemoryMetadata,
-  MemoryImport,
+  MemoryImportance,
   MemorySource,
   MemoryContentType,
   MemoryQuery,
@@ -608,10 +608,12 @@ export class MemoryEngine extends EventEmitter {
     const memories = this.timelineIndex.get(this.currentEpoch.id) || new Set();
     this.currentEpoch.memoryCount = memories.size;
     
+    // HIGH importance threshold normalized (4/5 = 0.8)
+    const highImportanceThreshold = MemoryImportance.HIGH / MemoryImportance.CRITICAL;
     let importantCount = 0;
     for (const memoryId of memories) {
       const entry = await this.get(memoryId);
-      if (entry && entry.importance >= MemoryImportance.HIGH) {
+      if (entry && entry.importance >= highImportanceThreshold) {
         importantCount++;
       }
     }
@@ -737,8 +739,10 @@ export class MemoryEngine extends EventEmitter {
     // Archive old memories
     if (this.config.retention.archiveEnabled) {
       const archiveAge = this.config.retention.archiveAge;
+      // HIGH importance threshold normalized (4/5 = 0.8)
+      const highImportanceThreshold = MemoryImportance.HIGH / MemoryImportance.CRITICAL;
       for (const entry of this.longTermMemory.values()) {
-        if (now - entry.createdAt > archiveAge && entry.importance < MemoryImportance.HIGH) {
+        if (now - entry.createdAt > archiveAge && entry.importance < highImportanceThreshold) {
           // In a real implementation, this would move to cold storage
           result.archived++;
         }
@@ -849,12 +853,14 @@ export class MemoryEngine extends EventEmitter {
 
   /**
    * Calculate importance score for a memory
+   * Returns a normalized score between 0 and 1
    */
   private calculateImportance(
     content: string,
     metadata: Partial<MemoryMetadata>
   ): number {
-    let importance = MemoryImportance.MEDIUM;
+    // Start with normalized medium importance (3/5 = 0.6)
+    let importance = MemoryImportance.MEDIUM / MemoryImportance.CRITICAL;
     
     // Boost for certain content types
     if (metadata.toolName) {

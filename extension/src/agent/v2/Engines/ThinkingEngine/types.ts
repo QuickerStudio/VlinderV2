@@ -136,7 +136,9 @@ export interface ThinkingStepMetadata {
  * Thinking chain status
  */
 export enum ThinkingChainStatus {
+  IDLE = 'idle',
   INITIALIZED = 'initialized',
+  RUNNING = 'running',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   FAILED = 'failed',
@@ -148,7 +150,8 @@ export enum ThinkingChainStatus {
  */
 export interface ThinkingChain {
   id: ThinkingChainId;
-  taskId: string;
+  taskId?: string;
+  topic?: string;
   
   // Chain content
   steps: ThinkingStep[];
@@ -169,10 +172,10 @@ export interface ThinkingChain {
   duration?: number;
   
   // Metrics
-  metrics: ThinkingChainMetrics;
+  metrics?: ThinkingChainMetrics;
   
   // Context
-  context: ThinkingContext;
+  context?: ThinkingContext;
 }
 
 /**

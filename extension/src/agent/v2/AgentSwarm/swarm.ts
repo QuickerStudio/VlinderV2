@@ -24,7 +24,7 @@ import {
   Message,
   ToolResult,
   HandoffConfig,
-} from '../core/types';
+} from '../types';
 
 /**
  * Swarm configuration

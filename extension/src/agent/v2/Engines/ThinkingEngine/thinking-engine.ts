@@ -141,45 +141,42 @@ export class ThinkingEngine extends EventEmitter {
   /**
    * Create a new thinking chain
    */
-  public async createChain(
-    taskId: string,
-    context: ThinkingContext,
-    pattern: ReasoningPattern = this.config.reasoning.defaultPattern
-  ): Promise<ThinkingChain> {
+  public async createChain(options: {
+    topic: string;
+    pattern: ReasoningPattern;
+  }): Promise<ThinkingChain> {
     const chainId = this.generateChainId();
+    const { topic, pattern } = options;
     
     const chain: ThinkingChain = {
       id: chainId,
-      taskId,
+      topic,
       steps: [],
       pattern,
-      status: ThinkingChainStatus.INITIALIZED,
+      status: ThinkingChainStatus.IDLE,
       overallConfidence: 0,
       startedAt: Date.now(),
-      metrics: {
-        totalSteps: 0,
-        completedSteps: 0,
-        failedSteps: 0,
-        averageStepConfidence: 0,
-        reasoningDepth: 0,
-        backtrackingCount: 0,
-        reflectionCount: 0,
-      },
-      context,
     };
     
     this.chains.set(chainId, chain);
     
-    this.emit(ThinkingEventType.CHAIN_STARTED, { chainId, taskId, pattern });
+    this.emit(ThinkingEventType.CHAIN_STARTED, { chainId, topic, pattern });
     
     return chain;
   }
 
   /**
-   * Get a thinking chain by ID
+   * Get a thinking chain by ID (synchronous)
    */
-  public async getChain(chainId: ThinkingChainId): Promise<ThinkingChain | undefined> {
+  public getChain(chainId: ThinkingChainId): ThinkingChain | undefined {
     return this.chains.get(chainId);
+  }
+
+  /**
+   * Get all thinking chains (synchronous)
+   */
+  public getAllChains(): ThinkingChain[] {
+    return Array.from(this.chains.values());
   }
 
   /**
@@ -464,49 +461,30 @@ export class ThinkingEngine extends EventEmitter {
    */
   public async addStep(
     chainId: ThinkingChainId,
-    step: Partial<ThinkingStep>
+    step: {
+      type: ThinkingStepType;
+      content: string;
+    }
   ): Promise<ThinkingStep> {
     const chain = this.chains.get(chainId);
     if (!chain) {
       throw new Error(`Chain ${chainId} not found`);
     }
     
-    if (chain.status !== ThinkingChainStatus.IN_PROGRESS &&
-        chain.status !== ThinkingChainStatus.INITIALIZED) {
-      throw new Error(`Chain ${chainId} is not active`);
-    }
-    
     const fullStep: ThinkingStep = {
-      id: step.id || this.generateStepId(),
+      id: this.generateStepId(),
       chainId,
-      type: step.type || ThinkingStepType.ANALYSIS,
-      content: step.content || '',
-      reasoning: step.reasoning,
-      confidence: step.confidence ?? 0.7,
+      type: step.type,
+      content: step.content,
+      confidence: 0.7,
       validated: false,
-      dependencies: step.dependencies || [],
-      metadata: step.metadata || {},
+      dependencies: [],
+      metadata: {},
       createdAt: Date.now(),
       status: ThinkingStepStatus.PENDING,
     };
     
-    // Validate step
-    if (this.config.reasoning.autoValidation) {
-      fullStep.validated = this.validateStep(fullStep, chain);
-    }
-    
     chain.steps.push(fullStep);
-    chain.metrics.totalSteps++;
-    
-    // Update status
-    fullStep.status = ThinkingStepStatus.COMPLETED;
-    fullStep.completedAt = Date.now();
-    fullStep.duration = fullStep.completedAt - fullStep.createdAt;
-    chain.metrics.completedSteps++;
-    
-    // Update average confidence
-    chain.metrics.averageStepConfidence = 
-      chain.steps.reduce((sum, s) => sum + s.confidence, 0) / chain.steps.length;
     
     // Cache step
     if (this.config.performance.cacheEnabled) {
@@ -519,11 +497,47 @@ export class ThinkingEngine extends EventEmitter {
   }
 
   /**
-   * Get steps from a chain
+   * Get steps from a chain (synchronous)
    */
-  public async getSteps(chainId: ThinkingChainId): Promise<ThinkingStep[]> {
+  public getSteps(chainId: ThinkingChainId): ThinkingStep[] {
     const chain = this.chains.get(chainId);
     return chain?.steps || [];
+  }
+
+  /**
+   * Get a step by ID (synchronous)
+   */
+  public getStep(stepId: ThinkingStepId): ThinkingStep | undefined {
+    // First check the cache
+    const cached = this.stepCache.get(stepId);
+    if (cached) return cached;
+    
+    // Search in all chains
+    for (const chain of this.chains.values()) {
+      const step = chain.steps.find(s => s.id === stepId);
+      if (step) return step;
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Update step status
+   */
+  public async updateStepStatus(stepId: ThinkingStepId, status: ThinkingStepStatus): Promise<void> {
+    const step = this.getStep(stepId);
+    if (!step) {
+      throw new Error(`Step ${stepId} not found`);
+    }
+    
+    step.status = status;
+    
+    if (status === ThinkingStepStatus.COMPLETED) {
+      step.completedAt = Date.now();
+      step.duration = step.completedAt - step.createdAt;
+    }
+    
+    this.emit(ThinkingEventType.STEP_COMPLETED, { stepId, status });
   }
 
   /**
@@ -543,6 +557,67 @@ export class ThinkingEngine extends EventEmitter {
     }
     
     return undefined;
+  }
+
+  // =========================================================================
+  // Chain Lifecycle Control
+  // =========================================================================
+
+  /**
+   * Start a chain (set status to RUNNING)
+   */
+  public async startChain(chainId: ThinkingChainId): Promise<void> {
+    const chain = this.chains.get(chainId);
+    if (!chain) {
+      throw new Error(`Chain ${chainId} not found`);
+    }
+    
+    chain.status = ThinkingChainStatus.RUNNING;
+    this.activeChain = chainId;
+    
+    this.emit(ThinkingEventType.CHAIN_STARTED, { chainId });
+  }
+
+  /**
+   * Complete a chain
+   */
+  public async completeChain(chainId: ThinkingChainId): Promise<void> {
+    const chain = this.chains.get(chainId);
+    if (!chain) {
+      throw new Error(`Chain ${chainId} not found`);
+    }
+    
+    chain.status = ThinkingChainStatus.COMPLETED;
+    chain.completedAt = Date.now();
+    chain.duration = chain.completedAt - chain.startedAt;
+    chain.overallConfidence = this.calculateOverallConfidence(chain);
+    
+    if (this.activeChain === chainId) {
+      this.activeChain = null;
+    }
+    
+    this.emit(ThinkingEventType.CHAIN_COMPLETED, { chainId, chain });
+  }
+
+  /**
+   * Fail a chain
+   */
+  public async failChain(chainId: ThinkingChainId, reason: string): Promise<void> {
+    const chain = this.chains.get(chainId);
+    if (!chain) {
+      throw new Error(`Chain ${chainId} not found`);
+    }
+    
+    chain.status = ThinkingChainStatus.FAILED;
+    chain.completedAt = Date.now();
+    chain.duration = chain.completedAt - chain.startedAt;
+    chain.conclusion = `Failed: ${reason}`;
+    
+    if (this.activeChain === chainId) {
+      this.activeChain = null;
+    }
+    
+    this.emit(ThinkingEventType.CHAIN_FAILED, { chainId, error: reason });
   }
 
   // =========================================================================
@@ -571,22 +646,22 @@ export class ThinkingEngine extends EventEmitter {
     if (completedSteps.length === chain.steps.length) {
       result.strengths.push('All steps completed successfully');
     }
-    if (chain.metrics.averageStepConfidence > 0.8) {
+    
+    // Calculate average step confidence
+    const avgConfidence = chain.steps.length > 0 
+      ? chain.steps.reduce((sum, s) => sum + s.confidence, 0) / chain.steps.length 
+      : 0;
+    
+    if (avgConfidence > 0.8) {
       result.strengths.push('High confidence in reasoning');
-    }
-    if (chain.metrics.backtrackingCount === 0) {
-      result.strengths.push('No backtracking required');
     }
     
     // Identify weaknesses
     if (failedSteps.length > 0) {
       result.weaknesses.push(`${failedSteps.length} steps failed`);
     }
-    if (chain.metrics.averageStepConfidence < 0.5) {
+    if (avgConfidence < 0.5) {
       result.weaknesses.push('Low confidence in reasoning');
-    }
-    if (chain.metrics.backtrackingCount > 2) {
-      result.weaknesses.push('Excessive backtracking required');
     }
     
     // Generate improvements
@@ -596,7 +671,7 @@ export class ThinkingEngine extends EventEmitter {
     }
     
     // Calculate reflection confidence
-    result.confidence = chain.metrics.averageStepConfidence;
+    result.confidence = avgConfidence;
     
     // Generate recommendations
     if (result.confidence < 0.7) {
@@ -607,11 +682,7 @@ export class ThinkingEngine extends EventEmitter {
     await this.addStep(chain.id, {
       type: ThinkingStepType.REFLECTION,
       content: result.overallAssessment || 'Reflection completed',
-      reasoning: JSON.stringify(result),
-      confidence: result.confidence,
     });
-    
-    chain.metrics.reflectionCount++;
     
     this.emit(ThinkingEventType.REFLECTION, { chainId: chain.id, result });
     
@@ -843,7 +914,8 @@ export class ThinkingEngine extends EventEmitter {
         totalDuration += chain.duration;
       }
       
-      reflectionCount += chain.metrics.reflectionCount;
+      // Count reflection steps
+      reflectionCount += chain.steps.filter(s => s.type === ThinkingStepType.REFLECTION).length;
       
       for (const step of chain.steps) {
         stepsByType[step.type] = (stepsByType[step.type] || 0) + 1;

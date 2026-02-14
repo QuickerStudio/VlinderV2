@@ -60,6 +60,20 @@ export enum MemorySource {
 }
 
 /**
+ * 记忆内容类型
+ */
+export enum MemoryContentType {
+  CONVERSATION = 'conversation',
+  CODE = 'code',
+  DOCUMENT = 'document',
+  ERROR = 'error',
+  DECISION = 'decision',
+  INSIGHT = 'insight',
+  COMMAND = 'command',
+  OUTPUT = 'output',
+}
+
+/**
  * 记忆状态
  */
 export enum MemoryState {
@@ -540,3 +554,54 @@ export interface MemoryEvent {
   payload: unknown;
   metadata?: Record<string, unknown>;
 }
+
+// ============================================================================
+// Zod Schemas for Validation
+// ============================================================================
+
+/**
+ * Search type for memory queries
+ */
+export enum SearchType {
+  SEMANTIC = 'semantic',
+  KEYWORD = 'keyword',
+  HYBRID = 'hybrid',
+}
+
+/**
+ * Memory query schema for validation
+ */
+export const MemoryQuerySchema = z.object({
+  query: z.string(),
+  type: z.nativeEnum(SearchType).optional(),
+  topK: z.number().min(1).max(100).default(10),
+  minSimilarity: z.number().min(0).max(1).default(0),
+  includeContent: z.boolean().default(true),
+  includeEmbeddings: z.boolean().default(false),
+  filter: z.any().optional(),
+  sortBy: z.enum(['relevance', 'timestamp', 'importance', 'accessCount']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  timeRange: z.object({
+    start: z.number(),
+    end: z.number(),
+  }).optional(),
+});
+
+/**
+ * Memory entry schema for validation
+ */
+export const MemoryEntrySchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  contentType: z.nativeEnum(MemoryContentType),
+  metadata: z.any(),
+  importance: z.number().min(0).max(1),
+  tags: z.array(z.string()),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  lastAccessedAt: z.number(),
+  accessCount: z.number(),
+  embedding: z.array(z.number()).optional(),
+  timeline: z.any(),
+  decayRate: z.number(),
+});
